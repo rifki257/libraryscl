@@ -31,7 +31,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        if (auth()->user()->role !== 'kepper') {
+        // Izinkan kepper DAN petugas untuk masuk ke halaman registrasi
+        if (!in_array(auth()->user()->role, ['kepper', 'petugas'])) {
             return redirect()->route('dashboard')->with('error', 'Anda tidak punya akses!');
         }
         return view('auth.register');
@@ -42,9 +43,14 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        // Cek akses
-        if (auth()->user()->role !== 'kepper') {
+        $userLogin = auth()->user();
+
+        if (!in_array($userLogin->role, ['kepper', 'petugas'])) {
             return redirect()->route('dashboard')->with('error', 'Anda tidak punya akses!');
+        }
+
+        if ($userLogin->role === 'petugas') {
+            $request->merge(['role' => 'anggota']);
         }
 
         $request->validate([
@@ -67,7 +73,7 @@ class UserController extends Controller
             'kelas' => $request->role === 'anggota' ? $request->kelas : null,
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'User baru berhasil didaftarkan!');
+        return back()->with('status', 'User baru berhasil didaftarkan!');
     }
 
     /**

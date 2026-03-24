@@ -1,4 +1,4 @@
-<div class="hidden space-x-5 sm:-my-px sm:ms-7 sm:flex ">
+<div class="hidden space-x-5 sm:-my-px sm:ms-7 sm:flex" style="margin-left: 350px">
     <x-nav-link :href="route('userdashboard')" :active="request()->routeIs('userdashboard')" class="w-20 justify-center">
         {{ __('Dashboard') }}
     </x-nav-link>

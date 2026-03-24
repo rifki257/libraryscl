@@ -3,29 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\Buku;
-use Illuminate\Http\Request;
 use App\Models\Peminjaman;
+use Illuminate\Http\Request;
 
 class PeminjamandataController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) // 1. Tambahkan parameter Request $request di sini
     {
+        $status = $request->query('status');
+
+        // 2. Variabel ini sudah didefinisikan
+        $isFilteringTerlambat = ($status == 'terlambat' || $status == 'denda');
         $hariIni = \Carbon\Carbon::now()->startOfDay();
 
-    $dipinjam = \App\Models\Peminjaman::with(['user', 'buku'])
-        ->whereIn('status', ['dipinjam', 'proses'])
-        ->get()
-        ->map(function ($item) use ($hariIni) {
-            $tglJatuhTempo = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
-            $item->is_telat = $hariIni->gt($tglJatuhTempo); 
-            return $item;
-        });
+        $dipinjam = \App\Models\Peminjaman::with(['user', 'buku'])
+            ->whereIn('status', ['dipinjam', 'proses'])
+            ->get()
+            ->map(function ($item) use ($hariIni) {
+                $tglJatuhTempo = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
+                $item->is_telat = $hariIni->gt($tglJatuhTempo);
+                return $item;
+            });
 
-    // Cukup kirim $dipinjam saja
-    return view('peminjamandata', compact('dipinjam'));
+        // 3. Masukkan 'isFilteringTerlambat' ke dalam compact agar sampai ke Blade
+        return view('peminjamandata', compact('dipinjam', 'isFilteringTerlambat'));
     }
 
     /**

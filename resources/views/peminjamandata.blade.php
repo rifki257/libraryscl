@@ -103,6 +103,9 @@
                                 <table class="table table-striped align-middle">
                                     <thead>
                                         <tr>
+                                            <th id="th-checkbox" class="checkbox-column text-center d-none">
+    <input type="checkbox" id="check-all" class="form-check-input" />
+</th>
                                             <th>ID Pinjam</th>
                                             <th>Peminjam</th>
                                             <th>Judul Buku</th>
@@ -115,16 +118,22 @@
                                     <tbody>
                                         @forelse ($dipinjam as $data)
                                             @php
-                    $tglJatuhTempo = \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->startOfDay();
-                    $hariIni = \Carbon\Carbon::now()->startOfDay();
-                    $isTelat = $hariIni > $tglJatuhTempo;
-                    $jmlHari = $isTelat ? $hariIni->diffInDays($tglJatuhTempo) : 0;
-                    $totalDenda = $jmlHari * 150000;
-                    $sudahDiajukan = ($data->status === 'proses');
-                @endphp
-                                            <tr
-                                                class="item-peminjaman {{ $isTelat ? 'status-terlambat' : 'status-aman' }}"
-                                            >
+                                            $statusAktif = request('status');
+                                            $isFilteringTerlambat = ($statusAktif == 'fTelat');
+        $tglJatuhTempo = \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->startOfDay();
+        $hariIni = \Carbon\Carbon::now()->startOfDay();
+        $isTelat = $hariIni > $tglJatuhTempo;
+        $jmlHari = $isTelat ? $hariIni->diffInDays($tglJatuhTempo) : 0;
+        $totalDenda = $jmlHari * 150000;
+        $sudahDiajukan = ($data->status === 'proses');
+        // Filter ini sudah benar
+        $isFilteringTerlambat = request('status') == 'terlambat' || request('filter') == 'denda';
+    @endphp
+                                           <tr class="item-peminjaman {{ $isTelat ? 'status-terlambat' : 'status-aman' }}">
+        {{-- Gunakan $isFilteringTerlambat yang didefinisikan di atas --}}
+        <td class="checkbox-column text-center d-none">
+    <input type="checkbox" class="form-check-input select-peminjaman" value="{{ $data->id }}" />
+</td>
                                                 <td>
                                                     <code
                                                         >#{{ $data->id_pinjam }}</code
@@ -219,13 +228,44 @@
                                                                                 font-size: 0.85rem;
                                                                             "
                                                                         >
-                                                                            <p class="mb-1">Peminjam: <strong>{{ $data->user->name }}</strong></p>
-                                                                            <p class="mb-1">Judul: <strong>{{ $data->buku->judul }}</strong></p>
+                                                                            <p class="mb-1">Peminjam: <strong class="text-capitalize">{{ $data->user->name }}</strong></p>
+                                                                            <p class="mb-1">Judul: <strong class="text-capitalize">{{ $data->buku->judul }}</strong></p>
+                                                                            <p class="mb-1">No HP: <strong>{{ $data->user->no_hp ?? '-' }}</strong></p>
+
                                                                             <hr
                                                                                 class="my-2"
                                                                             />
-                                                                            <p class="mb-1 text-danger">Terlambat: <strong>{{ $jmlHari }} Hari</strong></p>
-                                                                            <p class="mb-0 text-danger fw-bold">Total Denda: Rp {{ number_format($totalDenda, 0, ',', '.') }}</p>
+
+                                                                            <p class="mb-1 text-danger">Terlambat: <strong>{{ abs($jmlHari) }} Hari</strong></p>
+                                                                            <p class="mb-2 text-danger fw-bold">Total Denda: Rp {{ number_format(abs($totalDenda), 0, ',', '.') }}</p>
+
+                                                                            @if ($data->user->no_hp)
+                                                                                <button
+                                                                                    type="button"
+                                                                                    class="btn btn-sm btn-success w-100 mb-2 d-flex align-items-center justify-content-center gap-2"
+                                                                                    onclick="kirimNotifWA('{{ $data->user->no_hp }}', '{{ $data->user->name }}', '{{ $data->buku->judul }}', '{{ abs($jmlHari) }}', '{{ number_format(abs($totalDenda), 0, ',', '.') }}')"
+                                                                                >
+                                                                                    <i
+                                                                                        class="bi bi-whatsapp"
+                                                                                    ></i>
+                                                                                    Kirim
+                                                                                    Tagihan
+                                                                                    via
+                                                                                    WA
+                                                                                </button>
+                                                                            @else
+                                                                                <div
+                                                                                    class="alert alert-warning py-1 px-2 mb-2"
+                                                                                    style="
+                                                                                        font-size: 0.75rem;
+                                                                                    "
+                                                                                >
+                                                                                    No.
+                                                                                    HP
+                                                                                    tidak
+                                                                                    tersedia
+                                                                                </div>
+                                                                            @endif
                                                                         </div>
                                                                         <div
                                                                             class="modal-footer py-1"
@@ -293,6 +333,81 @@
                                         @endforelse
                                     </tbody>
                                 </table>
+                                <div
+                                    id="bulk-action-bar"
+                                    class="fixed-bottom bg-white border-top p-3 shadow-lg d-none"
+                                    style="z-index: 1030"
+                                >
+                                    <div
+                                        class="container d-flex justify-content-between align-items-center"
+                                    >
+                                        <div>
+                                            <span
+                                                id="selected-count"
+                                                class="fw-bold text-primary"
+                                                >0</span
+                                            >
+                                            Data Terpilih
+                                        </div>
+                                        <button
+                                            type="button"
+                                            class="btn btn-success d-flex align-items-center gap-2"
+                                            onclick="openBulkModal()"
+                                        >
+                                            <i class="bi bi-whatsapp"></i> Kirim
+                                            Notif Massal (<span id="btn-count"
+                                                >0</span
+                                            >)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="modal fade"
+                                    id="modalBulkWA"
+                                    tabindex="-1"
+                                    aria-hidden="true"
+                                >
+                                    <div
+                                        class="modal-dialog modal-md modal-dialog-centered"
+                                    >
+                                        <div class="modal-content">
+                                            <div
+                                                class="modal-header bg-success text-white"
+                                            >
+                                                <h6 class="modal-title">
+                                                    Daftar Antrean Kirim WA
+                                                </h6>
+                                                <button
+                                                    type="button"
+                                                    class="btn-close btn-close-white"
+                                                    data-bs-dismiss="modal"
+                                                ></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div
+                                                    id="bulk-list"
+                                                    class="list-group list-group-flush mb-3"
+                                                    style="
+                                                        max-height: 300px;
+                                                        overflow-y: auto;
+                                                    "
+                                                ></div>
+                                                <div
+                                                    class="alert alert-info py-2 small"
+                                                >
+                                                    <i
+                                                        class="bi bi-info-circle"
+                                                    ></i>
+                                                    WhatsApp akan terbuka satu
+                                                    per satu setelah Anda
+                                                    menekan tombol kirim di
+                                                    masing-masing nama.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -310,43 +425,63 @@
 
             function applyAllFilters() {
                 const searchText = searchInput.value.toLowerCase();
-                const activeFilters = Array.from(checkboxes)
-                    .filter((i) => i.checked)
-                    .map((i) => i.value);
+                // Ambil hanya 1 value (karena kita setting hanya 1 yang bisa aktif)
+                const activeFilter = Array.from(checkboxes).find(
+                    (i) => i.checked
+                )?.value;
 
                 if (searchText.length > 0) {
-                    btnResetSearch.classList.remove('d-none');
+                    btnResetSearch?.classList.remove('d-none');
                 } else {
-                    btnResetSearch.classList.add('d-none');
+                    btnResetSearch?.classList.add('d-none');
                 }
 
                 rows.forEach((row) => {
                     const textContent = row.innerText.toLowerCase();
                     const textMatch = textContent.includes(searchText);
+
+                    // Logika: Jika tidak ada filter aktif, tampilkan semua.
+                    // Jika ada, harus sesuai dengan class yang ada di row.
                     const filterMatch =
-                        activeFilters.length === 0 ||
-                        activeFilters.some((f) => row.classList.contains(f));
+                        !activeFilter || row.classList.contains(activeFilter);
 
                     row.style.display = textMatch && filterMatch ? '' : 'none';
                 });
             }
 
-            searchInput.addEventListener('input', applyAllFilters);
-
+            // --- Logika Eksklusif Checkbox (Hanya 1 yang boleh aktif) ---
             checkboxes.forEach((box) => {
-                box.addEventListener('change', applyAllFilters);
+                box.addEventListener('change', function () {
+                    if (this.checked) {
+                        // Uncheck semua box lain jika box ini dicentang
+                        checkboxes.forEach((otherBox) => {
+                            if (otherBox !== this) otherBox.checked = false;
+                        });
+                    }
+                    applyAllFilters();
+                });
             });
 
-            btnResetSearch.addEventListener('click', function () {
-                searchInput.value = '';
-                applyAllFilters();
-                searchInput.focus();
-            });
+            if (searchInput) {
+                searchInput.addEventListener('input', applyAllFilters);
+            }
 
-            btnResetFilter.addEventListener('click', function () {
-                checkboxes.forEach((cb) => (cb.checked = false));
-                applyAllFilters();
-            });
+            if (btnResetSearch) {
+                btnResetSearch.addEventListener('click', function () {
+                    searchInput.value = '';
+                    applyAllFilters();
+                    searchInput.focus();
+                });
+            }
+
+            if (btnResetFilter) {
+                btnResetFilter.addEventListener('click', function () {
+                    checkboxes.forEach((cb) => (cb.checked = false));
+                    applyAllFilters();
+                });
+            }
+
+            // --- Notifikasi SweetAlert ---
             @if (session('success'))
             Swal.fire({
                 icon: 'success',
@@ -354,7 +489,7 @@
                 text: '{{ session('success') }}',
                 showConfirmButton: false,
                 timer: 2000,
-                iconColor: '#0d6efd', 
+                iconColor: '#0d6efd',
             });
             @endif
 
@@ -366,5 +501,19 @@
             });
             @endif
         });
+
+        function kirimNotifWA(noHp, nama, judulBuku, hari, denda) {
+            let formattedHp = noHp.toString().replace(/^0/, '62');
+            const pesan = `Halo Kak ${nama},\n\nKami dari Perpustakaan ingin menginformasikan bahwa peminjaman buku:\nJudul: ${judulBuku}\n\nTelah melewati batas waktu selama ${hari} hari.\nTotal denda saat ini sebesar: Rp ${denda}.\n\nMohon segera melakukan pengembalian buku dan penyelesaian denda. Terima kasih. 🙏`;
+            const url = `https://wa.me/${formattedHp}?text=${encodeURIComponent(pesan)}`;
+            window.open(url, '_blank');
+        }
+        $('.form-check-input').on('change', function() {
+    if ($('#filter-terlambat').is(':checked')) { // Ganti ID sesuai checkbox filter Anda
+        $('.checkbox-column').removeClass('d-none');
+    } else {
+        $('.checkbox-column').addClass('d-none');
+    }
+});
     </script>
 </x-app-layout>

@@ -1,4 +1,4 @@
-<div class="hidden space-x-5 sm:-my-px sm:ms-7 sm:flex">
+<div class="hidden space-x-5 sm:-my-px sm:ms-7 sm:flex" style="margin-left: 350px">
     <x-nav-link
         :href="route('userdashboard')"
         :active="request()->routeIs('userdashboard')"
@@ -9,7 +9,7 @@
     <x-nav-link
         :href="route('katalog')"
         :active="request()->routeIs('katalog')"
-        class="w-20 justify-center"
+        class="w-20 justify-center disabled"
     >
         {{ __('Buku') }}
     </x-nav-link>

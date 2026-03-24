@@ -7,6 +7,11 @@
             {{ __('Register') }}
         </h2>
     </x-slot>
+    @if (session('status'))
+    <div class="mb-4 font-medium text-sm text-green-600 p-4 bg-green-100 border border-green-400 rounded-md">
+        {{ session('status') }}
+    </div>
+@endif
     @if ($errors->any())
     <div class="text-red-600">
         <ul>
@@ -44,12 +49,20 @@
         <!-- Role -->
         <div class="mt-4">
     <x-input-label for="role" :value="__('Daftar Sebagai')" />
-    <select id="role" name="role" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required onchange="toggleFields()">
-        <option value="" disabled {{ old('role') ? '' : 'selected' }}>-- Pilih Role --</option>
-        <option value="kepper" {{ old('role') == 'kepper' ? 'selected' : '' }}>Kepala Sekolah</option>
-        <option value="petugas" {{ old('role') == 'petugas' ? 'selected' : '' }}>Petugas</option>
-        <option value="anggota" {{ old('role') == 'anggota' ? 'selected' : '' }}>Anggota</option>
+    
+    <select id="role" name="role" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required onchange="toggleFields()" 
+        {{ Auth::user()->role == 'petugas' ? 'readonly' : '' }}>
+        
+        @if(Auth::user()->role == 'petugas')
+            <option value="anggota" selected>Anggota</option>
+        @else
+            <option value="" disabled {{ old('role') ? '' : 'selected' }}>-- Pilih Role --</option>
+            <option value="kepper" {{ old('role') == 'kepper' ? 'selected' : '' }}>Kepala Sekolah</option>
+            <option value="petugas" {{ old('role') == 'petugas' ? 'selected' : '' }}>Petugas</option>
+            <option value="anggota" {{ old('role') == 'anggota' ? 'selected' : '' }}>Anggota</option>
+        @endif
     </select>
+    
     <x-input-error :messages="$errors->get('role')" class="mt-2" />
 </div>
 
@@ -147,5 +160,15 @@ function formatNIS(input) {
     }
     input.value = formatted;
 }
+document.addEventListener('DOMContentLoaded', function() {
+    const statusAlert = document.querySelector('.text-green-600');
+    if (statusAlert) {
+        setTimeout(() => {
+            statusAlert.style.transition = "opacity 0.5s ease";
+            statusAlert.style.opacity = "0";
+            setTimeout(() => statusAlert.remove(), 500);
+        }, 3000);
+    }
+});
 </script>
 </x-app-layout>
