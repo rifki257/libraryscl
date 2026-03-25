@@ -28,12 +28,109 @@
             });
         </script>
     @endif
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Katalog Buku') }}
-        </h2>
-    </x-slot>
+    <div class="max-w-7xl mx-auto px-4 py-10">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Kategori Buku</h2>
 
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <a
+                href="#"
+                class="group relative overflow-hidden rounded-xl h-40 shadow-md"
+            >
+                <img
+                    src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=500"
+                    alt="Komik"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"
+                ></div>
+
+                <div class="absolute inset-0 flex items-end p-4">
+                    <span
+                        class="text-white font-bold text-sm leading-tight drop-shadow-lg"
+                    >
+                        Keahlian Kejuruan
+                    </span>
+                </div>
+            </a>
+
+            <a
+                href="#"
+                class="group relative overflow-hidden rounded-xl h-40 shadow-md"
+            >
+                <img
+                    src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=500"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent"
+                ></div>
+                <div class="absolute inset-0 flex items-end p-4">
+                    <span class="text-white font-bold text-sm"
+                        >Kategori Cerpen & Prosa</span
+                    >
+                </div>
+            </a>
+
+            <a
+                href="#"
+                class="group relative overflow-hidden rounded-xl h-40 shadow-md"
+            >
+                <img
+                    src="https://images.unsplash.com/photo-1519074063912-ad2fe3f5198e?q=80&w=500"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent"
+                ></div>
+                <div class="absolute inset-0 flex items-end p-4">
+                    <span class="text-white font-bold text-sm">Pengetahuan Umum</span>
+                </div>
+            </a>
+            
+            <a
+                href="#"
+                class="group relative overflow-hidden rounded-xl h-40 shadow-md"
+            >
+                <img
+                    src="https://images.unsplash.com/photo-1519074063912-ad2fe3f5198e?q=80&w=500"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent"
+                ></div>
+                <div class="absolute inset-0 flex items-end p-4">
+                    <span class="text-white font-bold text-sm">Literacy & Languages</span>
+                </div>
+            </a>
+            
+            <a
+                href="#"
+                class="group relative overflow-hidden rounded-xl h-40 shadow-md"
+            >
+                <img
+                    src="https://images.unsplash.com/photo-1519074063912-ad2fe3f5198e?q=80&w=500"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent"
+                ></div>
+                <div class="absolute inset-0 flex items-end p-4">
+                    <span class="text-white font-bold text-sm">Kategori Komik</span>
+                </div>
+            </a>
+        </div>
+    </div>
+    <style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
     <style>
         .book-card {
             position: relative;
@@ -90,7 +187,6 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div id="katalog-kontainer">
                     @include ('partials.katalog_isi')
-                    
                 </div>
             </div>
 
@@ -101,7 +197,6 @@
             @endif
         </div>
     </div>
-
     <script>
         function refreshKatalog() {
             let url = '{{ route("katalog") }}';

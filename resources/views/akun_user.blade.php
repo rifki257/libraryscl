@@ -44,55 +44,75 @@
                     </button>
                     <ul
                         class="dropdown-menu dropdown-menu-end p-3"
-                        style="min-width: 200px"
+                        id="filter-wrapper"
+                        style="
+                            min-width: 250px;
+                            max-height: 400px;
+                            overflow-y: auto;
+                        "
                     >
-                        <li>
-                            <div class="form-check mb-2">
-                                <input
-                                    class="form-check-input filter-kelas-checkbox"
-                                    type="checkbox"
-                                    value="X PPLG 1"
-                                    id="kelas1"
-                                    onchange="filterTableByKelas()"
-                                />
-                                <label class="form-check-label" for="kelas1"
-                                    >X PPLG 1</label
-                                >
+                        @php
+        $jurusans = [
+            'PPLG' => 3,
+            'APHP' => 3,
+            'APAT' => 3,
+            'TO'   => 6,
+            'AKL'  => 3
+        ];
+        $tingkatans = ['X' => 'group-x', 'XI' => 'group-xi', 'XII' => 'group-xii'];
+    @endphp
+
+                        @foreach ($tingkatans as $romawi => $classGroup)
+                            <div
+                                class="filter-group {{ $classGroup }} {{ $romawi != 'X' ? 'd-none' : '' }}"
+                            >
+                                <li>
+                                    <h5
+                                        class="dropdown-header ps-0 text-dark fw-bold"
+                                        style="font-size: 1.1rem"
+                                    >
+                                        KELAS {{ $romawi }}
+                                    </h5>
+                                </li>
+
+                                @foreach ($jurusans as $jur => $jumlah)
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <h6
+                                            class="dropdown-header ps-0 text-primary fw-bold"
+                                        >
+                                            {{ $jur }}
+                                        </h6>
+                                    </li>
+                                    @for ($i = 1; $i <= $jumlah; $i++)
+                                        <li>
+                                            <div class="form-check mb-1">
+                                                <input
+                                                    class="form-check-input filter-kelas-checkbox"
+                                                    type="checkbox"
+                                                    value="{{ $romawi }} {{ $jur }} {{ $i }}"
+                                                    id="chk{{ $romawi }}{{ $jur }}{{ $i }}"
+                                                    onchange="
+                                                        filterTableByKelas()
+                                                    "
+                                                />
+                                                <label
+                                                    class="form-check-label"
+                                                    for="chk{{ $romawi }}{{ $jur }}{{ $i }}"
+                                                >
+                                                    {{ $romawi }} {{ $jur }} {{ $i }}
+                                                </label>
+                                            </div>
+                                        </li>
+                                    @endfor
+                                @endforeach
                             </div>
-                        </li>
-                        <li>
-                            <div class="form-check mb-2">
-                                <input
-                                    class="form-check-input filter-kelas-checkbox"
-                                    type="checkbox"
-                                    value="X PPLG 2"
-                                    id="kelas2"
-                                    onchange="filterTableByKelas()"
-                                />
-                                <label class="form-check-label" for="kelas2"
-                                    >X PPLG 2</label
-                                >
-                            </div>
-                        </li>
-                        <li>
-                            <div class="form-check mb-2">
-                                <input
-                                    class="form-check-input filter-kelas-checkbox"
-                                    type="checkbox"
-                                    value="X PPLG 3"
-                                    id="kelas3"
-                                    onchange="filterTableByKelas()"
-                                />
-                                <label class="form-check-label" for="kelas3"
-                                    >X PPLG 3</label
-                                >
-                            </div>
-                        </li>
+                        @endforeach
 
                         <li><hr class="dropdown-divider" /></li>
                         <li>
                             <button
-                                class="btn btn-sm btn-light w-100"
+                                class="btn btn-sm btn-danger w-100"
                                 onclick="resetFilterKelas()"
                             >
                                 <i class="bi bi-arrow-counterclockwise"></i>
@@ -108,125 +128,102 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <div class="container">
-                        <div class="card-body">
-                            <div id="tabel-akun" class="mt-4">
-                                <div class="flex justify-between mb-4">
-                                    <button
-                                        id="btn-bulk-edit"
-                                        class="btn btn-warning d-none"
-                                        onclick="bulkEditKelas()"
-                                    >
-                                        Edit Kelas Terpilih (<span
-                                            id="count-selected"
-                                            >0</span
-                                        >)
-                                    </button>
-                                </div>
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr class="text-center">
-                                            <th>
-                                                <input
-                                                    type="checkbox"
-                                                    id="select-all"
-                                                    onclick="toggleSelectAll()"
-                                                />
-                                            </th>
-                                            <th>NIS</th>
-                                            <th>Nama</th>
-                                            <th>Kelas</th>
-                                            <th>Email</th>
-                                            <th>No HP</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-center">
-                                        @foreach ($users as $user)
-                                            <tr
-                                                class="align-middle border-b hover:bg-gray-50"
-                                            >
-                                                <td>
-                                                    <input
-                                                        type="checkbox"
-                                                        class="user-checkbox"
-                                                        value="{{ $user->id }}"
-                                                    />
-                                                </td>
-                                                <td>{{ $user->nis ?? '-' }}</td>
-                                                <td>{{ $user->name }}</td>
-                                                <td>
-                                                    {{ $user->kelas ?? '-' }}
-                                                </td>
-                                                <td>{{ $user->email }}</td>
-                                                <td>
-                                                    {{ $user->no_hp ?? '-' }}
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        type="button"
-                                                        onclick="editPassword({{ $user->id }}, '{{ $user->name }}')"
-                                                        class="btn btn-primary text-white"
-                                                    >
-                                                        Password
-                                                    </button>
-                                                    <form
-                                                        id="delete-form-{{ $user->id }}"
-                                                        action="{{ route('user.destroy', $user->id) }}"
-                                                        method="POST"
-                                                        class="inline-block m-0"
-                                                    >
-                                                        @csrf
-                                                        @method ('DELETE')
-                                                        <button
-                                                            type="button"
-                                                            onclick="confirmDelete({{ $user->id }})"
-                                                            class="btn btn-danger"
-                                                        >
-                                                            Hapus
-                                                        </button>
-                                                    </form>
-                                                    <form
-                                                        id="update-pw-form-{{ $user->id }}"
-                                                        action="{{ route('user.updatePassword', $user->id) }}"
-                                                        method="POST"
-                                                        style="display: none"
-                                                    >
-                                                        @csrf
-                                                        @method ('PUT')
-                                                        <input
-                                                            type="hidden"
-                                                            name="password"
-                                                            id="pw-input-{{ $user->id }}"
-                                                        />
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                                <form
-                                    id="bulk-update-form"
-                                    action="{{ route('user.bulkUpdateKelas') }}"
-                                    method="POST"
-                                    style="display: none"
-                                >
-                                    @csrf
-                                    @method ('PUT')
-                                    <input
-                                        type="hidden"
-                                        name="ids"
-                                        id="bulk-ids"
-                                    />
-                                    <input
-                                        type="hidden"
-                                        name="kelas"
-                                        id="bulk-kelas"
-                                    />
-                                </form>
-                            </div>
+                    <div class="mb-4 gap-2">
+                        <button
+                            id="btn-bulk-edit"
+                            class="btn btn-warning d-none"
+                            onclick="bulkEditKelas()"
+                        >
+                            Edit Kelas (<span id="count-selected">0</span>)
+                        </button>
+                        <button
+                            id="btn-bulk-delete"
+                            class="btn btn-danger d-none"
+                            onclick="bulkDeleteUser()"
+                        >
+                            <i class="bi bi-trash"></i> Hapus Akun (<span
+                                id="count-selected-delete"
+                                >0</span
+                            >)
+                        </button>
+                    </div>
+
+                    <ul class="nav nav-tabs mb-4" id="kelasTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button
+                                class="nav-link active"
+                                id="x10-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#x10"
+                                type="button"
+                                role="tab"
+                            >
+                                Kelas X
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button
+                                class="nav-link"
+                                id="xi11-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#xi11"
+                                type="button"
+                                role="tab"
+                            >
+                                Kelas XI
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button
+                                class="nav-link"
+                                id="xii12-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#xii12"
+                                type="button"
+                                role="tab"
+                            >
+                                Kelas XII
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="kelasTabContent">
+                        <div
+                            class="tab-pane fade show active"
+                            id="x10"
+                            role="tabpanel"
+                        >
+                            @include ('partials.x10')
+                        </div>
+                        <div class="tab-pane fade" id="xi11" role="tabpanel">
+                            @include ('partials.xi11')
+                        </div>
+                        <div class="tab-pane fade" id="xii12" role="tabpanel">
+                            @include ('partials.xii12')
                         </div>
                     </div>
+
+                    <form
+                        id="bulk-update-form"
+                        action="{{ route('user.bulkUpdateKelas') }}"
+                        method="POST"
+                        style="display: none"
+                    >
+                        @csrf
+                        @method ('PUT')
+                        <input type="hidden" name="ids" id="bulk-ids" />
+                        <input type="hidden" name="kelas" id="bulk-kelas" />
+                    </form>
+                    <form
+                        id="bulk-delete-form"
+                        action="{{ route('user.bulkDestroy') }}"
+                        method="POST"
+                        style="display: none"
+                    >
+                        @csrf
+                        @method ('DELETE')
+                        <input type="hidden" name="ids" id="bulk-delete-ids" />
+                    </form>
                 </div>
             </div>
         </div>
@@ -296,11 +293,8 @@
         function searchTableUser() {
             let input = document.getElementById('search-input-user');
             let filter = input.value.toLowerCase();
-            let table = document.querySelector('table');
-            let tr = table.getElementsByTagName('tr');
             let btnReset = document.getElementById('reset-search-user');
 
-            // Toggle tombol reset
             if (filter.length > 0) {
                 btnReset.classList.remove('d-none');
                 btnReset.classList.add('d-flex');
@@ -308,22 +302,25 @@
                 btnReset.classList.add('d-none');
                 btnReset.classList.remove('d-flex');
             }
+            let rows = document.querySelectorAll('.tab-content tbody tr');
 
-            for (let i = 1; i < tr.length; i++) {
-                let tds = tr[i].getElementsByTagName('td');
+            rows.forEach((row) => {
+                let tds = row.getElementsByTagName('td');
                 if (tds.length > 0) {
                     let combinedText = Array.from(tds)
-                        .slice(0, 5)
+                        .slice(1, 6)
                         .map((td) => td.textContent || td.innerText)
                         .join(' ')
                         .toLowerCase();
 
-                    tr[i].style.display =
-                        combinedText.indexOf(filter) > -1 ? '' : 'none';
+                    if (combinedText.indexOf(filter) > -1) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
                 }
-            }
+            });
         }
-
         function resetTableUser() {
             let input = document.getElementById('search-input-user');
             input.value = '';
@@ -340,21 +337,70 @@
         const countSpan = document.getElementById('count-selected');
 
         function updateBulkButton() {
-            const checkedCount = document.querySelectorAll(
-                '.user-checkbox:checked'
-            ).length;
+            const btnBulkEdit = document.getElementById('btn-bulk-edit');
+            const btnBulkDelete = document.getElementById('btn-bulk-delete');
+            const countEdit = document.getElementById('count-selected');
+            const countDelete = document.getElementById('count-selected-delete');
+
+            // Ambil tab aktif
+            const activeTab = document
+                .querySelector('.nav-link.active')
+                .getAttribute('data-bs-target');
+
+            // Ambil semua checkbox yang dicentang
+            const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+            const checkedCount = checkedBoxes.length;
+
             if (checkedCount > 0) {
+                // Update angka di kedua tombol
+                countEdit.innerText = checkedCount;
+                countDelete.innerText = checkedCount;
+
+                // Tampilkan tombol Edit (semua kelas)
                 btnBulkEdit.classList.remove('d-none');
-                if (countSpan) countSpan.innerText = checkedCount;
+
+                // Tampilkan tombol Hapus (hanya jika di tab Kelas XII)
+                if (activeTab === '#xii12') {
+                    btnBulkDelete.classList.remove('d-none');
+                    // Tambahkan class d-inline-block jika tombol berdempetan
+                    btnBulkDelete.classList.add('d-inline-block');
+                } else {
+                    btnBulkDelete.classList.add('d-none');
+                }
             } else {
+                // Sembunyikan semua jika tidak ada yang dipilih
                 btnBulkEdit.classList.add('d-none');
+                btnBulkDelete.classList.add('d-none');
             }
+        }
+        function bulkDeleteUser() {
+            const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+            const ids = Array.from(checkedBoxes).map((cb) => cb.value);
+
+            if (ids.length === 0) return;
+
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: `Anda akan menghapus ${ids.length} akun terpilih secara permanen!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus Semua!',
+                cancelButtonText: 'Batal',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('bulk-delete-ids').value =
+                        JSON.stringify(ids);
+                    document.getElementById('bulk-delete-form').submit();
+                }
+            });
         }
 
         function toggleSelectAll() {
-            const selectAllCb = document.getElementById('select-all');
-            const tr = document.querySelectorAll('table tbody tr');
-
+            const activeTab = document.querySelector('.tab-pane.active');
+            const selectAllCb = activeTab.querySelector('#select-all');
+            const tr = activeTab.querySelectorAll('tbody tr');
             tr.forEach((row) => {
                 if (row.style.display !== 'none') {
                     const checkbox = row.querySelector('.user-checkbox');
@@ -363,7 +409,6 @@
             });
             updateBulkButton();
         }
-
         document.addEventListener('change', function (e) {
             if (e.target.classList.contains('user-checkbox')) {
                 updateBulkButton();
@@ -430,13 +475,13 @@
             let formHtml = '<div style="text-align: left; font-size: 0.9rem;">';
             Object.keys(kelasMap).forEach((namaKelas, index) => {
                 formHtml += `
-                            <div class="mb-3">
-                                <label class="form-label">Ubah Kelas: <b>${namaKelas}</b> (${kelasMap[namaKelas].length} murid)</label>
-                                <input type="text" id="bulk-input-${index}" class="swal2-input mt-1"
-                                        value="${namaKelas}" placeholder="Masukkan nama kelas baru...">
-                                <input type="hidden" id="ids-${index}" value='${JSON.stringify(kelasMap[namaKelas])}'>
-                            </div>
-                        `;
+                                                                            <div class="mb-3">
+                                                                                <label class="form-label">Ubah Kelas: <b>${namaKelas}</b> (${kelasMap[namaKelas].length} murid)</label>
+                                                                                <input type="text" id="bulk-input-${index}" class="swal2-input mt-1"
+                                                                                        value="${namaKelas}" placeholder="Masukkan nama kelas baru...">
+                                                                                <input type="hidden" id="ids-${index}" value='${JSON.stringify(kelasMap[namaKelas])}'>
+                                                                            </div>
+                                                                        `;
             });
             formHtml += '</div>';
 
@@ -474,8 +519,51 @@
 
         document.querySelectorAll('.dropdown-menu').forEach(function (element) {
             element.addEventListener('click', function (e) {
-                // Menghentikan event klik agar tidak memicu penutupan dropdown otomatis
                 e.stopPropagation();
+            });
+        });
+        function filterByTingkat(tingkat) {
+            const rows = document.querySelectorAll('tbody tr');
+
+            rows.forEach((row) => {
+                const kelasText = row.cells[3].innerText.trim();
+
+                if (tingkat === 'all') {
+                    row.style.display = '';
+                } else {
+                    if (kelasText.startsWith(tingkat)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+
+            document.getElementById('select-all').checked = false;
+            toggleSelectAll();
+        }
+        // filter
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabLinks = document.querySelectorAll('button[data-bs-toggle="tab"]');
+
+            tabLinks.forEach((tab) => {
+                tab.addEventListener('shown.bs.tab', function (event) {
+                    const targetId = event.target.getAttribute('data-bs-target');
+
+                    document.querySelectorAll('.filter-group').forEach((group) => {
+                        group.classList.add('d-none');
+                    });
+
+                    if (targetId === '#x10') {
+                        document.querySelector('.group-x').classList.remove('d-none');
+                    } else if (targetId === '#xi11') {
+                        document.querySelector('.group-xi').classList.remove('d-none');
+                    } else if (targetId === '#xii12') {
+                        document.querySelector('.group-xii').classList.remove('d-none');
+                    }
+
+                    resetFilterKelas();
+                });
             });
         });
     </script>

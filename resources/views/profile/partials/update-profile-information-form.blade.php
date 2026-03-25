@@ -17,11 +17,26 @@
         @csrf
         @method('patch')
 
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+    <div class="{{ !in_array(Auth::user()->role, ['petugas', 'kepper']) ? 'md:col-span-9' : 'md:col-span-12' }}">
+        <x-input-label for="name" :value="__('Name')" />
+        <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
+        <x-input-error class="mt-2" :messages="$errors->get('name')" />
+    </div>
+
+    @if(!in_array(Auth::user()->role, ['petugas', 'kepper'])) 
+    <div class="md:col-span-3">
+        <x-input-label for="kelas" :value="__('Kelas')" />
+        <x-text-input 
+            id="kelas" 
+            type="text" 
+            class="mt-1 md-1 block w-full bg-gray-100 cursor-not-allowed border-gray-300 text-center" 
+            :value="$user->kelas ?? '-'" 
+            disabled 
+        />
+    </div>
+    @endif
+    </div>
         
         <div>
             <x-input-label for="no_hp" :value="__('no_hp')" />
@@ -54,9 +69,16 @@
             @endif
         </div>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
+        <div class="flex items-center gap-2">
+            
+            {{-- <a 
+    href="{{ in_array(Auth::user()->role, ['petugas', 'kepper', 'admin']) ? route('dashboard') : route('userdashboard') }}" 
+    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
+>
+    {{ __('Kembali') }}
+</a> --}}
+    <x-primary-button>{{ __('Save') }}</x-primary-button>
+            
             @if (session('status') === 'profile-updated')
                 <p
                     x-data="{ show: true }"

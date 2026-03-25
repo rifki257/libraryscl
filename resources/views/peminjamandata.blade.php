@@ -103,9 +103,16 @@
                                 <table class="table table-striped align-middle">
                                     <thead>
                                         <tr>
-                                            <th id="th-checkbox" class="checkbox-column text-center d-none">
-    <input type="checkbox" id="check-all" class="form-check-input" />
-</th>
+                                            <th
+                                                id="th-checkbox"
+                                                class="checkbox-column text-center d-none"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    id="check-all"
+                                                    class="form-check-input"
+                                                />
+                                            </th>
                                             <th>ID Pinjam</th>
                                             <th>Peminjam</th>
                                             <th>Judul Buku</th>
@@ -126,14 +133,20 @@
         $jmlHari = $isTelat ? $hariIni->diffInDays($tglJatuhTempo) : 0;
         $totalDenda = $jmlHari * 150000;
         $sudahDiajukan = ($data->status === 'proses');
-        // Filter ini sudah benar
         $isFilteringTerlambat = request('status') == 'terlambat' || request('filter') == 'denda';
     @endphp
-                                           <tr class="item-peminjaman {{ $isTelat ? 'status-terlambat' : 'status-aman' }}">
-        {{-- Gunakan $isFilteringTerlambat yang didefinisikan di atas --}}
-        <td class="checkbox-column text-center d-none">
-    <input type="checkbox" class="form-check-input select-peminjaman" value="{{ $data->id }}" />
-</td>
+                                            <tr
+                                                class="item-peminjaman {{ $isTelat ? 'status-terlambat' : 'status-aman' }}"
+                                            >
+                                                <td
+                                                    class="checkbox-column text-center d-none"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        class="form-check-input select-peminjaman"
+                                                        value="{{ $data->id }}"
+                                                    />
+                                                </td>
                                                 <td>
                                                     <code
                                                         >#{{ $data->id_pinjam }}</code
@@ -425,7 +438,6 @@
 
             function applyAllFilters() {
                 const searchText = searchInput.value.toLowerCase();
-                // Ambil hanya 1 value (karena kita setting hanya 1 yang bisa aktif)
                 const activeFilter = Array.from(checkboxes).find(
                     (i) => i.checked
                 )?.value;
@@ -440,8 +452,6 @@
                     const textContent = row.innerText.toLowerCase();
                     const textMatch = textContent.includes(searchText);
 
-                    // Logika: Jika tidak ada filter aktif, tampilkan semua.
-                    // Jika ada, harus sesuai dengan class yang ada di row.
                     const filterMatch =
                         !activeFilter || row.classList.contains(activeFilter);
 
@@ -449,11 +459,9 @@
                 });
             }
 
-            // --- Logika Eksklusif Checkbox (Hanya 1 yang boleh aktif) ---
             checkboxes.forEach((box) => {
                 box.addEventListener('change', function () {
                     if (this.checked) {
-                        // Uncheck semua box lain jika box ini dicentang
                         checkboxes.forEach((otherBox) => {
                             if (otherBox !== this) otherBox.checked = false;
                         });
@@ -481,7 +489,6 @@
                 });
             }
 
-            // --- Notifikasi SweetAlert ---
             @if (session('success'))
             Swal.fire({
                 icon: 'success',
@@ -508,12 +515,12 @@
             const url = `https://wa.me/${formattedHp}?text=${encodeURIComponent(pesan)}`;
             window.open(url, '_blank');
         }
-        $('.form-check-input').on('change', function() {
-    if ($('#filter-terlambat').is(':checked')) { // Ganti ID sesuai checkbox filter Anda
-        $('.checkbox-column').removeClass('d-none');
-    } else {
-        $('.checkbox-column').addClass('d-none');
-    }
-});
+        $('.form-check-input').on('change', function () {
+            if ($('#filter-terlambat').is(':checked')) {
+                $('.checkbox-column').removeClass('d-none');
+            } else {
+                $('.checkbox-column').addClass('d-none');
+            }
+        });
     </script>
 </x-app-layout>

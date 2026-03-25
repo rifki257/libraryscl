@@ -75,7 +75,14 @@ class UserController extends Controller
 
         return back()->with('status', 'User baru berhasil didaftarkan!');
     }
+    // delete
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->ids);
+        User::whereIn('id', $ids)->delete();
 
+        return redirect()->back()->with('success', count($ids) . ' akun berhasil dihapus.');
+    }
     /**
      * Display the specified resource.
      */

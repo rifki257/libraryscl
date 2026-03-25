@@ -1,8 +1,29 @@
 <nav
     x-data="{ open: false, userDropdown: false }"
-    class="bg-white border-b border-gray-100"
+    class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm"
 >
-    <!-- Primary Navigation Menu -->
+    @auth
+        @if (Auth::user()->role === 'anggota')
+            <div class="bg-gray-50 border-b border-gray-100 py-2">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-end space-x-6 text-xs font-medium text-gray-600">
+                        <a href="#"  class="hover:text-indigo-600 transition-colors">Aturan & Denda</a>
+                        <a href="#" class="hover:text-indigo-600 transition-colors">Hubungi Pustakawan</a>
+                    </div>
+                </div>
+            </div>
+        @endif
+        
+    @else
+        <div class="bg-gray-50 border-b border-gray-100 py-2">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-end space-x-6 text-xs font-medium text-gray-600">
+                    <a href="#" class="hover:text-indigo-600 transition-colors">Aturan & Denda</a>
+                    <a href="#" class="hover:text-indigo-600 transition-colors">Hubungi Pustakawan</a>
+                </div>
+            </div>
+        </div>
+    @endauth
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
@@ -26,7 +47,6 @@
                 @endauth
             </div>
 
-            <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown
                     align="right"
@@ -37,7 +57,6 @@
                         <button
                             class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                         >
-                            {{-- Cek apakah ada user, jika tidak tampilkan 'Guest' --}}
                             <div>
                                 {{ Auth::check() ? Auth::user()->name : 'Guest' }}
                             </div>
@@ -52,9 +71,9 @@
 
                     <x-slot name="content">
                         @auth
-                            {{-- Muncul jika SUDAH login --}}
                             <x-dropdown-link
                                 :href="route('profile.edit')"
+                                class="pt-3"
                                 >{{ __('Profile') }}</x-dropdown-link
                             >
                             <form method="POST" action="{{ route('logout') }}">
@@ -70,7 +89,6 @@
                                 </x-dropdown-link>
                             </form>
                         @else
-                            {{-- Muncul jika BELUM login --}}
                             <x-dropdown-link
                                 :href="route('login')"
                                 >{{ __('Log In') }}</x-dropdown-link

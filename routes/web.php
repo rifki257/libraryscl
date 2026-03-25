@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/register-petugas', [UserController::class, 'store'])->name('register.petugas.store');
         Route::resource('users', UserController::class);
         Route::put('/user/bulk-update-kelas', [UserController::class, 'bulkUpdateKelas'])->name('user.bulkUpdateKelas');
+        Route::delete('/user/bulk-delete', [UserController::class, 'bulkDestroy'])->name('user.bulkDestroy');
 
         // Manajemen Buku
         Route::get('/buku', [BukuController::class, 'index'])->name('buku');
