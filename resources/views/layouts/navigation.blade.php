@@ -1,25 +1,41 @@
 <nav
-    x-data="{ open: false, userDropdown: false }"
+    x-data="{ open: false, userDropdown: false, showModal: false }"
     class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm"
 >
     @auth
         @if (Auth::user()->role === 'anggota')
             <div class="bg-gray-50 border-b border-gray-100 py-2">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex justify-end space-x-6 text-xs font-medium text-gray-600">
-                        <a href="#"  class="hover:text-indigo-600 transition-colors">Aturan & Denda</a>
-                        <a href="#" class="hover:text-indigo-600 transition-colors">Hubungi Pustakawan</a>
+                    <div
+                        class="flex justify-end space-x-6 text-xs font-medium text-gray-600"
+                    >
+                        <a
+                            href="#"
+                            class="hover:text-indigo-600 transition-colors"
+                            >Aturan & Denda</a
+                        >
+                        <a
+                            href="#"
+                            class="hover:text-indigo-600 transition-colors"
+                            >Hubungi Pustakawan</a
+                        >
                     </div>
                 </div>
             </div>
         @endif
-        
+
     @else
         <div class="bg-gray-50 border-b border-gray-100 py-2">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-end space-x-6 text-xs font-medium text-gray-600">
-                    <a href="#" class="hover:text-indigo-600 transition-colors">Aturan & Denda</a>
-                    <a href="#" class="hover:text-indigo-600 transition-colors">Hubungi Pustakawan</a>
+                <div
+                    class="flex justify-end space-x-6 text-xs font-medium text-gray-600"
+                >
+                    <a href="#" class="hover:text-indigo-600 transition-colors"
+                        >Aturan & Denda</a
+                    >
+                    <a href="#" class="hover:text-indigo-600 transition-colors"
+                        >Hubungi Pustakawan</a
+                    >
                 </div>
             </div>
         </div>
@@ -74,8 +90,40 @@
                             <x-dropdown-link
                                 :href="route('profile.edit')"
                                 class="pt-3"
-                                >{{ __('Profile') }}</x-dropdown-link
-                            >
+                                >{{ __('Profile') }}
+                            </x-dropdown-link>
+                            {{-- anggota --}}
+                            @if (Auth::user()->role === 'anggota')
+                                <x-dropdown-link
+                                    :href="route('userdashboard')"
+                                    :active="request()->routeIs('userdashboard')"
+                                    class="w-20 justify-center"
+                                >
+                                    {{ __('Dashboard') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link
+                                    :href="route('katalog')"
+                                    :active="request()->routeIs('katalog')"
+                                    class="w-20 justify-center"
+                                >
+                                    {{ __('Buku') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link
+                                    :href="route('mypinjaman')"
+                                    :active="request()->routeIs('mypinjaman')"
+                                    class="w-20 justify-center"
+                                >
+                                    {{ __('Dipinjam') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link
+                                    :href="route('mybalik')"
+                                    :active="request()->routeIs('mybalik')"
+                                    class="w-20 justify-center"
+                                >
+                                    {{ __('Dikembalikan') }}
+                                </x-dropdown-link>
+                            @endif
+                            {{-- akhir anggota --}}
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <x-dropdown-link
@@ -89,10 +137,9 @@
                                 </x-dropdown-link>
                             </form>
                         @else
-                            <x-dropdown-link
-                                :href="route('login')"
-                                >{{ __('Log In') }}</x-dropdown-link
-                            >
+                            <x-dropdown-link :href="route('login')"
+                                >{{ __('Log In') }}
+                            </x-dropdown-link>
                         @endauth
                     </x-slot>
                 </x-dropdown>
@@ -133,7 +180,6 @@
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
     <div :class="{ block: open, hidden: !open }" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             @auth

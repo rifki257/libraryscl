@@ -20,14 +20,24 @@ class KatalogController extends Controller
         return view('katalog', compact('dataBuku'));
     }
 
-    public function katalog(Request $request)
-    {
-        $bukus = \App\Models\Buku::all();
-        if ($request->ajax()) {
-            return view('partials.katalog_isi', compact('bukus'))->render();
-        }
-        return view('katalog', compact('bukus'));
+   public function katalog(Request $request)
+{
+    $query = $request->input('q');
+
+    // Filter berdasarkan judul, penulis, atau penerbit
+    $bukus = \App\Models\Buku::when($query, function ($q) use ($query) {
+    $q->where('judul', 'like', "%{$query}%")
+      ->orWhere('penulis', 'like', "%{$query}%")
+      ->orWhere('penerbit', 'like', "%{$query}%");
+    })->get();
+
+    // Jika request datang dari AJAX (pencarian real-time)
+    if ($request->ajax()) {
+        return view('partials.katalog_isi', compact('bukus'))->render();
     }
+
+    return view('katalog', compact('bukus'));
+}
 
     /**
      * Show the form for creating a new resource.

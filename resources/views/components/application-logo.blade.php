@@ -1,4 +1,4 @@
     <img src="{{ asset('images/foto.png') }}" 
-        style="height: 55px; width: auto;" 
+        style="height: 115px; width: auto;" 
         {{ $attributes->merge(['class' => 'block']) }} 
         alt="Logo Perpustakaan">

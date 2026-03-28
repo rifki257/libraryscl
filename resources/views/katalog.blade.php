@@ -37,7 +37,7 @@
                 class="group relative overflow-hidden rounded-xl h-40 shadow-md"
             >
                 <img
-                    src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=500"
+                    src="{{ asset('images/jurusan yg ini.png') }}"
                     alt="Komik"
                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
@@ -78,7 +78,7 @@
                 class="group relative overflow-hidden rounded-xl h-40 shadow-md"
             >
                 <img
-                    src="https://images.unsplash.com/photo-1519074063912-ad2fe3f5198e?q=80&w=500"
+                    src="{{ asset('images/buku in lah .png') }}"
                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div
