@@ -9,6 +9,64 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('akun user') }}
             </h2>
+            <div class="gap-2">
+                <button
+                    id="btn-bulk-edit"
+                    class="btn btn-warning d-none"
+                    onclick="bulkEditKelas()"
+                >
+                    Edit Kelas (<span id="count-selected">0</span>)
+                </button>
+                <button
+                    id="btn-bulk-delete"
+                    class="btn btn-danger d-none"
+                    onclick="bulkDeleteUser()"
+                >
+                    <i class="bi bi-trash"></i> Hapus Akun (<span
+                        id="count-selected-delete"
+                        >0</span
+                    >)
+                </button>
+            </div>
+
+            <ul class="nav nav-tabs" id="kelasTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link active"
+                        id="x10-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#x10"
+                        type="button"
+                        role="tab"
+                    >
+                        Kelas X
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link"
+                        id="xi11-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#xi11"
+                        type="button"
+                        role="tab"
+                    >
+                        Kelas XI
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link"
+                        id="xii12-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#xii12"
+                        type="button"
+                        role="tab"
+                    >
+                        Kelas XII
+                    </button>
+                </li>
+            </ul>
 
             <div class="flex items-center gap-2">
                 <div class="input-group" style="width: 300px">
@@ -126,67 +184,11 @@
     </x-slot>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div
+                class="overflow-hidden shadow-sm sm:rounded-lg"
+                style="background-color: rgb(235, 235, 235)"
+            >
                 <div class="p-6 text-gray-900">
-                    <div class="mb-4 gap-2">
-                        <button
-                            id="btn-bulk-edit"
-                            class="btn btn-warning d-none"
-                            onclick="bulkEditKelas()"
-                        >
-                            Edit Kelas (<span id="count-selected">0</span>)
-                        </button>
-                        <button
-                            id="btn-bulk-delete"
-                            class="btn btn-danger d-none"
-                            onclick="bulkDeleteUser()"
-                        >
-                            <i class="bi bi-trash"></i> Hapus Akun (<span
-                                id="count-selected-delete"
-                                >0</span
-                            >)
-                        </button>
-                    </div>
-
-                    <ul class="nav nav-tabs mb-4" id="kelasTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button
-                                class="nav-link active"
-                                id="x10-tab"
-                                data-bs-toggle="tab"
-                                data-bs-target="#x10"
-                                type="button"
-                                role="tab"
-                            >
-                                Kelas X
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button
-                                class="nav-link"
-                                id="xi11-tab"
-                                data-bs-toggle="tab"
-                                data-bs-target="#xi11"
-                                type="button"
-                                role="tab"
-                            >
-                                Kelas XI
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button
-                                class="nav-link"
-                                id="xii12-tab"
-                                data-bs-toggle="tab"
-                                data-bs-target="#xii12"
-                                type="button"
-                                role="tab"
-                            >
-                                Kelas XII
-                            </button>
-                        </li>
-                    </ul>
-
                     <div class="tab-content" id="kelasTabContent">
                         <div
                             class="tab-pane fade show active"
@@ -352,23 +354,18 @@
             const checkedCount = checkedBoxes.length;
 
             if (checkedCount > 0) {
-                // Update angka di kedua tombol
                 countEdit.innerText = checkedCount;
                 countDelete.innerText = checkedCount;
 
-                // Tampilkan tombol Edit (semua kelas)
                 btnBulkEdit.classList.remove('d-none');
 
-                // Tampilkan tombol Hapus (hanya jika di tab Kelas XII)
                 if (activeTab === '#xii12') {
                     btnBulkDelete.classList.remove('d-none');
-                    // Tambahkan class d-inline-block jika tombol berdempetan
                     btnBulkDelete.classList.add('d-inline-block');
                 } else {
                     btnBulkDelete.classList.add('d-none');
                 }
             } else {
-                // Sembunyikan semua jika tidak ada yang dipilih
                 btnBulkEdit.classList.add('d-none');
                 btnBulkDelete.classList.add('d-none');
             }

@@ -97,7 +97,7 @@
     </x-slot>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="overflow-hidden shadow-sm sm:rounded-lg" style="background-color: rgb(235, 235, 235)">
                 <div class="p-6 text-gray-900">
                     <div class="container">
                         <div class="card-body">
@@ -172,7 +172,7 @@
             const searchInput = document.getElementById('search-input');
             const btnResetSearch = document.getElementById('reset-search');
             const btnResetFilter = document.getElementById('btn-reset-filter');
-            const filters = document.querySelectorAll('.filter-checkbox'); // Ini adalah radio buttons
+            const filters = document.querySelectorAll('.filter-checkbox');
             const rows = document.querySelectorAll('.item-peminjaman');
             const dropdownToggle = document.querySelector(
                 '[data-bs-toggle="dropdown"]'
@@ -181,13 +181,11 @@
             function applyAllFilters() {
                 const searchText = searchInput.value.toLowerCase();
 
-                // Mencari radio button mana yang aktif
                 let activeFilterValue = null;
                 filters.forEach((f) => {
                     if (f.checked) activeFilterValue = f.value;
                 });
 
-                // Toggle tombol reset search
                 if (searchText.length > 0) {
                     btnResetSearch.classList.remove('d-none');
                 } else {
@@ -198,8 +196,6 @@
                     const textContent = row.innerText.toLowerCase();
                     const textMatch = textContent.includes(searchText);
 
-                    // Logika Filter: Jika tidak ada filter aktif, tampilkan semua yang cocok dengan text
-                    // Jika ada filter aktif, cek apakah row punya class tersebut
                     const filterMatch =
                         !activeFilterValue ||
                         row.classList.contains(activeFilterValue);
@@ -212,14 +208,12 @@
                 });
             }
 
-            // Fungsi untuk menutup dropdown secara manual jika bootstrap instance gagal dipanggil
             function closeDropdown() {
                 if (window.bootstrap && bootstrap.Dropdown) {
                     const instance =
                         bootstrap.Dropdown.getOrCreateInstance(dropdownToggle);
                     instance.hide();
                 } else {
-                    // Cara fallback jika bootstrap JS belum siap
                     dropdownToggle.click();
                 }
             }

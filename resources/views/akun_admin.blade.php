@@ -6,51 +6,45 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('akun admin') }}
         </h2>
+        <div class="flex justify-end">
+            <div class="input-group" style="max-width: 350px">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input
+                    type="text"
+                    id="search-input"
+                    name="search"
+                    class="form-control border-start-0 border-end-0 ps-0 shadow-none"
+                    placeholder="Cari nama, email, no hp..."
+                    onkeyup="searchTable()"
+                    autocomplete="off"
+                />
+                <button
+                    class="btn bg-white border border-start-0 d-none align-items-center gap-1"
+                    type="button"
+                    id="reset-search"
+                    onclick="resetTable()"
+                    style="z-index: 5"
+                >
+                    <i class="bi bi-x-circle-fill text-danger"></i>
+                    <span style="font-size: 0.8rem" class="text-muted fw-bold"
+                        >Reset</span
+                    >
+                </button>
+            </div>
+        </div>
     </x-slot>
-    
+
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div
+                class="overflow-hidden shadow-sm sm:rounded-lg"
+                style="background-color: rgb(235, 235, 235)"
+            >
                 <div class="p-6 text-gray-900">
                     <div class="container">
                         <div class="card-body">
-                            <div class="flex justify-end mb-4">
-                                <div
-                                    class="input-group"
-                                    style="max-width: 350px"
-                                >
-                                    <span
-                                        class="input-group-text bg-white border-end-0"
-                                    >
-                                        <i class="bi bi-search text-muted"></i>
-                                    </span>
-                                    <input
-                                        type="text"
-                                        id="search-input"
-                                        name="search"
-                                        class="form-control border-start-0 border-end-0 ps-0 shadow-none"
-                                        placeholder="Cari nama, email, no hp..."
-                                        onkeyup="searchTable()"
-                                        autocomplete="off"
-                                    />
-                                    <button
-                                        class="btn bg-white border border-start-0 d-none align-items-center gap-1"
-                                        type="button"
-                                        id="reset-search"
-                                        onclick="resetTable()"
-                                        style="z-index: 5"
-                                    >
-                                        <i
-                                            class="bi bi-x-circle-fill text-danger"
-                                        ></i>
-                                        <span
-                                            style="font-size: 0.8rem"
-                                            class="text-muted fw-bold"
-                                            >Reset</span
-                                        >
-                                    </button>
-                                </div>
-                            </div>
                             <div id="tabel-akun" class="mt-4">
                                 <table class="table table-striped">
                                     <thead>

@@ -64,15 +64,43 @@
         transform: scale(0.9);
         pointer-events: none;
     }
-    /* ini yg buat tombol */
-    .nav-btn.is-available {
-        display: flex !important; /* Memastikan element-nya ada */
+/* Style untuk tombol agar melayang */
+    .nav-btn {
+        position: absolute;
+        top: 45%; /* Posisi vertikal di tengah */
+        transform: translateY(-50%);
+        z-index: 50; /* Pastikan di atas banner dan kartu */
+        background-color: rgba(255, 255, 255, 0.9); /* Warna background tombol */
+        color: #1a1a1a;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: none; /* Default sembunyi, muncul via JS class is-available */
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
     }
 
-    /* Tombol hanya muncul saat AREA (.group) di-hover */
-    .group:hover .nav-btn.is-available {
-        opacity: 1;
-        pointer-events: auto;
+    .nav-btn:hover {
+        background-color: #ffffff;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    /* Posisi spesifik kiri dan kanan */
+    .btn-prev {
+        left: 20px; /* Jarak dari sisi kiri (akan menimpa banner) */
+    }
+
+    .btn-next {
+        right: 20px; /* Jarak dari sisi kanan */
+    }
+
+    /* Class untuk menampilkan tombol (dipanggil JS) */
+    .nav-btn.is-available {
+        display: flex !important;
     }
 </style>
 <div class="max-w-screen-2xl mx-auto py-12 relative group">

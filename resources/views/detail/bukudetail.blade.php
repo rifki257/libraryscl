@@ -35,6 +35,14 @@
                             <tbody>
                                 <tr>
                                     <th class="bg-light" style="width: 30%">
+                                        Id Buku
+                                    </th>
+                                    <td class="text-capitalize">
+                                        {{ $buku->id_buku }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light" style="width: 30%">
                                         Judul
                                     </th>
                                     <td class="text-capitalize">
