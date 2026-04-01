@@ -69,12 +69,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/my-peminjaman', [PeminjamanController::class, 'history'])->name('mypinjaman');
     Route::put('/peminjaman/ajukan-kembali/{id}', [PeminjamanController::class, 'ajukanKembali'])
         ->name('peminjaman.ajukan_kembali');
-        Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
-// Jika di route tulisannya 'history', maka di controller harus 'public function history()'
-Route::get('/my-history', [PeminjamanController::class, 'history'])->name('peminjaman.history');
+    Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
+    Route::get('/my-history', [PeminjamanController::class, 'history'])->name('peminjaman.history');
 
-    // 7. ADMIN PENGEMBALIAN
-    Route::put('/admin/konfirmasi-kembali/{id}', [PeminjamanController::class, 'konfirmasi_kembali'])->name('admin.konfirmasi_kembali');
 
     // 8. AKUN ADMIN DAN USER
     Route::middleware(['auth'])->group(function () {
@@ -93,11 +90,10 @@ Route::get('/my-history', [PeminjamanController::class, 'history'])->name('pemin
     // 10. PENGEMBALIAN
     Route::middleware(['auth'])->group(function () {
         Route::get('/pengembalian', [PengembalianController::class, 'index'])->name('pengembalian');
-    Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
-    // Route ini yang akan dipanggil di tombol Blade
-    Route::put('/konfirmasi-kembali/{id_pinjam}', [PengembalianController::class, 'konfirmasi'])
-        ->name('konfirmasi_kembali');
-});
+        Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
+        Route::put('/admin/konfirmasi-pengembalian/{id_pinjam}', [PengembalianController::class, 'konfirmasi'])
+            ->name('admin.konfirmasi_kembali');
+    });
     // 11. BALIK
     Route::get('/mybalik', [UserpengembalianController::class, 'history'])->name('mybalik');
     Route::post('/mybalik/store/{id}', [UserpengembalianController::class, 'store'])->name('mybalik.store');

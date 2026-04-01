@@ -20,7 +20,7 @@
             >
                 <div class="row g-4">
                     @forelse ($sedangDipinjam as $item)
-    @php
+                        @php
         $tglJatuhTempo = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
         $isPending = $item->status == 'pending'; // Pastikan status di DB adalah 'pending'
         
@@ -28,74 +28,121 @@
             ? asset('storage/' . $item->buku->gambar) 
             : asset('images/default-book.png');
     @endphp
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div
+                                class="card shadow border-0 h-100 text-white position-relative overflow-hidden"
+                                style="border-radius: 15px; min-height: 380px; {{ $isPending ? 'filter: grayscale(1); opacity: 0.8;' : '' }}"
+                            >
+                                <div
+                                    class="position-absolute inset-0 w-100 h-100"
+                                    style="background-image: linear-gradient(to top, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.4) 60%), url('{{ $gambarBuku }}'); 
+                background-size: cover; background-position: center; z-index: 1;"
+                                ></div>
 
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="card shadow border-0 h-100 text-white position-relative overflow-hidden"
-             style="border-radius: 15px; min-height: 380px; {{ $isPending ? 'filter: grayscale(1); opacity: 0.8;' : '' }}">
-            
-            <div class="position-absolute inset-0 w-100 h-100"
-                 style="background-image: linear-gradient(to top, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.4) 60%), url('{{ $gambarBuku }}'); 
-                 background-size: cover; background-position: center; z-index: 1;">
-            </div>
+                                <div
+                                    class="card-body d-flex flex-column justify-content-end p-4 position-relative"
+                                    style="z-index: 2"
+                                >
+                                    <div class="mb-3">
+                                        @if ($isPending)
+                                            <span
+                                                class="badge bg-secondary px-3 py-2 shadow-sm"
+                                            >
+                                                <i
+                                                    class="bi bi-hourglass-split me-1"
+                                                ></i>
+                                                Menunggu Konfirmasi
+                                            </span>
+                                        @else
+                                            <span
+                                                class="badge bg-primary px-3 py-2 shadow-sm"
+                                            >
+                                                <i class="bi bi-book me-1"></i>
+                                                Sedang Dipinjam
+                                            </span>
+                                        @endif
+                                    </div>
 
-            <div class="card-body d-flex flex-column justify-content-end p-4 position-relative" style="z-index: 2">
-                <div class="mb-3">
-                    @if ($isPending)
-                        <span class="badge bg-secondary px-3 py-2 shadow-sm">
-                            <i class="bi bi-hourglass-split me-1"></i> Menunggu Konfirmasi
-                        </span>
-                    @else
-                        <span class="badge bg-primary px-3 py-2 shadow-sm">
-                            <i class="bi bi-book me-1"></i> Sedang Dipinjam
-                        </span>
-                    @endif
-                </div>
+                                    <h5
+                                        class="card-title fw-bold text-white mb-2 fs-4"
+                                    >
+                                        {{ $item->buku->judul }}
+                                    </h5>
 
-                <h5 class="card-title fw-bold text-white mb-2 fs-4">{{ $item->buku->judul }}</h5>
+                                    <div class="text-white-50 small mb-3">
+                                        <div
+                                            class="d-flex align-items-center mb-1"
+                                        >
+                                            <i
+                                                class="bi bi-calendar-check me-2"
+                                            ></i>
+                                            <span
+                                                >Pinjam: {{ \Carbon\Carbon::parse($item->tgl_pinjam)->format('d M Y') }}</span
+                                            >
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <i
+                                                class="bi bi-calendar-x me-2"
+                                            ></i>
+                                            <span
+                                                >Batas: {{ $tglJatuhTempo->format('d M Y') }}</span
+                                            >
+                                        </div>
+                                    </div>
 
-                <div class="text-white-50 small mb-3">
-                    <div class="d-flex align-items-center mb-1">
-                        <i class="bi bi-calendar-check me-2"></i>
-                        <span>Pinjam: {{ \Carbon\Carbon::parse($item->tgl_pinjam)->format('d M Y') }}</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-calendar-x me-2"></i>
-                        <span>Batas: {{ $tglJatuhTempo->format('d M Y') }}</span>
-                    </div>
-                </div>
-
-                <div class="mt-2">
-                    @if ($isPending)
-                        {{-- TOMBOL PEMBATALAN --}}
-                        <form action="{{ route('peminjaman.cancel', $item->id_pinjam) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-outline-light w-100 py-2 fw-bold" 
-                                    onclick="return confirm('Yakin ingin membatalkan pengajuan ini?')">
-                                <i class="bi bi-x-circle me-1"></i> Batalkan Peminjaman
-                            </button>
-                        </form>
-                    @else
-                        {{-- TOMBOL PENGEMBALIAN (Hanya untuk yang sudah dikonfirmasi admin) --}}
-                        <form action="{{ route('peminjaman.ajukan_kembali', $item->id_pinjam) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-dark shadow">
-                                <i class="bi bi-arrow-return-left me-1"></i> Ajukan Pengembalian
-                            </button>
-                        </form>
-                    @endif
+                                    <div class="mt-2">
+                                        @if ($isPending)
+                                            {{-- Form Pembatalan --}}
+                                            <form
+                                                id="form-cancel-{{ $item->id_pinjam }}"
+                                                action="{{ route('peminjaman.cancel', $item->id_pinjam) }}"
+                                                method="POST"
+                                                style="display: none"
+                                            >
+                                                @csrf
+                                                @method ('DELETE')
+                                            </form>
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-light w-100 py-2 fw-bold"
+                                                onclick="konfirmasiBatal('{{ $item->id_pinjam }}')"
+                                            >
+                                                <i
+                                                    class="bi bi-x-circle me-1"
+                                                ></i>
+                                                Batalkan Peminjaman
+                                            </button>
+                                        @else
+                                            {{-- Tombol Pengembalian (Route konfirmasi_kembali) --}}
+                                            <form
+                                                id="form-kembali-{{ $item->id_pinjam }}"
+                                                action="{{ route('peminjaman.ajukan_kembali', $item->id_pinjam) }}"
+                                                method="POST"
+                                                style="display: none"
+                                            >
+                                                @csrf
+                                                @method ('PUT')
+                                            </form>
+                                            <button
+                                                type="button"
+                                                onclick="konfirmasiKembali('{{ $item->id_pinjam }}', 0, 0)"
+                                                class="btn btn-warning w-100 py-2 fw-bold text-dark shadow"
+                                            >
+                                                <i
+                                                    class="bi bi-arrow-return-left me-1"
+                                                ></i>
+                                                Ajukan Pengembalian
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                    @endforelse
                 </div>
             </div>
         </div>
-    </div>
-@empty
-    @endforelse
-                </div>
-            </div>
-        </div>
-        
-    </div>
     </div>
     <style>
         .card-custom {
@@ -171,6 +218,24 @@
                 title: 'Detail Keterlambatan',
                 html: `<div class="text-start">Total Hari: <b>${hari} Hari</b><br>Total Denda: <b class="text-danger">Rp ${new Intl.NumberFormat('id-ID').format(nominal)}</b></div>`,
                 icon: 'info',
+            });
+        }
+
+        function konfirmasiBatal(idPinjam) {
+            Swal.fire({
+                title: 'Batalkan Peminjaman?',
+                text: 'Pesanan buku Anda akan dibatalkan secara permanen.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Batalkan!',
+                cancelButtonText: 'Kembali',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Menjalankan form hidden berdasarkan ID
+                    document.getElementById(`form-cancel-${idPinjam}`).submit();
+                }
             });
         }
     </script>

@@ -13,9 +13,15 @@ class PeminjamanController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function indexAdmin()
     {
-        //
+        // Rekomendasi: Status 'proses' harus tetap muncul di sini agar tidak "hilang"
+        $semuaPeminjam = Peminjaman::with(['user', 'buku'])
+            ->whereIn('status', ['dipinjam', 'proses', 'terlambat'])
+            ->latest()
+            ->get();
+
+        return view('admin.peminjaman.index', compact('semuaPeminjam'));
     }
 
     /**
@@ -133,18 +139,6 @@ class PeminjamanController extends Controller
      * Menghapus/Membatalkan pengajuan peminjaman.
      */
 
-    public function ajukan_kembali(Request $request, $id)
-    {
-        $peminjaman = Peminjaman::findOrFail($id);
-
-        $peminjaman->update([
-            'status' => 'proses',
-            'denda' => $request->denda,
-        ]);
-
-        return redirect()->back()->with('success', 'Pengembalian diajukan. Silakan kembalikan buku ke perpustakaan.');
-    }
-
     public function pinjam($id)
     {
         $buku = Buku::findOrFail($id);
@@ -153,16 +147,19 @@ class PeminjamanController extends Controller
             return redirect()->back()->with('error', 'Maaf, jumlah buku sudah habis!');
         }
     }
-    public function ajukanKembali(Request $request, $id)
+
+    public function ajukanKembali($id)
     {
-        $peminjaman = \App\Models\Peminjaman::findOrFail($id);
+        $peminjaman = Peminjaman::findOrFail($id);
+
+        // User hanya mengubah status menjadi 'proses'
         $peminjaman->update([
-            'status' => 'proses',
-            'denda'  => $request->denda ?? 0
+            'status' => 'proses'
         ]);
 
-        return redirect()->back()->with('success', 'Berhasil mengajukan pengembalian. Silakan temui petugas perpustakaan.');
+        return redirect()->back()->with('success', 'Pengembalian berhasil diajukan. Tunggu konfirmasi admin.');
     }
+
     public function konfirmasi_kembali($id_pinjam)
     {
         // Cari data berdasarkan ID
@@ -202,14 +199,18 @@ class PeminjamanController extends Controller
     }
 
     public function destroy($id)
-{
-    $peminjaman = Peminjaman::where('id_pinjam', $id)
-        ->where('id', auth()->id())
-        ->where('status', 'pending') // Hanya boleh hapus jika belum dikonfirmasi
-        ->firstOrFail();
+    {
+        $peminjaman = Peminjaman::findOrFail($id);
 
-    $peminjaman->delete();
+        // Pastikan hanya bisa dibatalkan jika belum disetujui admin (masih pending)
+        if ($peminjaman->status == 'pending') {
+            $peminjaman->update([
+                'status' => 'dibatalkan'
+            ]);
 
-    return redirect()->back()->with('success', 'Pengajuan berhasil dibatalkan.');
-}
+            return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan.');
+        }
+
+        return redirect()->back()->with('error', 'Gagal membatalkan. Status buku sudah berubah.');
+    }
 }

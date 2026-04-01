@@ -45,4 +45,8 @@ class Peminjaman extends Model
     {
         return $this->belongsTo(User::class, 'id', 'id');
     }
+    public function pengembalian()
+    {
+        return $this->hasOne(Pengembalian::class, 'id_pinjam', 'id_pinjam');
+    }
 }

@@ -20,19 +20,23 @@
                 >
                     <li class="nav-item" role="presentation">
                         <button
-    class="nav-link active fw-bold text-gray-600"
-    id="confirmation-tab"
-    data-bs-toggle="tab"
-    data-bs-target="#confirmation-pane"
-    type="button"
-    role="tab"
->
-    <i class="bi bi-check2-circle me-1"></i> Konfirmasi Pengembalian
-    
-    <span class="badge bg-danger ms-1" id="pending-count">
-        {{ $totalKonfirmasi }}
-    </span>
-</button>
+                            class="nav-link active fw-bold text-gray-600"
+                            id="confirmation-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#confirmation-pane"
+                            type="button"
+                            role="tab"
+                        >
+                            <i class="bi bi-check2-circle me-1"></i> Konfirmasi
+                            Pengembalian
+
+                            <span
+                                class="badge bg-danger ms-1"
+                                id="pending-count"
+                            >
+                                {{ $totalKonfirmasi }}
+                            </span>
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button
@@ -133,23 +137,36 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="tab-content" id="returnTabContent">
-                <div
-                    class="tab-pane fade show active"
-                    id="confirmation-pane"
-                    role="tabpanel"
-                    tabindex="0"
-                >
-                    @include ('partials.konfirmasi_pengembalian')
-                </div>
+            <div
+                class="overflow-hidden shadow-sm sm:rounded-lg"
+                style="background-color: rgb(235, 235, 235)"
+            >
+                <div class="p-6 text-gray-900">
+                    <div class="container">
+                        <div class="card-body">
+                            <div id="tabel-buku" class="mt-4">
+                                <div class="tab-content" id="returnTabContent">
+                                    <div
+                                        class="tab-pane fade show active"
+                                        id="confirmation-pane"
+                                        role="tabpanel"
+                                        tabindex="0"
+                                    >
+                                        @include ('partials.konfirmasi_pengembalian')
+                                    </div>
 
-                <div
-                    class="tab-pane fade"
-                    id="all-data-pane"
-                    role="tabpanel"
-                    tabindex="0"
-                >
-                    @include ('partials.data_pengembalian')
+                                    <div
+                                        class="tab-pane fade"
+                                        id="all-data-pane"
+                                        role="tabpanel"
+                                        tabindex="0"
+                                    >
+                                        @include ('partials.data_pengembalian')
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -227,5 +244,5 @@
                 closeDropdown();
             });
         });
-    </script>
-</x-app-layout>
+    </script></x-app-layout
+>

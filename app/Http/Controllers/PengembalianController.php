@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\pengembalian;
 use App\Models\Peminjaman;
+use Carbon\Carbon;
 
 class PengembalianController extends Controller
 {
@@ -13,41 +15,70 @@ class PengembalianController extends Controller
      */
     public function index()
 {
-    // Mengambil semua data yang belum berstatus 'kembali'
-    $dipinjam = Peminjaman::with(['user', 'buku'])
-        ->whereIn('status', ['dipinjam', 'proses', 'terlambat']) // Sesuaikan dengan semua status yang muncul di tabel
+    // Tabel Atas (Peminjaman Aktif)
+    $dipinjam = \App\Models\Peminjaman::with(['user', 'buku'])
+        ->whereIn('status', ['dipinjam', 'proses', 'terlambat', 'pending', 'dikembalikan'])
         ->latest()
         ->get();
 
-    $dikembalikan = Peminjaman::with(['user', 'buku'])
-        ->where('status', 'kembali')
+    // Tabel Bawah (Riwayat Pengembalian)
+    $dataHistory = \App\Models\Pengembalian::with(['user', 'buku'])
         ->latest()
         ->get();
 
-    // Hitung TOTAL semua data yang ada di list konfirmasi
-    $totalKonfirmasi = $dipinjam->count(); 
+    $totalKonfirmasi = \App\Models\Peminjaman::whereIn('status', ['proses', 'pending'])->count();
 
-    return view('pengembalian', compact('dipinjam', 'dikembalikan', 'totalKonfirmasi'));
+    return view('pengembalian', compact('dipinjam', 'dataHistory', 'totalKonfirmasi'));
 }
+
 
     public function konfirmasi(Request $request, $id_pinjam)
-{
-    $peminjaman = Peminjaman::where('id_pinjam', $id_pinjam)->firstOrFail();
+    {
+        // Menggunakan where('id_pinjam', ...) sesuai dengan struktur tabel Anda
+        $peminjaman = Peminjaman::where('id_pinjam', $id_pinjam)->firstOrFail();
 
-    // Update status peminjaman
-    $peminjaman->update([
-        'status' => 'kembali',
-        'tgl_kembali' => now(),
-    ]);
+        // 1. Ambil Tanggal (Gunakan startOfDay agar jam tidak mengacaukan hitungan hari)
+        $tglJatuhTempo = \Carbon\Carbon::parse($peminjaman->tgl_jatuh_tempo)->startOfDay();
+        $hariIni = \Carbon\Carbon::now()->startOfDay();
 
-    // Update jumlah buku (Kembalikan stok)
-    if ($peminjaman->buku) {
-        // GANTI 'stok' MENJADI 'jumlah'
-        $peminjaman->buku->increment('jumlah'); 
+        // 2. Kalkulasi Selisih Hari yang Lebih Akurat
+        // Jika hari ini sudah LEWAT dari jatuh tempo, hitung selisihnya
+        if ($hariIni->gt($tglJatuhTempo)) {
+            $selisihHari = $hariIni->diffInDays($tglJatuhTempo);
+        } else {
+            $selisihHari = 0;
+        }
+
+        // 3. Hitung Total Denda (Pastikan hasil akhirnya positif dengan abs)
+        $tarifDenda = 50000;
+        $totalDenda = abs($selisihHari * $tarifDenda);
+
+        \DB::transaction(function () use ($peminjaman, $totalDenda, $hariIni) {
+            // Simpan ke tabel riwayat pengembalian
+            \App\Models\Pengembalian::create([
+                'id_pinjam'   => $peminjaman->id_pinjam,
+                'id_buku'     => $peminjaman->id_buku,
+                'id'          => $peminjaman->id,
+                'tgl_pinjam'  => $peminjaman->tgl_pinjam,
+                'tgl_kembali' => $hariIni->format('Y-m-d'), // Simpan format tanggal saja
+                'denda'       => $totalDenda,
+            ]);
+
+            // Update status di tabel peminjaman
+            $peminjaman->update([
+                'status'      => 'kembali',
+                'tgl_kembali' => $hariIni->format('Y-m-d'),
+                'denda'       => $totalDenda
+            ]);
+
+            // Kembalikan stok buku
+            if ($peminjaman->buku) {
+                $peminjaman->buku->increment('jumlah');
+            }
+        });
+
+        return redirect()->back()->with('success', 'Konfirmasi Berhasil! Denda: Rp ' . number_format($totalDenda, 0, ',', '.'));
     }
-
-    return redirect()->back()->with('success', 'Buku berhasil dikembalikan!');
-}
     // Contoh di PeminjamanController (Bagian User)
     public function ajukan_kembali(Request $request, $id)
     {
@@ -72,7 +103,36 @@ class PengembalianController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // 1. Ambil data peminjaman terkait
+        $pinjam = Peminjaman::findOrFail($request->id_pinjam);
+
+        // 2. Hitung selisih hari (Tanggal Kembali vs Jatuh Tempo)
+        $tgl_kembali = Carbon::now(); // atau $request->tgl_kembali
+        $tgl_jatuh_tempo = Carbon::parse($pinjam->tgl_jatuh_tempo);
+
+        // diffInDays akan menghasilkan angka positif jika terlambat
+        $hari_terlambat = $tgl_jatuh_tempo->diffInDays($tgl_kembali, false);
+
+        $total_denda = 0;
+        if ($tgl_kembali > $tgl_jatuh_tempo) {
+            $nominal_per_hari = 1000; // Set tarif denda kamu di sini
+            $total_denda = $hari_terlambat * $nominal_per_hari;
+        }
+
+        // 3. Simpan ke tabel Pengembalian
+        Pengembalian::create([
+            'id_pinjam'       => $pinjam->id_pinjam,
+            'tgl_kembali'     => $tgl_kembali,
+            'tgl_jatuh_tempo' => $tgl_jatuh_tempo,
+            'id_buku'         => $pinjam->id_buku,
+            'id'              => $pinjam->id, // User ID
+            'denda'           => $total_denda,
+        ]);
+
+        // 4. Update status di tabel Peminjaman agar buku tersedia lagi
+        $pinjam->update(['status' => 'Kembali']);
+
+        return redirect()->route('pengembalian.index')->with('success', 'Buku kembali! Denda: Rp ' . number_format($total_denda));
     }
 
     /**
