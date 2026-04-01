@@ -20,21 +20,19 @@
                 >
                     <li class="nav-item" role="presentation">
                         <button
-                            class="nav-link active fw-bold text-gray-600"
-                            id="confirmation-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#confirmation-pane"
-                            type="button"
-                            role="tab"
-                        >
-                            <i class="bi bi-check2-circle me-1"></i> Konfirmasi
-                            Pengembalian
-                            <span
-                                class="badge bg-danger ms-1"
-                                id="pending-count"
-                                >0</span
-                            >
-                        </button>
+    class="nav-link active fw-bold text-gray-600"
+    id="confirmation-tab"
+    data-bs-toggle="tab"
+    data-bs-target="#confirmation-pane"
+    type="button"
+    role="tab"
+>
+    <i class="bi bi-check2-circle me-1"></i> Konfirmasi Pengembalian
+    
+    <span class="badge bg-danger ms-1" id="pending-count">
+        {{ $totalKonfirmasi }}
+    </span>
+</button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button

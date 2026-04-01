@@ -68,8 +68,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/peminjaman/store', [PeminjamanController::class, 'store'])->name('peminjaman.store');
     Route::get('/my-peminjaman', [PeminjamanController::class, 'history'])->name('mypinjaman');
     Route::put('/peminjaman/ajukan-kembali/{id}', [PeminjamanController::class, 'ajukanKembali'])
-    ->name('peminjaman.ajukan_kembali');
-
+        ->name('peminjaman.ajukan_kembali');
+        Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
+// Jika di route tulisannya 'history', maka di controller harus 'public function history()'
+Route::get('/my-history', [PeminjamanController::class, 'history'])->name('peminjaman.history');
 
     // 7. ADMIN PENGEMBALIAN
     Route::put('/admin/konfirmasi-kembali/{id}', [PeminjamanController::class, 'konfirmasi_kembali'])->name('admin.konfirmasi_kembali');
@@ -91,8 +93,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // 10. PENGEMBALIAN
     Route::middleware(['auth'])->group(function () {
         Route::get('/pengembalian', [PengembalianController::class, 'index'])->name('pengembalian');
-    });
-
+    Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
+    // Route ini yang akan dipanggil di tombol Blade
+    Route::put('/konfirmasi-kembali/{id_pinjam}', [PengembalianController::class, 'konfirmasi'])
+        ->name('konfirmasi_kembali');
+});
     // 11. BALIK
     Route::get('/mybalik', [UserpengembalianController::class, 'history'])->name('mybalik');
     Route::post('/mybalik/store/{id}', [UserpengembalianController::class, 'store'])->name('mybalik.store');
@@ -100,7 +105,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     //
     // Pastikan ini di dalam middleware 'auth' dan checkRole admin
-Route::get('/admin/persetujuan', [AdminPeminjamanController::class, 'index'])->name('admin.persetujuan');
-Route::patch('/admin/persetujuan/{id}/setujui', [AdminPeminjamanController::class, 'setujui'])->name('admin.setujui');
-Route::patch('/admin/persetujuan/{id}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('admin.tolak');
+    Route::get('/admin/persetujuan', [AdminPeminjamanController::class, 'index'])->name('admin.persetujuan');
+    Route::patch('/admin/persetujuan/{id}/setujui', [AdminPeminjamanController::class, 'setujui'])->name('admin.setujui');
+    Route::patch('/admin/persetujuan/{id}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('admin.tolak');
 });

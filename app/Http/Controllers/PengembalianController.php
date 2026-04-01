@@ -13,28 +13,52 @@ class PengembalianController extends Controller
      */
     public function index()
 {
+    // Mengambil semua data yang belum berstatus 'kembali'
     $dipinjam = Peminjaman::with(['user', 'buku'])
-                ->where('status', 'dikembalikan') // <--- PASTI KAN STATUS INI SESUAI
-                ->latest()
-                ->get();
+        ->whereIn('status', ['dipinjam', 'proses', 'terlambat']) // Sesuaikan dengan semua status yang muncul di tabel
+        ->latest()
+        ->get();
 
-    // Data untuk tab Semua Data (Arsip)
-    $dikembalikan = Pengembalian::with(['user', 'buku'])->latest()->get();
+    $dikembalikan = Peminjaman::with(['user', 'buku'])
+        ->where('status', 'kembali')
+        ->latest()
+        ->get();
 
-    return view('pengembalian', compact('dipinjam', 'dikembalikan'));
+    // Hitung TOTAL semua data yang ada di list konfirmasi
+    $totalKonfirmasi = $dipinjam->count(); 
+
+    return view('pengembalian', compact('dipinjam', 'dikembalikan', 'totalKonfirmasi'));
 }
 
-// Contoh di PeminjamanController (Bagian User)
-public function ajukan_kembali(Request $request, $id)
+    public function konfirmasi(Request $request, $id_pinjam)
 {
-    $peminjaman = Peminjaman::findOrFail($id);
+    $peminjaman = Peminjaman::where('id_pinjam', $id_pinjam)->firstOrFail();
+
+    // Update status peminjaman
     $peminjaman->update([
-        'status' => 'dikembalikan', // Pastikan teks ini SAMA dengan yang dicari Admin
-        'denda'  => $request->denda,
+        'status' => 'kembali',
+        'tgl_kembali' => now(),
     ]);
 
-    return back()->with('success', 'Pengembalian berhasil diajukan.');
+    // Update jumlah buku (Kembalikan stok)
+    if ($peminjaman->buku) {
+        // GANTI 'stok' MENJADI 'jumlah'
+        $peminjaman->buku->increment('jumlah'); 
+    }
+
+    return redirect()->back()->with('success', 'Buku berhasil dikembalikan!');
 }
+    // Contoh di PeminjamanController (Bagian User)
+    public function ajukan_kembali(Request $request, $id)
+    {
+        $peminjaman = Peminjaman::findOrFail($id);
+        $peminjaman->update([
+            'status' => 'dikembalikan', // Pastikan teks ini SAMA dengan yang dicari Admin
+            'denda'  => $request->denda,
+        ]);
+
+        return back()->with('success', 'Pengembalian berhasil diajukan.');
+    }
     /**
      * Show the form for creating a new resource.
      */

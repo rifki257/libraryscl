@@ -20,171 +20,82 @@
             >
                 <div class="row g-4">
                     @forelse ($sedangDipinjam as $item)
-                        @php
-                            $tglJatuhTempo = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
-                            $hariIni = \Carbon\Carbon::now()->startOfDay();
-                            $selisihHari = $hariIni->diffInDays($tglJatuhTempo, false);
-                            $dendaValue = 50000; 
-                            $denda = $selisihHari < 0 ? abs($selisihHari) * $dendaValue : 0;
-                            $isTelat = $selisihHari < 0;
-                            $jumlahHariTelat = $isTelat ? abs($selisihHari) : 0;
-                            
-                            $gambarBuku = $item->buku->gambar 
-                                ? asset('storage/' . $item->buku->gambar) 
-                                : asset('images/default-book.png');
-                        @endphp
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div
-                                class="card shadow border-0 h-100 text-white position-relative overflow-hidden"
-                                style="border-radius: 15px; min-height: 380px"
-                            >
-                                <div
-                                    class="position-absolute inset-0 w-100 h-100"
-                                    style="background-image: linear-gradient(to top, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.7) 100%), url('{{ $gambarBuku }}'); 
-                                            background-size: cover; background-position: center; z-index: 1;"
-                                ></div>
+    @php
+        $tglJatuhTempo = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
+        $isPending = $item->status == 'pending'; // Pastikan status di DB adalah 'pending'
+        
+        $gambarBuku = $item->buku->gambar 
+            ? asset('storage/' . $item->buku->gambar) 
+            : asset('images/default-book.png');
+    @endphp
 
-                                <div
-                                    class="card-body d-flex flex-column justify-content-end p-4 position-relative"
-                                    style="z-index: 2"
-                                >
-                                    <div class="mb-3">
-                                        @if ($item->status == 'proses')
-                                            <span
-                                                class="badge bg-warning text-dark px-3 py-2 shadow-sm"
-                                            >
-                                                <i
-                                                    class="bi bi-clock-history me-1"
-                                                ></i>
-                                                Menunggu Verifikasi
-                                            </span>
-                                        @elseif ($isTelat)
-                                            <span
-                                                class="badge bg-danger px-3 py-2 shadow-sm"
-                                            >
-                                                <i
-                                                    class="bi bi-exclamation-triangle me-1"
-                                                ></i>
-                                                Terlambat {{ $jumlahHariTelat }} Hari
-                                            </span>
-                                        @else
-                                            <span
-                                                class="badge bg-primary px-3 py-2 shadow-sm"
-                                            >
-                                                <i class="bi bi-book me-1"></i>
-                                                Sedang Dipinjam
-                                            </span>
-                                        @endif
-                                    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card shadow border-0 h-100 text-white position-relative overflow-hidden"
+             style="border-radius: 15px; min-height: 380px; {{ $isPending ? 'filter: grayscale(1); opacity: 0.8;' : '' }}">
+            
+            <div class="position-absolute inset-0 w-100 h-100"
+                 style="background-image: linear-gradient(to top, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.4) 60%), url('{{ $gambarBuku }}'); 
+                 background-size: cover; background-position: center; z-index: 1;">
+            </div>
 
-                                    <h5
-                                        class="card-title fw-bold text-white mb-2 fs-4 text-capitalize"
-                                    >
-                                        {{ $item->buku->judul }}
-                                    </h5>
+            <div class="card-body d-flex flex-column justify-content-end p-4 position-relative" style="z-index: 2">
+                <div class="mb-3">
+                    @if ($isPending)
+                        <span class="badge bg-secondary px-3 py-2 shadow-sm">
+                            <i class="bi bi-hourglass-split me-1"></i> Menunggu Konfirmasi
+                        </span>
+                    @else
+                        <span class="badge bg-primary px-3 py-2 shadow-sm">
+                            <i class="bi bi-book me-1"></i> Sedang Dipinjam
+                        </span>
+                    @endif
+                </div>
 
-                                    <div class="text-white-50 small mb-3">
-                                        <div
-                                            class="d-flex align-items-center mb-1"
-                                        >
-                                            <i
-                                                class="bi bi-calendar-check me-2"
-                                            ></i>
-                                            <span
-                                                >Pinjam: {{ \Carbon\Carbon::parse($item->tgl_pinjam)->format('d M Y') }}</span
-                                            >
-                                        </div>
-                                        <div
-                                            class="d-flex align-items-center {{ $isTelat ? 'text-danger fw-bold' : '' }}"
-                                        >
-                                            <i
-                                                class="bi bi-calendar-x me-2"
-                                            ></i>
-                                            <span
-                                                >Batas: {{ $tglJatuhTempo->format('d M Y') }}</span
-                                            >
-                                        </div>
-                                    </div>
+                <h5 class="card-title fw-bold text-white mb-2 fs-4">{{ $item->buku->judul }}</h5>
 
-                                    <div class="mt-2">
-                                        @if ($item->status == 'proses')
-                                            <button
-                                                class="btn btn-light w-100 py-2 fw-bold opacity-75 mb-3"
-                                                disabled
-                                            >
-                                                <i
-                                                    class="bi bi-hourglass-split me-1"
-                                                ></i>
-                                                Permintaan Diproses...
-                                            </button>
-                                        @elseif ($isTelat)
-                                            <div class="row g-2">
-                                                <div class="col-8">
-                                                    <button
-                                                        type="button"
-                                                        onclick="Swal.fire('Perhatian', 'Harap hubungi petugas perpustakaan untuk pelunasan denda Rp {{ number_format($denda, 0, ',', '.') }}', 'warning')"
-                                                        class="btn btn-danger w-100 py-2 fw-bold mb-3"
-                                                    >
-                                                        Selesaikan Denda
-                                                    </button>
-                                                </div>
-                                                <div class="col-4">
-                                                    <button
-                                                        type="button"
-                                                        onclick="showDendaDetail({{ $jumlahHariTelat }}, {{ $denda }})"
-                                                        class="btn btn-outline-light w-100 py-2"
-                                                    >
-                                                        <i
-                                                            class="bi bi-info-circle"
-                                                        ></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        @else
-                                            <form
-                                                action="{{ route('peminjaman.ajukan_kembali', $item->id_pinjam) }}"
-                                                method="POST"
-                                                id="form-kembali-{{ $item->id_pinjam }}"
-                                            >
-                                                @csrf
-                                                @method ('PUT')
-                                                <input
-                                                    type="hidden"
-                                                    name="denda"
-                                                    value="{{ $denda }}"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onclick="konfirmasiKembali({{ $item->id_pinjam }}, {{ $denda }}, {{ $jumlahHariTelat }})"
-                                                    class="btn btn-warning w-100 py-2 fw-bold text-dark shadow"
-                                                >
-                                                    <i
-                                                        class="bi bi-arrow-return-left me-1"
-                                                    ></i>
-                                                    Ajukan Pengembalian
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="col-12 text-center py-5">
-                            <h5 class="text-gray-500 fw-medium">
-                                Wah, rak bukumu kosong...
-                            </h5>
-                            <p class="text-muted small">Kamu tidak memiliki pinjaman aktif saat ini.</p>
-                            <a
-                                href="{{ route('katalog') }}"
-                                class="btn btn-primary mt-3 px-4 rounded-pill"
-                                >Cari Buku Sekarang</a
-                            >
-                        </div>
-                    @endforelse
+                <div class="text-white-50 small mb-3">
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        <span>Pinjam: {{ \Carbon\Carbon::parse($item->tgl_pinjam)->format('d M Y') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-calendar-x me-2"></i>
+                        <span>Batas: {{ $tglJatuhTempo->format('d M Y') }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    @if ($isPending)
+                        {{-- TOMBOL PEMBATALAN --}}
+                        <form action="{{ route('peminjaman.cancel', $item->id_pinjam) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-outline-light w-100 py-2 fw-bold" 
+                                    onclick="return confirm('Yakin ingin membatalkan pengajuan ini?')">
+                                <i class="bi bi-x-circle me-1"></i> Batalkan Peminjaman
+                            </button>
+                        </form>
+                    @else
+                        {{-- TOMBOL PENGEMBALIAN (Hanya untuk yang sudah dikonfirmasi admin) --}}
+                        <form action="{{ route('peminjaman.ajukan_kembali', $item->id_pinjam) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-dark shadow">
+                                <i class="bi bi-arrow-return-left me-1"></i> Ajukan Pengembalian
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
+    </div>
+@empty
+    @endforelse
+                </div>
+            </div>
+        </div>
+        
+    </div>
     </div>
     <style>
         .card-custom {

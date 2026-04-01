@@ -31,7 +31,7 @@
                             {{ $buku->judul }}
                         </h3>
                         <p class="text-sm text-blue-700">Stok Tersedia: <span class="font-extrabold">{{ $buku->jumlah }}</span></p>
-                        <p class="text-sm text-red-700">Denda: <span>Rp150.000/Hari</span></p>
+                        <p class="text-sm text-red-700">Denda: <span>Rp50.000/Hari</span></p>
                     </div>
                 </div>
 

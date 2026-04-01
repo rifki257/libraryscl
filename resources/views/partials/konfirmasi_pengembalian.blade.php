@@ -208,27 +208,13 @@
                                                             </div>
                                                         </div>
                                                     @elseif ($sudahDiajukan)
-                                                        <form
-                                                            action="{{ route('admin.konfirmasi_kembali', $data->id_pinjam) }}"
-                                                            method="POST"
-                                                            style="
-                                                                display: contents;
-                                                            "
-                                                        >
-                                                            @csrf
-                                                            @method ('PUT')
-                                                            <button
-                                                                type="submit"
-                                                                class="btn btn-sm btn-primary"
-                                                                onclick="
-                                                                    return confirm(
-                                                                        'Apakah Anda yakin ingin mengonfirmasi pengembalian buku ini?'
-                                                                    );
-                                                                "
-                                                            >
-                                                                Konfirmasi
-                                                            </button>
-                                                        </form>
+                                                        <form action="{{ route('admin.konfirmasi_kembali', $data->id_pinjam) }}" method="POST">
+    @csrf
+    @method('PUT')
+    <button type="submit" class="btn btn-primary btn-sm">
+        Konfirmasi
+    </button>
+</form>
                                                     @else
                                                         <button
                                                             class="btn btn-sm btn-secondary opacity-50"

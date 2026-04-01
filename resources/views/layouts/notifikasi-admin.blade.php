@@ -49,7 +49,7 @@
                             <i class="bi bi-check-circle-fill"></i>
                         </div>
                         <div style="white-space: normal">
-                            <p class="mb-0 small">Pinjaman buku <strong>"Laskar Pelangi"</strong> telah disetujui petugas!</p>
+                            <p class="mb-0 small">Pinjaman buku <strong>"admin"</strong> telah disetujui petugas!</p>
                             <small class="text-muted">2 menit yang lalu</small>
                         </div>
                     </a>

@@ -2,32 +2,7 @@
     x-data="{ open: false, userDropdown: false, showModal: false }"
     class="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-md"
 >
-    @auth
-        @if (Auth::user()->role === 'anggota')
-            <div
-                class="border-b border-gray-100 py-2"
-                style="background: rgb(234, 234, 234)"
-            >
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div
-                        class="flex justify-end space-x-6 text-xs font-medium text-gray-600"
-                    >
-                        <a
-                            href="#"
-                            class="hover:text-indigo-600 transition-colors"
-                            >Aturan & Denda</a
-                        >
-                        <a
-                            href="#"
-                            class="hover:text-indigo-600 transition-colors"
-                            >Hubungi Pustakawan</a
-                        >
-                    </div>
-                </div>
-            </div>
-        @endif
-
-    @else
+    @if (!Auth::check() || Auth::user()->role === 'anggota')
         <div
             class="border-b border-gray-100 py-2"
             style="background: rgb(234, 234, 234)"
@@ -45,16 +20,14 @@
                 </div>
             </div>
         </div>
-    @endauth
+    @endif
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20">
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="#">
-                        <x-application-logo
-                            class="block h-9 w-auto fill-current text-gray-800"
-                        />
+                    <a href="{{ Auth::check() && Auth::user()->role === 'admin' ? route('admin.dashboard') : route('userdashboard') }}">
+                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                     </a>
                 </div>
 
@@ -70,7 +43,6 @@
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
-                @include ('layouts.notifikasi')
                 <x-dropdown
                     align="right"
                     width="48"

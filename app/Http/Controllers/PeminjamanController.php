@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Buku;
 use Illuminate\Support\Facades\DB;
 use App\Models\Peminjaman;
+use Carbon\Carbon;
 
 class PeminjamanController extends Controller
 {
@@ -44,9 +45,9 @@ class PeminjamanController extends Controller
 
         $buku = \App\Models\Buku::where('id_buku', $request->id_buku)->first();
 
-        // 1. Cek ketersediaan stok
+        // 1. Cek ketersediaan jumlah
         if (!$buku || $buku->jumlah <= 0) {
-            return redirect()->back()->with('error', 'Maaf, stok buku ini sedang habis.');
+            return redirect()->back()->with('error', 'Maaf, jumlah buku ini sedang habis.');
         }
 
         // 2. Cek limit peminjaman (termasuk yang masih pending)
@@ -69,8 +70,8 @@ class PeminjamanController extends Controller
                 'denda'           => 0,
             ]);
 
-            // Catatan: Kita TIDAK melakukan decrement stok di sini. 
-            // Stok dikurangi nanti di method konfirmasi milik Admin.
+            // Catatan: Kita TIDAK melakukan decrement jumlah di sini. 
+            // jumlah dikurangi nanti di method konfirmasi milik Admin.
 
             return redirect()->route('katalog')->with('success', 'Permintaan pinjam berhasil dikirim. Silakan tunggu konfirmasi Admin.');
         } catch (\Exception $e) {
@@ -83,12 +84,12 @@ class PeminjamanController extends Controller
     {
         $pinjam = Peminjaman::find($id_peminjaman);
 
-        // Kurangi stok saat admin setuju
+        // Kurangi jumlah saat admin setuju
         \App\Models\Buku::where('id_buku', $pinjam->id_buku)->decrement('jumlah');
 
         $pinjam->update(['status' => 'dipinjam']);
 
-        return back()->with('success', 'Peminjaman disetujui dan stok telah diperbarui.');
+        return back()->with('success', 'Peminjaman disetujui dan jumlah telah diperbarui.');
     }
     /**
      * Display the specified resource.
@@ -128,35 +129,9 @@ class PeminjamanController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
     /**
-     * Remove the specified resource from storage.
+     * Menghapus/Membatalkan pengajuan peminjaman.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    public function history()
-    {
-        $userId = auth()->id();
-
-        $sedangDipinjam = \App\Models\Peminjaman::with('buku')
-            ->where('id', $userId)
-            ->whereIn('status', ['dipinjam', 'proses'])
-            ->get();
-
-        $riwayatSelesai = \App\Models\Peminjaman::with('buku')
-            ->where('id', $userId)
-            ->where('status', 'kembali')
-            ->get();
-
-        return view('mypinjaman', compact('sedangDipinjam', 'riwayatSelesai'));
-    }
 
     public function ajukan_kembali(Request $request, $id)
     {
@@ -175,7 +150,7 @@ class PeminjamanController extends Controller
         $buku = Buku::findOrFail($id);
 
         if ($buku->jumlah <= 0) {
-            return redirect()->back()->with('error', 'Maaf, stok buku sudah habis!');
+            return redirect()->back()->with('error', 'Maaf, jumlah buku sudah habis!');
         }
     }
     public function ajukanKembali(Request $request, $id)
@@ -188,4 +163,53 @@ class PeminjamanController extends Controller
 
         return redirect()->back()->with('success', 'Berhasil mengajukan pengembalian. Silakan temui petugas perpustakaan.');
     }
+    public function konfirmasi_kembali($id_pinjam)
+    {
+        // Cari data berdasarkan ID
+        $peminjaman = Peminjaman::where('id_pinjam', $id_pinjam)->firstOrFail();
+
+        // Update status dan tanggal kembali
+        $peminjaman->update([
+            'status' => 'kembali',
+            'tgl_kembali' => Carbon::now()->toDateString(),
+        ]);
+
+        // Opsional: Kembalikan jumlah buku jika ada relasi
+        if ($peminjaman->buku) {
+            $peminjaman->buku->increment('jumlah');
+        }
+
+        return redirect()->back()->with('success', 'Buku berhasil dikembalikan!');
+    }
+    // ... inside PeminjamanController class
+
+    public function history()
+    {
+        $userId = auth()->id();
+
+        // Mengambil buku dengan status pending, dipinjam, atau proses
+        $sedangDipinjam = \App\Models\Peminjaman::with('buku')
+            ->where('id', $userId)
+            ->whereIn('status', ['pending', 'dipinjam', 'proses'])
+            ->get();
+
+        $riwayatSelesai = \App\Models\Peminjaman::with('buku')
+            ->where('id', $userId)
+            ->where('status', 'kembali')
+            ->get();
+
+        return view('mypinjaman', compact('sedangDipinjam', 'riwayatSelesai'));
+    }
+
+    public function destroy($id)
+{
+    $peminjaman = Peminjaman::where('id_pinjam', $id)
+        ->where('id', auth()->id())
+        ->where('status', 'pending') // Hanya boleh hapus jika belum dikonfirmasi
+        ->firstOrFail();
+
+    $peminjaman->delete();
+
+    return redirect()->back()->with('success', 'Pengajuan berhasil dibatalkan.');
+}
 }
