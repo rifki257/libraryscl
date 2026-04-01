@@ -206,7 +206,7 @@
 
         const scrollLeft = container.scrollLeft;
 
-        if (scrollLeft > 30) {
+        if (scrollLeft > 5) {
             banner.classList.add('hidden-banner');
         } else {
             banner.classList.remove('hidden-banner');

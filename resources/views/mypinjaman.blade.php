@@ -24,7 +24,7 @@
                             $tglJatuhTempo = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
                             $hariIni = \Carbon\Carbon::now()->startOfDay();
                             $selisihHari = $hariIni->diffInDays($tglJatuhTempo, false);
-                            $dendaValue = 150000; 
+                            $dendaValue = 50000; 
                             $denda = $selisihHari < 0 ? abs($selisihHari) * $dendaValue : 0;
                             $isTelat = $selisihHari < 0;
                             $jumlahHariTelat = $isTelat ? abs($selisihHari) : 0;

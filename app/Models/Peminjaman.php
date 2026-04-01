@@ -12,7 +12,7 @@ class Peminjaman extends Model
     protected $table = 'peminjaman';
     protected $primaryKey = 'id_pinjam';
 
-    public $incrementing = false;
+    public $incrementing = true;
     protected $keyType = 'int';
 
     protected $fillable = [

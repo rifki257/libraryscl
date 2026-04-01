@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\pengembalian;
+use App\Models\Peminjaman;
 
 class PengembalianController extends Controller
 {
@@ -11,12 +12,29 @@ class PengembalianController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        $dikembalikan = Pengembalian::with(['user', 'buku'])->latest()->get();
+{
+    $dipinjam = Peminjaman::with(['user', 'buku'])
+                ->where('status', 'dikembalikan') // <--- PASTI KAN STATUS INI SESUAI
+                ->latest()
+                ->get();
 
-        return view('pengembalian', compact('dikembalikan'));
-    }
+    // Data untuk tab Semua Data (Arsip)
+    $dikembalikan = Pengembalian::with(['user', 'buku'])->latest()->get();
 
+    return view('pengembalian', compact('dipinjam', 'dikembalikan'));
+}
+
+// Contoh di PeminjamanController (Bagian User)
+public function ajukan_kembali(Request $request, $id)
+{
+    $peminjaman = Peminjaman::findOrFail($id);
+    $peminjaman->update([
+        'status' => 'dikembalikan', // Pastikan teks ini SAMA dengan yang dicari Admin
+        'denda'  => $request->denda,
+    ]);
+
+    return back()->with('success', 'Pengembalian berhasil diajukan.');
+}
     /**
      * Show the form for creating a new resource.
      */

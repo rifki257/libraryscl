@@ -16,8 +16,8 @@
     </x-nav-link>
 
     <x-nav-link
-        :href="route('peminjamandata')"
-        :active="request()->routeIs('peminjamandata')"
+        :href="route('admin.persetujuan')"
+        :active="request()->routeIs('admin.persetujuan')"
         class="px-2"
     >
         {{ __('Peminjam') }}

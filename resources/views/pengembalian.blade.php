@@ -3,12 +3,57 @@
 </head>
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Pengembalian') }}
-            </h2>
+        <div
+            class="d-flex align-items-center justify-content-between flex-wrap gap-3"
+        >
+            <div class="d-flex align-items-center gap-4 flex-grow-1">
+                <h2
+                    class="font-semibold text-xl text-gray-800 leading-tight mb-0"
+                >
+                    {{ __('Pengembalian') }}
+                </h2>
+
+                <ul
+                    class="nav nav-tabs border-bottom-0"
+                    id="returnTab"
+                    role="tablist"
+                >
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link active fw-bold text-gray-600"
+                            id="confirmation-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#confirmation-pane"
+                            type="button"
+                            role="tab"
+                        >
+                            <i class="bi bi-check2-circle me-1"></i> Konfirmasi
+                            Pengembalian
+                            <span
+                                class="badge bg-danger ms-1"
+                                id="pending-count"
+                                >0</span
+                            >
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link fw-bold text-gray-600"
+                            id="all-data-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#all-data-pane"
+                            type="button"
+                            role="tab"
+                        >
+                            <i class="bi bi-collection-play me-1"></i> Semua
+                            Data
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
             <div class="d-flex align-items-center gap-2">
-                <div class="input-group" style="max-width: 350px">
+                <div class="input-group" style="max-width: 300px">
                     <span class="input-group-text bg-white border-end-0">
                         <i class="bi bi-search text-muted"></i>
                     </span>
@@ -16,21 +61,15 @@
                         type="text"
                         id="search-input"
                         class="form-control border-start-0 border-end-0 ps-0 shadow-none"
-                        placeholder="Cari judul, peminjam..."
+                        placeholder="Cari..."
                         autocomplete="off"
                     />
                     <button
                         class="btn bg-white border border-start-0 d-none d-flex align-items-center gap-1"
                         type="button"
                         id="reset-search"
-                        style="z-index: 5"
                     >
                         <i class="bi bi-x-circle-fill text-danger"></i>
-                        <span
-                            style="font-size: 0.8rem"
-                            class="text-muted fw-bold"
-                            >Reset</span
-                        >
                     </button>
                 </div>
 
@@ -58,9 +97,8 @@
                                 <label
                                     class="form-check-label text-danger fw-bold"
                                     for="fTelat"
+                                    >Denda</label
                                 >
-                                    Denda
-                                </label>
                             </div>
                         </li>
                         <li>
@@ -75,9 +113,8 @@
                                 <label
                                     class="form-check-label text-success fw-bold"
                                     for="fAman"
+                                    >Tepat Waktu</label
                                 >
-                                    Tepat Waktu
-                                </label>
                             </div>
                         </li>
                         <li><hr class="dropdown-divider" /></li>
@@ -95,78 +132,31 @@
             </div>
         </div>
     </x-slot>
+
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="overflow-hidden shadow-sm sm:rounded-lg" style="background-color: rgb(235, 235, 235)">
-                <div class="p-6 text-gray-900">
-                    <div class="container">
-                        <div class="card-body">
-                            <div id="tabel-buku" class="mt-4">
-                                <table class="table table-striped align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>ID Pinjam</th>
-                                            <th>Peminjam</th>
-                                            <th>Judul Buku</th>
-                                            <th>Tgl Pinjam</th>
-                                            <th>Tgl Kembali</th>
-                                            <th>Denda</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($dikembalikan as $data)
-                                            @php
-        $classStatus = ($data->denda > 0) ? 'status-terlambat' : 'status-aman';
-    @endphp
-                                            <tr
-                                                class="item-peminjaman {{ $classStatus }}"
-                                            >
-                                                <td>
-                                                    <code
-                                                        >{{ $data->id_pinjam }}</code
-                                                    >
-                                                </td>
-                                                <td>{{ $data->user->name }}</td>
-                                                <td>
-                                                    {{ $data->buku->judul }}
-                                                </td>
-                                                <td>
-                                                    {{ \Carbon\Carbon::parse($data->tgl_pinjam)->format('d/m/Y') }}
-                                                </td>
-                                                <td>
-                                                    {{ \Carbon\Carbon::parse($data->updated_at)->format('d/m/Y') }}
-                                                </td>
-                                                <td>
-                                                    @if ($data->denda > 0)
-                                                        <span
-                                                            class="text-danger fw-bold"
-                                                            >Rp {{ number_format($data->denda, 0, ',', '.') }}</span
-                                                        >
-                                                    @else
-                                                        <span
-                                                            class="text-success"
-                                                            >Tidak Ada</span
-                                                        >
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="6" class="py-4">
-                                                    Belum ada riwayat
-                                                    pengembalian.
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+            <div class="tab-content" id="returnTabContent">
+                <div
+                    class="tab-pane fade show active"
+                    id="confirmation-pane"
+                    role="tabpanel"
+                    tabindex="0"
+                >
+                    @include ('partials.konfirmasi_pengembalian')
+                </div>
+
+                <div
+                    class="tab-pane fade"
+                    id="all-data-pane"
+                    role="tabpanel"
+                    tabindex="0"
+                >
+                    @include ('partials.data_pengembalian')
                 </div>
             </div>
         </div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('search-input');

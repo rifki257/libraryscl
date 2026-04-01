@@ -8,6 +8,7 @@ use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\PeminjamandataController;
 use App\Http\Controllers\UserdashboardController;
 use App\Http\Controllers\PengembalianController;
+use App\Http\Controllers\AdminPeminjamanController;
 use App\Http\Controllers\UserpengembalianController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Buku;
@@ -66,14 +67,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pinjam/{id}', [App\Http\Controllers\PeminjamanController::class, 'create'])->name('peminjaman');
     Route::post('/peminjaman/store', [PeminjamanController::class, 'store'])->name('peminjaman.store');
     Route::get('/my-peminjaman', [PeminjamanController::class, 'history'])->name('mypinjaman');
+    Route::put('/peminjaman/ajukan-kembali/{id}', [PeminjamanController::class, 'ajukanKembali'])
+    ->name('peminjaman.ajukan_kembali');
 
-
-    // 5. PEMINJAMANDATA
-    Route::get('/peminjamandata', [PeminjamandataController::class, 'index'])->name('peminjamandata');
-
-    // 6. PENGEMBALIAN
-    Route::put('/peminjaman/ajukan/{id}', [PeminjamanController::class, 'ajukan_kembali'])->name('peminjaman.ajukan_kembali');
-    Route::put('/peminjamandata/konfirmasi/{id}', [PeminjamandataController::class, 'konfirmasi_kembali'])->name('admin.konfirmasi_kembali');
 
     // 7. ADMIN PENGEMBALIAN
     Route::put('/admin/konfirmasi-kembali/{id}', [PeminjamanController::class, 'konfirmasi_kembali'])->name('admin.konfirmasi_kembali');
@@ -101,4 +97,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mybalik', [UserpengembalianController::class, 'history'])->name('mybalik');
     Route::post('/mybalik/store/{id}', [UserpengembalianController::class, 'store'])->name('mybalik.store');
 
+
+    //
+    // Pastikan ini di dalam middleware 'auth' dan checkRole admin
+Route::get('/admin/persetujuan', [AdminPeminjamanController::class, 'index'])->name('admin.persetujuan');
+Route::patch('/admin/persetujuan/{id}/setujui', [AdminPeminjamanController::class, 'setujui'])->name('admin.setujui');
+Route::patch('/admin/persetujuan/{id}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('admin.tolak');
 });

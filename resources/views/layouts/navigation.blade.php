@@ -4,7 +4,10 @@
 >
     @auth
         @if (Auth::user()->role === 'anggota')
-            <div class="border-b border-gray-100 py-2" style="background: rgb(234, 234, 234)">
+            <div
+                class="border-b border-gray-100 py-2"
+                style="background: rgb(234, 234, 234)"
+            >
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div
                         class="flex justify-end space-x-6 text-xs font-medium text-gray-600"
@@ -25,7 +28,10 @@
         @endif
 
     @else
-        <div class="border-b border-gray-100 py-2" style="background: rgb(234, 234, 234)">
+        <div
+            class="border-b border-gray-100 py-2"
+            style="background: rgb(234, 234, 234)"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div
                     class="flex justify-end space-x-6 text-xs font-medium text-gray-600"
@@ -64,6 +70,7 @@
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
+                @include ('layouts.notifikasi')
                 <x-dropdown
                     align="right"
                     width="48"
