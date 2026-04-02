@@ -22,11 +22,19 @@
                     @forelse ($sedangDipinjam as $item)
                         @php
         $tglJatuhTempo = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
-        $isPending = $item->status == 'pending'; // Pastikan status di DB adalah 'pending'
         
+        // Status pending = belum dikonfirmasi pinjam sama sekali
+        $isPending = $item->status == 'pending'; 
+        
+        // Status proses = sudah pinjam, tapi sedang mengajukan pengembalian
+        $isWaitingReturn = $item->status == 'proses'; 
+
         $gambarBuku = $item->buku->gambar 
             ? asset('storage/' . $item->buku->gambar) 
             : asset('images/default-book.png');
+            
+        // Efek visual jika sedang diproses (pending atau nunggu balik)
+        $isProcessing = ($isPending || $isWaitingReturn);
     @endphp
                         <div class="col-12 col-md-6 col-lg-4">
                             <div
@@ -38,30 +46,28 @@
                                     style="background-image: linear-gradient(to top, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.4) 60%), url('{{ $gambarBuku }}'); 
                 background-size: cover; background-position: center; z-index: 1;"
                                 ></div>
-
+                                @php
+    $isProcessing = ($isPending || $item->status == 'diajukan_kembali');
+@endphp
                                 <div
                                     class="card-body d-flex flex-column justify-content-end p-4 position-relative"
                                     style="z-index: 2"
                                 >
                                     <div class="mb-3">
-                                        @if ($isPending)
-                                            <span
-                                                class="badge bg-secondary px-3 py-2 shadow-sm"
-                                            >
-                                                <i
-                                                    class="bi bi-hourglass-split me-1"
-                                                ></i>
-                                                Menunggu Konfirmasi
-                                            </span>
-                                        @else
-                                            <span
-                                                class="badge bg-primary px-3 py-2 shadow-sm"
-                                            >
-                                                <i class="bi bi-book me-1"></i>
-                                                Sedang Dipinjam
-                                            </span>
-                                        @endif
-                                    </div>
+                    @if ($isPending)
+                        <span class="badge bg-secondary px-3 py-2 shadow-sm">
+                            <i class="bi bi-hourglass-split me-1"></i> Menunggu Konfirmasi
+                        </span>
+                    @elseif ($isWaitingReturn)
+                        <span class="badge bg-info px-3 py-2 shadow-sm text-dark">
+                            <i class="bi bi-arrow-repeat me-1"></i> Proses Kembali
+                        </span>
+                    @else
+                        <span class="badge bg-primary px-3 py-2 shadow-sm">
+                            <i class="bi bi-book me-1"></i> Sedang Dipinjam
+                        </span>
+                    @endif
+                </div>
 
                                     <h5
                                         class="card-title fw-bold text-white mb-2 fs-4"
@@ -91,50 +97,26 @@
                                     </div>
 
                                     <div class="mt-2">
-                                        @if ($isPending)
-                                            {{-- Form Pembatalan --}}
-                                            <form
-                                                id="form-cancel-{{ $item->id_pinjam }}"
-                                                action="{{ route('peminjaman.cancel', $item->id_pinjam) }}"
-                                                method="POST"
-                                                style="display: none"
-                                            >
-                                                @csrf
-                                                @method ('DELETE')
-                                            </form>
-                                            <button
-                                                type="button"
-                                                class="btn btn-outline-light w-100 py-2 fw-bold"
-                                                onclick="konfirmasiBatal('{{ $item->id_pinjam }}')"
-                                            >
-                                                <i
-                                                    class="bi bi-x-circle me-1"
-                                                ></i>
-                                                Batalkan Peminjaman
-                                            </button>
-                                        @else
-                                            {{-- Tombol Pengembalian (Route konfirmasi_kembali) --}}
-                                            <form
-                                                id="form-kembali-{{ $item->id_pinjam }}"
-                                                action="{{ route('peminjaman.ajukan_kembali', $item->id_pinjam) }}"
-                                                method="POST"
-                                                style="display: none"
-                                            >
-                                                @csrf
-                                                @method ('PUT')
-                                            </form>
-                                            <button
-                                                type="button"
-                                                onclick="konfirmasiKembali('{{ $item->id_pinjam }}', 0, 0)"
-                                                class="btn btn-warning w-100 py-2 fw-bold text-dark shadow"
-                                            >
-                                                <i
-                                                    class="bi bi-arrow-return-left me-1"
-                                                ></i>
-                                                Ajukan Pengembalian
-                                            </button>
-                                        @endif
-                                    </div>
+                    @if ($isPending)
+                        <button type="button" class="btn btn-outline-light w-100 py-2 fw-bold" onclick="konfirmasiBatal('{{ $item->id_pinjam }}')">
+                            <i class="bi bi-x-circle me-1"></i> Batalkan Peminjaman
+                        </button>
+
+                    @elseif ($isWaitingReturn)
+                        <button type="button" class="btn btn-secondary w-100 py-2 fw-bold shadow-sm" disabled style="cursor: not-allowed;">
+                            <i class="bi bi-clock-history me-1"></i> Sedang Mengajukan Kembali
+                        </button>
+
+                    @else
+                        <form id="form-kembali-{{ $item->id_pinjam }}" action="{{ route('peminjaman.ajukan_kembali', $item->id_pinjam) }}" method="POST" style="display: none">
+                            @csrf
+                            @method('PUT')
+                        </form>
+                        <button type="button" onclick="konfirmasiKembali('{{ $item->id_pinjam }}')" class="btn btn-warning w-100 py-2 fw-bold text-dark shadow">
+                            <i class="bi bi-arrow-return-left me-1"></i> Ajukan Pengembalian
+                        </button>
+                    @endif
+                </div>
                                 </div>
                             </div>
                         </div>

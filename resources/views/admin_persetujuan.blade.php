@@ -39,6 +39,10 @@
                         role="tab"
                     >
                         <i class="bi bi-collection-play me-1"></i> Semua Data
+
+                        <span class="badge bg-primary ms-1">
+                            {{ (isset($semuaPeminjam)) ? $semuaPeminjam->count() : 0 }}
+                        </span>
                     </button>
                 </li>
             </ul>

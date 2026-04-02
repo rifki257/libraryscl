@@ -71,6 +71,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('peminjaman.ajukan_kembali');
     Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
     Route::get('/my-history', [PeminjamanController::class, 'history'])->name('peminjaman.history');
+    // Contoh rute yang benar
+    Route::get('/admin/persetujuan', [PeminjamanController::class, 'persetujuan'])->name('admin.persetujuan');
+    // Pastikan tujuannya ke PeminjamanController
+    Route::put('/admin/setujui/{id}', [PeminjamanController::class, 'setujuiPinjam'])->name('admin.setujui');
 
 
     // 8. AKUN ADMIN DAN USER

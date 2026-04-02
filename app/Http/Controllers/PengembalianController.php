@@ -26,9 +26,13 @@ class PengembalianController extends Controller
         ->latest()
         ->get();
 
+    // Menghitung total untuk badge Konfirmasi
     $totalKonfirmasi = \App\Models\Peminjaman::whereIn('status', ['proses', 'pending'])->count();
 
-    return view('pengembalian', compact('dipinjam', 'dataHistory', 'totalKonfirmasi'));
+    // Menghitung total untuk badge Semua Data (berdasarkan hasil query $dipinjam)
+    $totalSemua = $dipinjam->count();
+
+    return view('pengembalian', compact('dipinjam', 'dataHistory', 'totalKonfirmasi', 'totalSemua'));
 }
 
 

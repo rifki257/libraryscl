@@ -13,15 +13,27 @@ class PeminjamanController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function indexAdmin()
+    public function index()
     {
-        // Rekomendasi: Status 'proses' harus tetap muncul di sini agar tidak "hilang"
-        $semuaPeminjam = Peminjaman::with(['user', 'buku'])
-            ->whereIn('status', ['dipinjam', 'proses', 'terlambat'])
-            ->latest()
+        $sedangDipinjam = Peminjaman::where('id', auth()->id())
+            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
+            ->with('buku')
             ->get();
 
-        return view('admin.peminjaman.index', compact('semuaPeminjam'));
+        // Hitung total fisik buku, bukan jumlah baris transaksi
+        $totalFisikBuku = $sedangDipinjam->sum('total_pinjam');
+
+        return view('peminjaman.index', compact('sedangDipinjam', 'totalFisikBuku'));
+    }
+
+    // Cari fungsi yang merujuk ke rute /admin/persetujuan
+    public function persetujuan()
+    {
+        // Untuk Dashboard Admin agar badge count tidak error
+        $semuaPeminjam = Peminjaman::all();
+        $peminjamanPending = Peminjaman::where('status', 'pending')->get();
+
+        return view('admin_persetujuan', compact('semuaPeminjam', 'peminjamanPending'));
     }
 
     /**
@@ -35,9 +47,14 @@ class PeminjamanController extends Controller
 
         $buku = Buku::findOrFail($id);
 
-        return view('peminjaman', compact('buku'));
-    }
+        // LOGIKA: Gunakan 'total_pinjam' sesuai kolom baru di database kamu
+        $totalBukuAktif = DB::table('peminjaman')
+            ->where('id', auth()->id())
+            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
+            ->sum('total_pinjam') ?? 0;
 
+        return view('peminjaman', compact('buku', 'totalBukuAktif'));
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -47,56 +64,70 @@ class PeminjamanController extends Controller
         $request->validate([
             'id_buku' => 'required',
             'tgl_kembali' => 'required|date',
+            'total_pinjam' => 'required|integer|min:1',
         ]);
 
-        $buku = \App\Models\Buku::where('id_buku', $request->id_buku)->first();
+        $limitMaksimal = 6;
+        $buku = Buku::where('id_buku', $request->id_buku)->first();
 
-        // 1. Cek ketersediaan jumlah
-        if (!$buku || $buku->jumlah <= 0) {
-            return redirect()->back()->with('error', 'Maaf, jumlah buku ini sedang habis.');
+        $totalBukuAktif = DB::table('peminjaman')
+            ->where('id', auth()->id())
+            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
+            ->sum('total_pinjam') ?? 0;
+
+        $slotTersedia = $limitMaksimal - $totalBukuAktif;
+
+        if ($totalBukuAktif >= $limitMaksimal) {
+            return redirect()->back()->with('error', 'Gagal! Kamu sudah mencapai limit peminjaman 6 buku.');
         }
 
-        // 2. Cek limit peminjaman (termasuk yang masih pending)
-        $jumlahPinjam = \DB::table('peminjaman')
-            ->where('id', auth()->id())
-            ->whereIn('status', ['pending', 'dipinjam']) // Hitung yang sedang diajukan & sedang dipinjam
-            ->count();
+        if ($request->total_pinjam > $slotTersedia) {
+            return redirect()->back()->with('error', 'Gagal! Kamu hanya bisa meminjam ' . $slotTersedia . ' buku lagi.');
+        }
 
-        if ($jumlahPinjam >= 3) {
-            return redirect()->back()->with('error', 'Gagal! Limit pinjam tercapai (Maksimal 3 buku termasuk yang menunggu konfirmasi).');
+        if (!$buku || $buku->jumlah < $request->total_pinjam) {
+            return redirect()->back()->with('error', 'Maaf, stok tidak mencukupi. Sisa: ' . ($buku->jumlah ?? 0));
         }
 
         try {
-            \App\Models\Peminjaman::create([
-                'id_buku'         => $request->id_buku,
-                'id'              => auth()->id(),
-                'tgl_pinjam'      => now(),
-                'tgl_jatuh_tempo' => $request->tgl_kembali,
-                'status'          => 'pending', // Status awal menjadi pending
-                'denda'           => 0,
-            ]);
+            // Menggunakan transaksi agar data peminjaman dan pengurangan stok aman
+            DB::transaction(function () use ($request, $buku) {
+                // 1. Buat data peminjaman
+                Peminjaman::create([
+                    'id_buku' => $request->id_buku,
+                    'id' => auth()->id(),
+                    'tgl_pinjam' => now(),
+                    'tgl_jatuh_tempo' => $request->tgl_kembali,
+                    'status' => 'pending',
+                    'total_pinjam' => $request->total_pinjam,
+                    'denda' => 0,
+                ]);
 
-            // Catatan: Kita TIDAK melakukan decrement jumlah di sini. 
-            // jumlah dikurangi nanti di method konfirmasi milik Admin.
+                // 2. Kurangi stok buku sesuai jumlah yang dipinjam
+                $buku->decrement('jumlah', $request->total_pinjam);
+            });
 
-            return redirect()->route('katalog')->with('success', 'Permintaan pinjam berhasil dikirim. Silakan tunggu konfirmasi Admin.');
+            return redirect()->route('katalog')->with('success', 'Berhasil! Permintaan pinjam dikirim.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Sistem error: ' . $e->getMessage());
         }
     }
 
-
     public function setujuiPinjam($id_peminjaman)
     {
-        $pinjam = Peminjaman::find($id_peminjaman);
+        $pinjam = Peminjaman::findOrFail($id_peminjaman);
 
-        // Kurangi jumlah saat admin setuju
-        \App\Models\Buku::where('id_buku', $pinjam->id_buku)->decrement('jumlah');
+        // Update status saja ke 'dipinjam'
+        $pinjam->update([
+            'status' => 'dipinjam'
+        ]);
 
-        $pinjam->update(['status' => 'dipinjam']);
+        // PASTIKAN BARIS DI BAWAH INI SUDAH DIHAPUS/KOMENTAR:
+        // $pinjam->buku->decrement('jumlah', $pinjam->total_pinjam); 
 
-        return back()->with('success', 'Peminjaman disetujui dan jumlah telah diperbarui.');
+        return back()->with('success', 'Peminjaman disetujui.');
     }
+
     /**
      * Display the specified resource.
      */
@@ -162,21 +193,24 @@ class PeminjamanController extends Controller
 
     public function konfirmasi_kembali($id_pinjam)
     {
-        // Cari data berdasarkan ID
-        $peminjaman = Peminjaman::where('id_pinjam', $id_pinjam)->firstOrFail();
+        // Menggunakan DB transaction agar kedua proses (update & stok) harus berhasil semua atau gagal semua
+        return DB::transaction(function () use ($id_pinjam) {
+            $peminjaman = Peminjaman::where('id_pinjam', $id_pinjam)->firstOrFail();
 
-        // Update status dan tanggal kembali
-        $peminjaman->update([
-            'status' => 'kembali',
-            'tgl_kembali' => Carbon::now()->toDateString(),
-        ]);
+            // 1. Update status peminjaman
+            $peminjaman->update([
+                'status' => 'kembali',
+                'tgl_kembali' => Carbon::now()->toDateString(),
+            ]);
 
-        // Opsional: Kembalikan jumlah buku jika ada relasi
-        if ($peminjaman->buku) {
-            $peminjaman->buku->increment('jumlah');
-        }
+            // 2. Kembalikan stok buku sesuai 'total_pinjam'
+            if ($peminjaman->buku) {
+                // Ini akan menambah stok sejumlah angka di kolom total_pinjam
+                $peminjaman->buku->increment('jumlah', $peminjaman->total_pinjam);
+            }
 
-        return redirect()->back()->with('success', 'Buku berhasil dikembalikan!');
+            return redirect()->back()->with('success', 'Buku berhasil dikembalikan!');
+        });
     }
     // ... inside PeminjamanController class
 
@@ -202,13 +236,22 @@ class PeminjamanController extends Controller
     {
         $peminjaman = Peminjaman::findOrFail($id);
 
-        // Pastikan hanya bisa dibatalkan jika belum disetujui admin (masih pending)
+        // Pastikan hanya bisa dibatalkan jika masih pending
         if ($peminjaman->status == 'pending') {
-            $peminjaman->update([
-                'status' => 'dibatalkan'
-            ]);
 
-            return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan.');
+            DB::transaction(function () use ($peminjaman) {
+                // KEMBALIKAN STOK karena batal pinjam
+                if ($peminjaman->buku) {
+                    $peminjaman->buku->increment('jumlah', $peminjaman->total_pinjam);
+                }
+
+                // Ubah status atau hapus datanya
+                $peminjaman->update([
+                    'status' => 'dibatalkan'
+                ]);
+            });
+
+            return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan dan stok dikembalikan.');
         }
 
         return redirect()->back()->with('error', 'Gagal membatalkan. Status buku sudah berubah.');

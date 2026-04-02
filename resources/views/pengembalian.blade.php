@@ -49,6 +49,10 @@
                         >
                             <i class="bi bi-collection-play me-1"></i> Semua
                             Data
+
+                            <span class="badge bg-primary ms-1">
+                                {{ $totalSemua }}
+                            </span>
                         </button>
                     </li>
                 </ul>
