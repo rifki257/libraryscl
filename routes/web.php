@@ -11,6 +11,7 @@ use App\Http\Controllers\PengembalianController;
 use App\Http\Controllers\AdminPeminjamanController;
 use App\Http\Controllers\UserpengembalianController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WishlistController;
 use App\Models\Buku;
 use Illuminate\Http\Request;
 
@@ -66,6 +67,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // 4. PEMINJAMAN
     Route::get('/pinjam/{id}', [App\Http\Controllers\PeminjamanController::class, 'create'])->name('peminjaman');
     Route::post('/peminjaman/store', [PeminjamanController::class, 'store'])->name('peminjaman.store');
+    // Tambahkan ini untuk memproses simpan banyak buku sekaligus
+    Route::post('/peminjaman/store-masal', [PeminjamanController::class, 'storeMasal'])->name('peminjaman.store.masal');
     Route::get('/my-peminjaman', [PeminjamanController::class, 'history'])->name('mypinjaman');
     Route::put('/peminjaman/ajukan-kembali/{id}', [PeminjamanController::class, 'ajukanKembali'])
         ->name('peminjaman.ajukan_kembali');
@@ -75,7 +78,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/persetujuan', [PeminjamanController::class, 'persetujuan'])->name('admin.persetujuan');
     // Pastikan tujuannya ke PeminjamanController
     Route::put('/admin/setujui/{id}', [PeminjamanController::class, 'setujuiPinjam'])->name('admin.setujui');
-
+    Route::get('/pinjam-masal', [PeminjamanController::class, 'createMasal'])->name('peminjaman.masal');
+    // Pastikan ada ->name('peminjaman') di ujungnya
+Route::get('/pinjam/{id}', [PeminjamanController::class, 'pinjam'])->name('peminjaman');
 
     // 8. AKUN ADMIN DAN USER
     Route::middleware(['auth'])->group(function () {
@@ -94,7 +99,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // 10. PENGEMBALIAN
     Route::middleware(['auth'])->group(function () {
         Route::get('/pengembalian', [PengembalianController::class, 'index'])->name('pengembalian');
-        Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
+       
         Route::put('/admin/konfirmasi-pengembalian/{id_pinjam}', [PengembalianController::class, 'konfirmasi'])
             ->name('admin.konfirmasi_kembali');
     });
@@ -102,10 +107,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mybalik', [UserpengembalianController::class, 'history'])->name('mybalik');
     Route::post('/mybalik/store/{id}', [UserpengembalianController::class, 'store'])->name('mybalik.store');
 
-
+    Route::post('/wishlist/store', [WishlistController::class, 'store'])->name('wishlist.store');
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
     //
     // Pastikan ini di dalam middleware 'auth' dan checkRole admin
-    Route::get('/admin/persetujuan', [AdminPeminjamanController::class, 'index'])->name('admin.persetujuan');
-    Route::patch('/admin/persetujuan/{id}/setujui', [AdminPeminjamanController::class, 'setujui'])->name('admin.setujui');
+    // Route::get('/admin/persetujuan', [AdminPeminjamanController::class, 'index'])->name('admin.persetujuan');
+    // Route::patch('/admin/persetujuan/{id}/setujui', [AdminPeminjamanController::class, 'setujui'])->name('admin.setujui');
     Route::patch('/admin/persetujuan/{id}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('admin.tolak');
+   
 });

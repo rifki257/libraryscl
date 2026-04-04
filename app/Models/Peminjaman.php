@@ -12,7 +12,8 @@ class Peminjaman extends Model
     protected $table = 'peminjaman';
     protected $primaryKey = 'id_pinjam';
 
-    public $incrementing = true;
+    // PENTING: Set ke false karena ID dibuat manual di booted()
+    public $incrementing = false;
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -38,16 +39,14 @@ class Peminjaman extends Model
             }
         });
     }
+
     public function buku()
     {
         return $this->belongsTo(Buku::class, 'id_buku', 'id_buku');
     }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'id', 'id');
-    }
-    public function pengembalian()
-    {
-        return $this->hasOne(Pengembalian::class, 'id_pinjam', 'id_pinjam');
     }
 }

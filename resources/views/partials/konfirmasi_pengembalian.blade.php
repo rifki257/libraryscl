@@ -30,7 +30,7 @@
         $sudahDiajukan = ($data->status === 'proses');
         $isFilteringTerlambat = request('status') == 'terlambat' || request('filter') == 'denda';
     @endphp
-            <tr 
+            <tr
                 class="text-capitalize text-center align-middle item-peminjaman {{ $isTelat ? 'status-terlambat' : 'status-aman' }}"
             >
                 <td class="checkbox-column text-center d-none">

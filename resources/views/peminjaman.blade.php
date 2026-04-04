@@ -9,6 +9,8 @@
                     {{ session('error') }}
                 </div>
             @endif
+
+            {{-- Info Slot --}}
             <div
                 class="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 mb-4 shadow-sm rounded-r-lg"
             >
@@ -18,89 +20,99 @@
                     <span
                         class="ml-2 px-2 py-0.5 bg-yellow-200 rounded-full font-bold"
                     >
-                        Sisa slot kamu: {{ 6 - $totalBukuAktif }} buku
+                        Sisa slot kamu: {{ 6 - ($totalBukuAktif ?? 0) }} buku
                     </span>
                 </p>
-                {{-- Tambahkan info detail jika slot hampir habis --}}
-                @if ($totalBukuAktif > 0)
-                    <p class="text-xs mt-1 text-yellow-600 italic">*Kamu sedang memiliki {{ $totalBukuAktif }} buku (pending/dipinjam).</p>
+                @if (($totalBukuAktif ?? 0) > 0)
+                    <p class="text-xs mt-1 text-yellow-600 italic">*Kamu sedang memiliki {{ $totalBukuAktif }} buku dalam status pending/dipinjam.</p>
                 @endif
             </div>
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                {{-- Detail Buku --}}
-                <div
-                    class="flex items-center gap-4 mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100"
+                <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-4">
+                    Konfirmasi Peminjaman Masal
+                </h2>
+
+                <form
+                    action="{{ route('peminjaman.store.masal') }}"
+                    method="POST"
+                    id="main-form"
                 >
-                    <img
-                        src="{{ asset('storage/' . $buku->gambar) }}"
-                        class="w-30 h-40 object-cover rounded shadow-md"
-                    />
-                    <div>
-                        <h3 class="text-lg font-bold text-blue-900">
-                            {{ $buku->judul }}
-                        </h3>
-                        <p class="text-sm text-blue-700">Stok Perpustakaan: <span class="font-extrabold">{{ $buku->jumlah }}</span></p>
-                        <p class="text-sm text-red-700">Denda: <span>Rp50.000/Hari</span></p>
+                    @csrf
 
-                        {{-- Selector Jumlah Pinjam --}}
-                        <div class="flex items-center gap-3 mt-3">
-                            <p class="text-sm font-medium text-gray-700">Jumlah Pinjam:</p>
+                    {{-- LOOPING BUKU YANG DIPILIH --}}
+                    <div class="space-y-4 mb-8">
+                        @forelse ($books as $buku)
                             <div
-                                class="flex items-center border border-blue-200 rounded-lg bg-white"
+                                class="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100"
                             >
-                                <button
-                                    type="button"
-                                    onclick="decrementQty()"
-                                    class="px-3 py-1 text-blue-600 hover:bg-blue-50 font-bold"
-                                >
-                                    -
-                                </button>
-
+                                {{-- Input Hidden ID Buku untuk dikirim ke Controller --}}
                                 <input
-                                    type="number"
-                                    id="total_pinjam_display"
-                                    class="w-12 text-center border-none focus:ring-0 text-sm font-bold"
-                                    value="1"
-                                    readonly
+                                    type="hidden"
+                                    name="id_buku[]"
+                                    value="{{ $buku->id_buku }}"
                                 />
 
-                                <button
-                                    type="button"
-                                    onclick="incrementQty()"
-                                    class="px-3 py-1 text-blue-600 hover:bg-blue-50 font-bold"
-                                >
-                                    +
-                                </button>
+                                <img
+                                    src="{{ asset('storage/' . $buku->gambar) }}"
+                                    class="w-20 h-28 object-cover rounded shadow-sm"
+                                />
+
+                                <div class="flex-grow">
+                                    <h3 class="text-md font-bold text-blue-900">
+                                        {{ $buku->judul }}
+                                    </h3>
+                                    <p class="text-xs text-blue-700">Stok Tersedia: <span class="font-bold">{{ $buku->jumlah }}</span></p>
+                                    <p class="text-xs text-red-600 italic">Denda: Rp50.000/Hari</p>
+                                </div>
+
+                                {{-- Input Jumlah per Buku --}}
+                                <div class="flex flex-col items-end gap-3">
+                                    {{-- flex-col membuat konten tersusun ke bawah --}}
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="text-xs font-medium text-gray-600"
+                                            >Jumlah:</span
+                                        >
+                                        <input
+                                            type="number"
+                                            name="total_pinjam[]"
+                                            value="1"
+                                            min="1"
+                                            max="{{ $buku->jumlah }}"
+                                            class="qty-input w-20 p-2 text-sm border-blue-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 font-bold text-center"
+                                            onchange="validateTotalSlot()"
+                                        />
+                                    </div>
+
+                                    {{-- Tombol Hapus sekarang berada di bawah input jumlah --}}
+                                    <button
+                                        type="button"
+                                        onclick="removeBook(this)"
+                                        class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition p-1 hover:bg-red-50 rounded me-3"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Hapus
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        @empty
+                            <p class="text-center text-gray-500">Tidak ada buku yang dipilih.</p>
+                        @endforelse
                     </div>
-                </div>
 
-                {{-- Form Peminjaman --}}
-                <div x-data="peminjamanForm()">
-                    <form
-                        action="{{ route('peminjaman.store') }}"
-                        method="POST"
+                    {{-- Form Tanggal & Durasi (Alpine.js) --}}
+                    <div
+                        x-data="peminjamanForm()"
+                        class="bg-gray-50 p-6 rounded-xl border border-gray-200"
                     >
-                        @csrf
-                        <input
-                            type="hidden"
-                            name="id_buku"
-                            value="{{ $buku->id_buku }}"
-                        />
-
-                        {{-- Input Hidden untuk Jumlah (dikirim ke controller) --}}
-                        <input
-                            type="hidden"
-                            name="total_pinjam"
-                            id="total_pinjam_hidden"
-                            value="1"
-                        />
-
                         <div class="mb-6">
                             <label
                                 class="block text-sm font-semibold text-gray-700 mb-2"
-                                >Pilih Tanggal Jatuh Tempo</label
+                                >Pilih Tanggal Jatuh Tempo (Berlaku untuk semua
+                                buku)</label
                             >
                             <input
                                 type="date"
@@ -113,10 +125,18 @@
                                 required
                             />
 
-                            <div
-                                class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg"
-                            >
-                                <p class="text-sm text-green-800">📅 Durasi Pinjam: <strong x-text="durationText"></strong></p>
+                            <div class="mt-4 flex flex-col md:flex-row gap-4">
+                                <div
+                                    class="flex-1 p-3 bg-green-50 border border-green-200 rounded-lg"
+                                >
+                                    <p class="text-sm text-green-800">📅 Durasi Pinjam: <strong x-text="durationText"></strong></p>
+                                </div>
+                                <div
+                                    id="slot-warning"
+                                    class="hidden flex-1 p-3 bg-red-50 border border-red-200 rounded-lg"
+                                >
+                                    <p class="text-sm text-red-800 font-bold">⚠️ Total melebihi sisa jatah buku kamu!</p>
+                                </div>
                             </div>
 
                             <template x-if="errorMessage">
@@ -131,85 +151,64 @@
                             class="flex items-center justify-end gap-4 border-t pt-6"
                         >
                             <a
-                                href="{{ route('katalog') }}"
+                                href="{{ route('dashboard') }}"
                                 class="text-gray-600 hover:text-gray-800 text-sm font-medium"
                                 >Batal</a
                             >
                             <button
                                 type="submit"
+                                id="btn-submit"
                                 :disabled="!isValid"
                                 :class="!isValid
                                     ? 'opacity-50 cursor-not-allowed bg-gray-400'
                                     : 'bg-blue-600 hover:bg-blue-700'"
-                                class="text-white px-6 py-2 rounded-lg font-bold transition shadow-md"
+                                class="text-white px-8 py-3 rounded-lg font-bold transition shadow-md"
                             >
-                                Pinjam
+                                Ajukan Peminjaman
                             </button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <script>
-        // 1. Inisialisasi Data dari Laravel (Controller)
-        // Mengambil data stok buku dan jatah user yang sudah dihitung di backend
-        const stokBuku = {{ $buku->jumlah }};
-        const limitMaks = 6;
-        const totalAktif = {{ $totalBukuAktif }}; // Mengambil total buku (pending + dipinjam)
-        const sisaSlot = limitMaks - totalAktif;
+        // Inisialisasi Data dari Laravel (Satu kali ambil saat load)
+        const sisaSlotUser = {{ 6 - ($totalBukuAktif ?? 0) }};
 
-        // Element Selector
-        const displayQty = document.getElementById('total_pinjam_display');
-        const hiddenQty = document.getElementById('total_pinjam_hidden');
+        // Fungsi Validasi Total Slot (Cek apakah total angka di semua input <= sisa jatah)
+        function validateTotalSlot() {
+            const inputs = document.querySelectorAll('.qty-input');
+            const warning = document.getElementById('slot-warning');
+            const btn = document.getElementById('btn-submit');
 
-        // 2. Logika Tombol Quantity (Plus/Minus)
-        function incrementQty() {
-            let current = parseInt(displayQty.value);
+            let totalInput = 0;
+            inputs.forEach((input) => {
+                totalInput += parseInt(input.value) || 0;
+            });
 
-            // Cek Jatah User: Jika user sudah punya 4 buku, maka sisaSlot adalah 2.
-            // Tombol + akan berhenti jika angka mencapai 2.
-            if (current >= sisaSlot) {
-                alert(
-                    'Batas pinjam kamu sisa ' +
-                        sisaSlot +
-                        ' slot lagi (termasuk yang sedang diajukan atau dipinjam).'
-                );
-                return;
-            }
-
-            // Cek Stok Perpustakaan: Jangan sampai pinjam melebihi buku yang ada di rak.
-            if (current >= stokBuku) {
-                alert('Maaf, stok buku di perpustakaan hanya tersisa ' + stokBuku);
-                return;
-            }
-
-            // Update nilai jika validasi lolos
-            displayQty.value = current + 1;
-            hiddenQty.value = displayQty.value;
-        }
-
-        function decrementQty() {
-            let current = parseInt(displayQty.value);
-            if (current > 1) {
-                displayQty.value = current - 1;
-                hiddenQty.value = displayQty.value;
+            if (totalInput > sisaSlotUser) {
+                warning.classList.remove('hidden');
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'bg-gray-400');
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            } else {
+                warning.classList.add('hidden');
+                // Tombol akan kembali aktif tergantung validasi tanggal di AlpineJS
             }
         }
 
-        // 3. Logika Alpine.js untuk Form & Tanggal
+        // Logika Alpine.js untuk Tanggal
         function peminjamanForm() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Aturan: Minimal pinjam 7 hari dari sekarang
             const min = new Date(today);
-            min.setDate(today.getDate() + 7);
+            min.setDate(today.getDate() + 7); // Minimal pinjam 7 hari
 
-            // Aturan: Maksimal pinjam 2 bulan ke depan
             const max = new Date(today);
-            max.setMonth(today.getMonth() + 2);
+            max.setMonth(today.getMonth() + 2); // Maksimal 2 bulan
 
             return {
                 tglKembali: '',
@@ -235,12 +234,41 @@
                     this.errorMessage = '';
                     this.isValid = true;
 
-                    // Hitung selisih hari
                     const diffTime = Math.abs(selected - today);
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     this.durationText = diffDays + ' Hari';
+
+                    // Trigger validasi jumlah buku setiap kali tanggal berubah
+                    validateTotalSlot();
                 },
             };
+        }
+        function removeBook(button) {
+            // 1. Cari elemen pembungkus kartu buku (div dengan class bg-blue-50)
+            // Gunakan .closest() untuk mencari parent terdekat dengan class tertentu
+            const bookItem = button.closest('.flex.items-center.gap-4.p-4.bg-blue-50');
+
+            // 2. Tampilkan konfirmasi sederhana agar tidak sengaja terhapus
+            if (confirm('Apakah Anda yakin ingin menghapus buku ini dari daftar?')) {
+                // Tambahkan efek animasi fade out (opsional)
+                bookItem.style.opacity = '0';
+                bookItem.style.transition = '0.3s ease';
+
+                setTimeout(() => {
+                    // 3. Hapus elemen dari DOM
+                    bookItem.remove();
+
+                    // 4. Jalankan kembali validasi slot agar angka "Sisa Slot" terupdate
+                    validateTotalSlot();
+
+                    // 5. Jika semua buku habis dihapus, arahkan kembali ke dashboard/wishlist
+                    const remainingBooks = document.querySelectorAll('.qty-input');
+                    if (remainingBooks.length === 0) {
+                        alert('Daftar buku kosong, kembali ke halaman utama.');
+                        window.location.href = '{{ route('dashboard') }}';
+                    }
+                }, 300);
+            }
         }
     </script>
 </x-app-layout>

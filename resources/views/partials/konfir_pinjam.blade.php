@@ -9,11 +9,12 @@
             <th>Judul Buku</th>
             <th>Tgl Pengajuan</th>
             <th>Rencana Kembali</th>
+            <th>Jumlah</th>
             <th>Aksi</th>
         </tr>
     </thead>
     <tbody>
-        @forelse ($peminjamanPending as $item)
+        @forelse ($semuaPeminjaman as $item)
             <tr class="text-capitalize text-center align-middle">
                 <td>{{ $item->user->name }}</td>
                 <td>{{ $item->buku->judul }}</td>
@@ -22,32 +23,43 @@
                     {{ \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->format('d M Y') }}
                 </td>
                 <td>
-                    <form
-                        action="{{ route('admin.setujui', $data->id_peminjaman) }}"
-                        method="POST"
+                    <span class="badge bg-primary"
+                        >{{ $item->total_pinjam }} Buku</span
                     >
-                        @csrf
-                        @method ('PUT')
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            Setujui
-                        </button>
-                    </form>
-
-                    <form
-                        action="{{ route('admin.tolak', ['id' => $item->id_pinjam]) }}"
-                        method="POST"
-                        style="display: inline"
+                </td>
+                <td class="align-middle">
+                    <div
+                        class="d-flex justify-content-center align-items-center gap-1"
                     >
-                        @csrf
-                        @method ('PATCH')
-                        <button
-                            type="submit"
-                            class="btn btn-danger btn-sm"
-                            onclick="return confirm('Tolak peminjaman ini?');"
+                        <form
+                            action="{{ route('admin.setujui', $item->id_pinjam) }}"
+                            method="POST"
                         >
-                            Tolak
-                        </button>
-                    </form>
+                            @csrf
+                            @method ('PUT')
+                            <button type="submit" class="btn btn-success">
+                                Setujui
+                            </button>
+                        </form>
+
+                        <form
+                            action="{{ route('admin.tolak', ['id' => $item->id_pinjam]) }}"
+                            method="POST"
+                            style="display: inline"
+                        >
+                            @csrf
+                            @method ('PATCH')
+                            <button
+                                type="submit"
+                                class="btn btn-danger"
+                                onclick="
+                                    return confirm('Tolak peminjaman ini?');
+                                "
+                            >
+                                Tolak
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
         @empty

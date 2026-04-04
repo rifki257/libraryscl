@@ -1,218 +1,146 @@
-<style>
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-    .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-
-    .book-card {
-        position: relative;
-        overflow: hidden;
-        border-radius: 0.75rem;
-        background-color: #1a1a1a;
-        aspect-ratio: 3/4;
-    }
-
-    .book-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition:
-            transform 0.5s ease,
-            opacity 0.5s ease;
-    }
-
-    .book-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.75);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 1.5rem;
-        text-align: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        z-index: 20;
-    }
-
-    .book-overlay h3,
-    .book-overlay p,
-    .book-overlay span {
-        color: #ffffff !important;
-        margin: 0.25rem 0;
-        pointer-events: none;
-    }
-
-    .book-card:hover .book-overlay {
-        opacity: 1;
-    }
-
-    .book-card:hover .book-image {
-        transform: scale(1.1);
-        opacity: 0.3;
-    }
-
-    .sticky-banner {
-        position: sticky;
-        left: 0;
-        z-index: 1;
-        flex-shrink: 0;
-        transition: all 0.4s ease;
-    }
-
-    .hidden-banner {
-        opacity: 0;
-        pointer-events: none;
-    }
-</style>
-
 <div class="max-w-screen-7xl mx-auto py-12 relative group">
     <div
         id="scroll-container"
         class="flex flex-row items-center overflow-x-auto pb-10 scrollbar-hide scroll-smooth"
     >
-        {{-- Banner / Card Utama --}}
-        <div
-            id="banner"
-            class="sticky-banner w-[215px] h-[330px] overflow-hidden rounded-[1.3rem]"
-        >
-            <img
-                src="{{ asset('images/coba.jpg') }}"
-                class="h-full object-cover rounded-[1.3rem]"
-            />
-        </div>
-
-        {{-- List Buku --}}
-        <div
-            class="flex flex-row items-center space-x-4 pr-10"
-            style="margin-left: -85px; z-index: 10"
-        >
+        <div class="flex flex-row items-center space-x-4 pr-10">
             @foreach ($dataBuku as $buku)
                 @php
-                    $url = 'javascript:void(0)';
-                    $onclick = '';
-                    $isOutOfStock = $buku->jumlah <= 0;
-                    $isGuest = !Auth::check();
-
-                    if ($isOutOfStock) {
-                        $onclick = "Swal.fire({
-                            icon: 'error',
-                            title: 'Stok Habis',
-                            text: 'Maaf, buku " . addslashes($buku->judul) . " tidak tersedia saat ini.',
-                            confirmButtonColor: '#2563eb'
-                        })";
-                    } elseif ($isGuest) {
-                        $onclick = "Swal.fire({
-                            icon: 'info',
-                            title: 'Ingin Meminjam?',
-                            text: 'Silakan login terlebih dahulu untuk meminjam buku',
-                            showCancelButton: true,
-                            confirmButtonText: 'Login Sekarang',
-                            cancelButtonText: 'Nanti Saja',
-                            confirmButtonColor: '#2563eb'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '" . route('login') . "';
-                            }
-                        })";
-                    } else {
-                        $url = route('peminjaman', $buku->id_buku);
-                    }
-                @endphp
-                <a
-                    href="{{ $url }}"
-                    onclick="{{ $onclick }}"
-                    class="book-card flex-shrink-0 w-[170px] h-[250px] block transition-transform hover:-translate-y-2 {{ $isOutOfStock ? 'opacity-75 grayscale cursor-not-allowed' : '' }}"
+        $isOutOfStock = $buku->jumlah <= 0;
+        $isGuest = !Auth::check();
+        
+        // Logika URL dan Onclick sama seperti sebelumnya
+        if ($isOutOfStock) {
+            $url = 'javascript:void(0)';
+            $onclick = "Swal.fire({icon: 'error', title: 'Stok Habis', text: 'Buku tidak tersedia.', confirmButtonColor: '#2563eb'})";
+        } elseif ($isGuest) {
+            $url = 'javascript:void(0)';
+            $onclick = "Swal.fire({icon: 'info', title: 'Login dulu', text: 'Silakan login untuk meminjam.', showCancelButton: true, confirmButtonText: 'Login'}).then((r) => { if(r.isConfirmed) window.location.href='".route('login')."'; })";
+        } else {
+            $url = route('peminjaman', $buku->id_buku);
+            $onclick = "";
+        }
+    @endphp
+                <div
+                    class="flex-shrink-0 w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow-lg border border-white/5 transition-transform hover:-translate-y-2"
                 >
-                    <img
-                        src="{{ asset('storage/' . $buku->gambar) }}"
-                        alt="{{ $buku->judul }}"
-                        class="book-image w-full h-full object-cover rounded-xl"
-                    />
+                    {{-- Area Gambar --}}
+                    <div class="relative h-[240px] w-full">
+                        <img
+                            src="{{ asset('storage/' . $buku->gambar) }}"
+                            alt="{{ $buku->judul }}"
+                            class="w-full h-full object-cover {{ $isOutOfStock ? 'grayscale opacity-50' : '' }}"
+                        />
+                        @if (!$isGuest && !$isOutOfStock)
+                            <button
+                                onclick="tambahWishlist(event, {{ $buku->id_buku }}, '{{ addslashes($buku->judul) }}')"
+                                {{-- Gunakan group untuk mendeteksi hover pada button --}}
+                                class="absolute top-3 right-3 z-30 transition-all duration-300 group/wish"
+                                title="Tambah ke Wishlist"
+                            >
+                                {{-- 1. Ikon Garis Tepi (Default: Abu-abu, Hilang saat Hover) --}}
+                                <i
+                                    class="bi bi-bookmark text-2xl text-gray-400 group-hover/wish:hidden"
+                                ></i>
 
-                    <div class="book-overlay">
-                        <h3
-                            style="
-                                font-size: 1rem;
-                                font-weight: 800;
-                                line-height: 1.1;
-                                color: #60a5fa !important;
-                                margin-bottom: 0.5rem;
-                                text-transform: capitalize;
-                            "
-                        >
-                            {{ $buku->judul }}
-                        </h3>
+                                {{-- 2. Ikon Terisi Penuh (Default: Tersembunyi, Muncul Putih saat Hover) --}}
+                                <i
+                                    class="bi bi-bookmark-fill text-2xl text-white hidden group-hover/wish:inline-block"
+                                ></i>
+                            </button>
+                        @endif
 
-                        <p
-                            style="
-                                font-size: 0.7rem;
-                                font-style: italic;
-                                color: #d1d5db !important;
-                            "
-                        >
-                            Penulis: {{ $buku->penulis }}
-                        </p>
+                        @if ($isOutOfStock)
+                            <div
+                                class="absolute inset-0 flex items-center justify-center bg-black/40"
+                            >
+                                <span
+                                    class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded"
+                                    >HABIS</span
+                                >
+                            </div>
+                        @endif
+                    </div>
 
-                        <p
-                            style="
-                                font-size: 0.7rem;
-                                font-style: italic;
-                                color: #d1d5db !important;
-                            "
-                        >
-                            Penerbit: {{ $buku->penerbit }}
-                        </p>
-
-                        <div
-                            style="
-                                margin-top: 0.6rem;
-                                padding: 0.25rem 0.75rem;
-                                background: #2563eb;
-                                border-radius: 0.375rem;
-                                font-size: 0.7rem;
-                                font-weight: 600;
-                            "
-                        >
-                            Stok: {{ $buku->jumlah }}
+                    {{-- Area Konten (Bawah Gambar) --}}
+                    <div class="p-4 flex flex-col h-[140px] justify-between">
+                        <div>
+                            <h3
+                                class="text-blue-400 font-bold text-sm line-clamp-1 mb-1 uppercase tracking-tight"
+                            >
+                                {{ $buku->judul }}
+                            </h3>
+                            <p class="text-gray-400 text-[11px] italic line-clamp-1">
+                                {{ $buku->penulis }}
+                            </p>
+                            <p class="text-gray-500 text-[10px] mb-2">
+                                Stok:
+                                <span
+                                    class="{{ $isOutOfStock ? 'text-red-500' : 'text-green-500' }}"
+                                    >{{ $buku->jumlah }}</span
+                                >
+                            </p>
                         </div>
 
-                        <p
-                            style="
-                                margin-top: 0.3rem;
-                                font-size: 0.7rem;
-                                font-weight: bold;
-                                border-bottom: 1px solid white;
-                            "
+                        {{-- Tombol Pinjam --}}
+                        <a
+                            href="{{ $url }}"
+                            onclick="{{ $onclick }}"
+                            class="w-full py-2 rounded-lg text-center text-xs font-bold transition-all {{ $isOutOfStock ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20 shadow-lg' }}"
                         >
-                            {{ $isOutOfStock ? 'STOK HABIS' : 'KLIK UNTUK PINJAM' }}
-                        </p>
+                            {{ $isOutOfStock ? 'TIDAK TERSEDIA' : 'PINJAM SEKARANG' }}
+                        </a>
                     </div>
-                </a>
+                </div>
             @endforeach
         </div>
     </div>
 </div>
+</div>
 <script>
-    const container = document.getElementById('scroll-container');
-    const banner = document.getElementById('banner');
+    function tambahWishlist(event, idBuku, judulBuku) {
+        event.preventDefault();
 
-    function updateUI() {
-        if (!container || !banner) return;
-
-        const scrollLeft = container.scrollLeft;
-
-        if (scrollLeft > 5) {
-            banner.classList.add('hidden-banner');
-        } else {
-            banner.classList.remove('hidden-banner');
-        }
+        axios
+            .post('{{ route("wishlist.store") }}', {
+                id_buku: idBuku,
+            })
+            .then((response) => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: judulBuku + ' ditambahkan ke wishlist.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Lihat Wishlist',
+                    cancelButtonText: 'Lanjut Cari Buku',
+                    confirmButtonColor: '#467599',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '{{ route("wishlist.index") }}';
+                    }
+                });
+            })
+            .catch((error) => {
+                // Cek jika error datang dari validasi (buku sudah ada)
+                if (error.response && error.response.status === 422) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Sudah Ada',
+                        text:
+                            'Buku "' +
+                            judulBuku +
+                            '" sudah masuk di wishlist kamu.',
+                        confirmButtonColor: '#467599',
+                    });
+                } else {
+                    // Error lainnya (masalah koneksi, dll)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Terjadi kesalahan saat menambahkan buku.',
+                        confirmButtonColor: '#ef4444',
+                    });
+                }
+            });
     }
-
-    container.addEventListener('scroll', updateUI, { passive: true });
-    window.addEventListener('load', updateUI);
 </script>

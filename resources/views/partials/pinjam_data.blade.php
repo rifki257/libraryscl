@@ -5,98 +5,57 @@
             <th>Buku</th>
             <th>Tgl Pinjam</th>
             <th>Jatuh Tempo</th>
+            <th>Jumlah</th>
             <th>Status</th>
             <th>Aksi</th>
         </tr>
     </thead>
     <tbody>
         @forelse ($semuaPeminjaman as $data)
-            <tr class="text-capitalize text-center align-middle" style="min-height: 200px">
+            @php
+                $tglJatuhTempo = \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->startOfDay();
+                $tglSekarang = \Carbon\Carbon::now()->startOfDay();
+                $selisih = $tglSekarang->diffInDays($tglJatuhTempo, false);
+                $hariTerlambat = $selisih < 0 ? abs($selisih) : 0;
+                $totalDenda = $hariTerlambat * 50000;
+            @endphp
+            <tr class="text-capitalize text-center align-middle">
                 <td>
-                    @php
-        // Hitung selisih hari & denda di awal agar bisa dipakai di Nama, Status, dan Tombol
-        $tglJatuhTempo = \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->startOfDay();
-        $tglSekarang = \Carbon\Carbon::now()->startOfDay();
-        $selisih = $tglSekarang->diffInDays($tglJatuhTempo, false);
-        
-        $hariTerlambat = $selisih < 0 ? abs($selisih) : 0;
-        $totalDenda = $hariTerlambat * 50000;
-    @endphp
-
-                    <div
-                        class="fw-bold {{ $hariTerlambat > 0 ? 'text-danger' : '' }}"
-                    >
+                    <div class="fw-bold {{ $hariTerlambat > 0 && $data->status == 'dipinjam' ? 'text-danger' : '' }}">
                         {{ $data->user->name }}
                     </div>
-
                     <small class="text-muted">{{ $data->user->email }}</small>
                 </td>
                 <td>{{ $data->buku->judul }}</td>
-                <td>
-                    {{ $data->tgl_pinjam ? \Carbon\Carbon::parse($data->tgl_pinjam)->format('d M Y') : '-' }}
-                </td>
-                <td>
-                    {{ \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->format('d M Y') }}
-                </td>
+                <td>{{ $data->tgl_pinjam ? \Carbon\Carbon::parse($data->tgl_pinjam)->format('d M Y') : '-' }}</td>
+                <td>{{ \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->format('d M Y') }}</td>
+                <td><span class="badge bg-secondary">{{ $data->total_pinjam }} Buku</span></td>
                 <td>
                     @if ($data->status == 'dipinjam')
-                        @php
-            $tglJatuhTempo = \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->startOfDay();
-            $tglSekarang = \Carbon\Carbon::now()->startOfDay();
-            $selisih = $tglSekarang->diffInDays($tglJatuhTempo, false);
-            $hariTerlambat = $selisih < 0 ? abs($selisih) : 0;
-            $dendaPerHari = 50000;
-            $totalDenda = $hariTerlambat * $dendaPerHari;
-        @endphp
-                        <span class="badge bg-primary text-uppercase p-2"
-                            >Dipinjam</span
-                        >
+                        <span class="badge bg-primary p-2">Dipinjam</span>
                         @if ($hariTerlambat > 0)
-                            <br />
-                            <small class="text-danger fw-bold"
-                                >Denda: Rp {{ number_format($totalDenda, 0, ',', '.') }}</small
-                            >
+                            <br><small class="text-danger fw-bold">Denda: Rp {{ number_format($totalDenda, 0, ',', '.') }}</small>
                         @endif
-
                     @elseif ($data->status == 'kembali')
-                        <span class="badge bg-success text-uppercase p-2"
-                            >Dikembalikan</span
-                        >
-                    @elseif ($data->status == 'ditolak')
-                        <span class="badge bg-danger text-uppercase p-2"
-                            >Ditolak</span
-                        >
+                        <span class="badge bg-success p-2">Dikembalikan</span>
+                    @else
+                        <span class="badge bg-danger p-2">{{ $data->status }}</span>
                     @endif
                 </td>
-
                 <td>
-                    @if ($data->status == 'dipinjam')
-                        {{-- Logika warna tombol: Jika telat (hariTerlambat > 0) jadi merah (btn-danger), jika tidak tetap biru (btn-primary) --}}
-                        <button
-                            type="button"
-                            class="btn {{ $hariTerlambat > 0 ? 'btn-danger' : 'btn-primary' }} btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#modalKembali"
-                            data-id="{{ $data->id_pinjam }}"
-                            data-nama="{{ $data->user->name }}"
-                            data-email="{{ $data->user->email }}"
-                            data-hp="{{ $data->user->no_hp }}"
-                            data-kelas="{{ $data->user->kelas }}"
-                            data-nis="{{ $data->user->nis }}"
-                            data-buku="{{ $data->buku->judul }}"
-                            data-tgl-tempo="{{ $data->tgl_jatuh_tempo }}"
-                        >
-                            Detail
-                        </button>
-                    @else
-                        <span class="text-muted small">Selesai</span>
-                    @endif
+                    <button type="button" class="btn {{ $hariTerlambat > 0 ? 'btn-danger' : 'btn-primary' }} btn-sm" 
+                        data-bs-toggle="modal" data-bs-target="#modalKembali"
+                        data-id="{{ $data->id_pinjam }}"
+                        data-nama="{{ $data->user->name }}"
+                        {{-- teruskan data lainnya... --}}>
+                        Detail
+                    </button>
                 </td>
             </tr>
         @empty
             <tr>
-                <td colspan="6" class="text-center py-4 text-muted">
-                    Belum ada data peminjaman yang diproses.
+                <td colspan="7" class="text-center py-4 text-muted">
+                    Belum ada data peminjaman yang disetujui.
                 </td>
             </tr>
         @endforelse

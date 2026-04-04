@@ -25,7 +25,7 @@
                         <i class="bi bi-check2-circle me-1"></i> Konfirmasi
                         Pinjam
                         <span class="badge bg-danger ms-1" id="pending-count">
-                            {{ $peminjamanPending->count() }}
+                            {{ $semuaPeminjaman->count() }}
                         </span>
                     </button>
                 </li>
