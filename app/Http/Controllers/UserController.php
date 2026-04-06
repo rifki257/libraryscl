@@ -8,9 +8,6 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         if (auth()->user()->role !== 'kepper') {
@@ -26,21 +23,14 @@ class UserController extends Controller
         $users = \App\Models\User::where('role', 'anggota')->get();
         return view('akun_user', compact('users'));
     }
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        // Izinkan kepper DAN petugas untuk masuk ke halaman registrasi
         if (!in_array(auth()->user()->role, ['kepper', 'petugas'])) {
             return redirect()->route('dashboard')->with('error', 'Anda tidak punya akses!');
         }
         return view('auth.register');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $userLogin = auth()->user();
@@ -83,33 +73,10 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', count($ids) . ' akun berhasil dihapus.');
     }
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
 
     public function bulkUpdateKelas(Request $request)
     {
-        $dataArray = json_decode($request->ids, true); // Mengambil data dari input id="bulk-ids"
+        $dataArray = json_decode($request->ids, true);
 
         foreach ($dataArray as $item) {
             User::whereIn('id', $item['ids'])->update([
@@ -120,9 +87,6 @@ class UserController extends Controller
         return back()->with('success', 'Berhasil memperbarui kelas.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $user = \App\Models\User::findOrFail($id);

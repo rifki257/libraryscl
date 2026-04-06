@@ -9,10 +9,6 @@ use Illuminate\Support\Facades\Storage;
 
 class BukuController extends Controller
 {
-
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         if (auth()->check() && auth()->user()->role === 'anggota') {
@@ -22,21 +18,12 @@ class BukuController extends Controller
         $dataBuku = Buku::all();
         return view('buku', compact('dataBuku'));
     }
-    
-    // ... fungsi lainnya otomatis aman
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('add.bukucreate');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -55,27 +42,18 @@ class BukuController extends Controller
         return redirect()->route('buku')->with('success', 'Buku berhasil ditambah!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $buku = Buku::findOrFail($id);
         return view('detail.bukudetail', compact('buku'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         $buku = Buku::findOrFail($id);
         return view('edit.bukuedit', compact('buku'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -97,9 +75,6 @@ class BukuController extends Controller
         return redirect()->route('buku')->with('success', 'Buku berhasil diperbarui!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         $buku = Buku::findOrFail($id);
@@ -110,7 +85,7 @@ class BukuController extends Controller
         $buku->delete();
         return redirect()->route('buku')->with('success', 'Buku berhasil dihapus!');
     }
-    //search
+
     public function search(Request $request)
     {
         $search = $request->query('search');

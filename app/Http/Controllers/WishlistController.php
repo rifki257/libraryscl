@@ -18,7 +18,6 @@ class WishlistController extends Controller
         ->latest()
         ->get();
 
-    // Hitung sisa jatah secara dinamis dari database
     $totalDipinjam = Peminjaman::where('id', $userId)
         ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
         ->sum('total_pinjam') ?? 0;
@@ -37,13 +36,11 @@ class WishlistController extends Controller
         $userId = Auth::id();
         $idBuku = $request->id_buku;
 
-        // Cek apakah sudah ada di wishlist
         $exists = Wishlist::where('id', $userId)
             ->where('id_buku', $idBuku)
             ->first();
 
         if ($exists) {
-            // GANTI DI SINI: Kirim status 422 agar masuk ke .catch di JavaScript
             return response()->json([
                 'success' => false,
                 'message' => 'Buku ini sudah ada di wishlist kamu.'
@@ -61,11 +58,8 @@ class WishlistController extends Controller
         ]);
     }
 
-    // Tambahkan fungsi destroy untuk tombol 'Remove'
     public function destroy($id)
     {
-        // Cari data berdasarkan id_wishlist (sesuai nama Primary Key manual Anda)
-        // dan pastikan milik user yang sedang login
         $wishlist = Wishlist::where('id', auth()->id())
             ->where('id_wishlist', $id)
             ->first();
