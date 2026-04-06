@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminPeminjamanController;
 use App\Http\Controllers\UserpengembalianController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\KategoriController;
 use App\Models\Buku;
 use Illuminate\Http\Request;
 
@@ -80,7 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/admin/setujui/{id}', [PeminjamanController::class, 'setujuiPinjam'])->name('admin.setujui');
     Route::get('/pinjam-masal', [PeminjamanController::class, 'createMasal'])->name('peminjaman.masal');
     // Pastikan ada ->name('peminjaman') di ujungnya
-Route::get('/pinjam/{id}', [PeminjamanController::class, 'pinjam'])->name('peminjaman');
+    Route::get('/pinjam/{id}', [PeminjamanController::class, 'pinjam'])->name('peminjaman');
 
     // 8. AKUN ADMIN DAN USER
     Route::middleware(['auth'])->group(function () {
@@ -99,7 +100,7 @@ Route::get('/pinjam/{id}', [PeminjamanController::class, 'pinjam'])->name('pemin
     // 10. PENGEMBALIAN
     Route::middleware(['auth'])->group(function () {
         Route::get('/pengembalian', [PengembalianController::class, 'index'])->name('pengembalian');
-       
+
         Route::put('/admin/konfirmasi-pengembalian/{id_pinjam}', [PengembalianController::class, 'konfirmasi'])
             ->name('admin.konfirmasi_kembali');
     });
@@ -115,5 +116,11 @@ Route::get('/pinjam/{id}', [PeminjamanController::class, 'pinjam'])->name('pemin
     // Route::get('/admin/persetujuan', [AdminPeminjamanController::class, 'index'])->name('admin.persetujuan');
     // Route::patch('/admin/persetujuan/{id}/setujui', [AdminPeminjamanController::class, 'setujui'])->name('admin.setujui');
     Route::patch('/admin/persetujuan/{id}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('admin.tolak');
-   
+
+    // Halaman Daftar Kategori (Index)
+    Route::get('/kategori-buku', [KategoriController::class, 'index'])->name('kategori.buku');
+
+    Route::get('/kategori-buku/create', [KategoriController::class, 'create'])->name('kategori.create');
+    Route::post('/kategori-buku/store', [KategoriController::class, 'store'])->name('kategori.store');
+    Route::post('/kategori-buku', [KategoriController::class, 'store'])->name('kategori.store');
 });

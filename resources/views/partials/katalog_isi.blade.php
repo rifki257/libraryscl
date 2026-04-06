@@ -22,7 +22,7 @@
         }
     @endphp
                 <div
-                    class="flex-shrink-0 w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow-lg border border-white/5 transition-transform hover:-translate-y-2"
+                    class="flex-shrink-0 w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow border border-white/5 transition-transform hover:-translate-y-2"
                 >
                     {{-- Area Gambar --}}
                     <div class="relative h-[240px] w-full">

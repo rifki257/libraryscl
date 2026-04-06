@@ -4,9 +4,14 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight mb-0">
-                {{ __('Data Buku') }}
-            </h2>
+            <div class="d-flex align-items-center gap-2">
+                <a
+                    href="{{ route('kategori.buku') }}"
+                    class="btn btn-success d-flex align-items-center gap-1"
+                >
+                    <i class="bi bi-list-ul"></i> Kategori
+                </a>
+            </div>
 
             <div class="d-flex align-items-center gap-2">
                 <div class="input-group" style="max-width: 350px">
@@ -49,7 +54,10 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="overflow-hidden shadow-sm sm:rounded-lg" style="background-color: rgb(235, 235, 235)">
+            <div
+                class="overflow-hidden shadow-sm sm:rounded-lg"
+                style="background-color: rgb(235, 235, 235)"
+            >
                 <div class="p-6 text-gray-900">
                     <div class="container">
                         <div class="card-body">

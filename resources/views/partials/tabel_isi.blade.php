@@ -19,7 +19,7 @@
                             src="{{ asset('storage/' . $buku->gambar) }}"
                             alt="cover"
                             style="width: 50px; height: auto"
-                            class="rounded shadow-sm mx-auto"
+                            class="rounded mx-auto"
                         />
                     @else
                         <span class="text-muted">No Image</span>
