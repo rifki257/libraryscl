@@ -25,8 +25,14 @@ class Buku extends Model
         'penulis',
         'jumlah',
         'gambar',
+        'id_kategori',
     ];
 
+    public function kategori()
+    {
+        return $this->belongsTo(Kategori::class, 'id_kategori');
+    }
+    
     protected static function booted()
     {
         static::creating(function ($buku) {

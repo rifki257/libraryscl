@@ -4,7 +4,7 @@
             <th>id buku</th>
             <th>gambar</th>
             <th>judul</th>
-            <th>stok</th>
+            <th>Kategori</th>
             <th>aksi</th>
         </tr>
     </thead>
@@ -27,34 +27,33 @@
                 </td>
 
                 {{-- Kolom Judul --}}
-                <td class="{{ $buku->jumlah <= 0 ? 'text-danger fw-bold' : '' }}">
+                <td
+                    class="{{ $buku->jumlah <= 0 ? 'text-danger fw-bold' : '' }}"
+                >
                     {{ $buku->judul }}
                 </td>
 
-                {{-- Kolom Jumlah/Stok --}}
                 <td>
-                    @if ($buku->jumlah <= 0)
-                        <span class="badge bg-danger">Stok Habis</span>
-                    @else
-                        {{ $buku->jumlah }}
-                    @endif
+                    {{ $buku->kategori->nama_kategori ?? 'Tidak Ada Kategori' }}
                 </td>
 
                 <td class="text-center">
-                    <div class="d-flex justify-content-center align-items-center gap-1">
+                    <div
+                        class="d-flex justify-content-center align-items-center gap-1"
+                    >
                         <a
                             href="{{ route('buku.edit', $buku->id_buku) }}"
                             class="btn btn-warning text-white"
                             style="width: 70px"
-                            >Edit</a
-                        >
+                            ><i class="fa-solid fa-pen-to-square"></i
+                        ></a>
 
                         <a
                             href="{{ route('buku.detail', $buku->id_buku) }}"
                             class="btn btn-secondary"
                             style="width: 70px"
-                            >Detail</a
-                        >
+                            ><i class="fa-solid fa-eye"></i
+                        ></a>
 
                         <form
                             action="{{ route('buku.destroy', $buku->id_buku) }}"
@@ -62,14 +61,18 @@
                             class="m-0"
                         >
                             @csrf
-                            @method('DELETE')
+                            @method ('DELETE')
                             <button
                                 type="submit"
                                 class="btn btn-danger"
                                 style="width: 70px"
-                                onclick="return confirm('Apakah Anda yakin ingin menghapus buku ini?');"
+                                onclick="
+                                    return confirm(
+                                        'Apakah Anda yakin ingin menghapus buku ini?'
+                                    );
+                                "
                             >
-                                Hapus
+                                <i class="fa-solid fa-trash"></i>
                             </button>
                         </form>
                     </div>

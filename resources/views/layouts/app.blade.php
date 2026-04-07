@@ -15,7 +15,10 @@
     />
     @vite (['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <!-- Scripts -->
     @vite (['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -33,15 +36,14 @@
         @endisset
 
         <!-- Page Content -->
-        <main class="flex-grow"> {{ $slot }}</main>
+        <main class="flex-grow">{{ $slot }}</main>
         @auth
             @if (in_array(Auth::user()->role, ['petugas', 'kepper', 'admin']))
-            @include ('layouts.footers.admin')
-        @else
-            @include ('layouts.footers.user')
-        @endif
+                @include ('layouts.footers.admin')
+            @else
+                @include ('layouts.footers.user')
+            @endif
         @endauth
-        
     </div>
     @if (session('error'))
         <script>

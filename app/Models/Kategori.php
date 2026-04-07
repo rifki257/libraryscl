@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Kategori extends Model
 {
-    protected $table = 'kategoris'; // Nama tabel manual kamu
-    protected $fillable = ['nama_kategori']; // Nama kolom di database
+    protected $primaryKey = 'id_kategori';
+    protected $table = 'kategoris';
+    protected $fillable = ['nama_kategori'];
+    public function buku()
+    {
+        return $this->hasMany(Buku::class, 'id_kategori', 'id_kategori');
+    }
 }

@@ -46,7 +46,7 @@
                     href="{{ route('buku.create') }}"
                     class="btn btn-success d-flex align-items-center gap-1"
                 >
-                    <i class="bi bi-plus-lg"></i> Tambah
+                    <i class="bi bi-plus-lg"></i> Buku
                 </a>
             </div>
         </div>

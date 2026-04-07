@@ -1,6 +1,11 @@
 <head>
     @vite (['resources/css/app.scss', 'resources/js/app.js'])
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
 </head>
+
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between">
@@ -62,6 +67,14 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <th class="bg-light" style="width: 30%">
+                                        Kategori
+                                    </th>
+                                    <td class="text-capitalize">
+                                        {{ $buku->kategori->nama_kategori ?? 'Tanpa Kategori' }}
+                                    </td>
+                                </tr>
+                                <tr>
                                     <th class="bg-light">Jumlah</th>
                                     <td class="text-capitalize">
                                         {{ $buku->jumlah }} Ekor
@@ -73,13 +86,13 @@
                             href="{{ route('buku.edit', $buku->id_buku) }}"
                             class="btn btn-warning text-white mt-2"
                             style="width: 80px"
-                            >Edit</a
-                        >
+                            id="edit"
+                            ><i class="fa-solid fa-pen-to-square"></i></a>
                         <a
                             href="{{ route('buku') }}"
-                            class="btn btn-secondary mt-2"
-                            >Kembali</a
-                        >
+                            class="btn btn-secondary mt-2" id="kembali"
+                            style="width: 80px"
+                            ><i class="fa-solid fa-arrow-left"></i></a>
                     </div>
                 </div>
             </div>

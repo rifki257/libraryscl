@@ -4,27 +4,28 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Buku;
-use Illuminate\Support\Facades\DB;
 use App\Models\Peminjaman;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Wishlist;
 
 class PeminjamanController extends Controller
 {
     public function index()
-{
-    $semuaPeminjaman = Peminjaman::with(['buku', 'user'])
-        ->whereIn('status', ['dipinjam', 'kembali', 'ditolak'])
-        ->latest()
-        ->get();
+    {
+        $semuaPeminjaman = Peminjaman::with(['buku', 'user'])
+            ->whereIn('status', ['dipinjam', 'kembali', 'ditolak'])
+            ->latest()
+            ->get();
 
-    return view('partials.pinjam_data', compact('semuaPeminjaman'));
-}
+        return view('partials.pinjam_data', compact('semuaPeminjaman'));
+    }
 
     public function persetujuan()
     {
-        $semuaPeminjaman = Peminjaman::with('buku', 'user')
-            ->where('status', 'pending') 
+        $semuaPeminjaman = Peminjaman::with(['buku', 'user'])
+            ->whereIn('status', ['menunggu', 'ajukan_kembali']) // Sesuaikan status
             ->latest()
             ->get();
 
@@ -39,8 +40,8 @@ class PeminjamanController extends Controller
         $buku = Buku::findOrFail($id);
         $totalBukuAktif = DB::table('peminjaman')
             ->where('id', auth()->id())
-            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
-            ->sum('total_pinjam') ?? 0;
+            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu'])
+            ->count(); // Gunakan count() karena kolom total_pinjam sudah tidak ada
 
         return view('peminjaman', compact('buku', 'totalBukuAktif'));
     }
@@ -59,7 +60,7 @@ class PeminjamanController extends Controller
         $totalBukuAktif = DB::table('peminjaman')
             ->where('id', auth()->id())
             ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
-            ->sum('total_pinjam') ?? 0;
+            ->count();
 
         $slotTersedia = $limitMaksimal - $totalBukuAktif;
 
@@ -118,12 +119,11 @@ class PeminjamanController extends Controller
     public function ajukanKembali($id)
     {
         $peminjaman = Peminjaman::findOrFail($id);
-
         $peminjaman->update([
-            'status' => 'proses'
+            'status' => 'ajukan_kembali' // Ubah dari 'proses' ke 'ajukan_kembali' agar sinkron
         ]);
 
-        return redirect()->back()->with('success', 'Pengembalian berhasil diajukan. Tunggu konfirmasi admin.');
+        return redirect()->back()->with('success', 'Pengembalian diajukan ke admin.');
     }
 
     public function konfirmasi_kembali($id_pinjam)
@@ -132,14 +132,17 @@ class PeminjamanController extends Controller
             $peminjaman = Peminjaman::where('id_pinjam', $id_pinjam)->firstOrFail();
 
             $peminjaman->update([
-                'status' => 'kembali',
+                'status'      => 'kembali',
                 'tgl_kembali' => Carbon::now()->toDateString(),
             ]);
+
+            // Stok tidak perlu ditambah lagi karena tidak dikurangi saat pengajuan balik
+            // Tapi jika kamu ingin memastikan stok kembali saat buku benar-benar di tangan admin:
             if ($peminjaman->buku) {
-                $peminjaman->buku->increment('jumlah', $peminjaman->total_pinjam);
+                $peminjaman->buku->increment('jumlah');
             }
 
-            return redirect()->back()->with('success', 'Buku berhasil dikembalikan!');
+            return redirect()->back()->with('success', 'Buku telah kembali!');
         });
     }
 
@@ -147,14 +150,16 @@ class PeminjamanController extends Controller
     {
         $userId = auth()->id();
 
-        $sedangDipinjam = \App\Models\Peminjaman::with('buku')
+        $sedangDipinjam = Peminjaman::with('buku')
             ->where('id', $userId)
-            ->whereIn('status', ['pending', 'dipinjam', 'proses'])
+            ->whereIn('status', ['menunggu', 'dipinjam', 'ajukan_kembali', 'proses'])
+            ->latest()
             ->get();
 
-        $riwayatSelesai = \App\Models\Peminjaman::with('buku')
+        $riwayatSelesai = Peminjaman::with('buku')
             ->where('id', $userId)
             ->where('status', 'kembali')
+            ->latest()
             ->get();
 
         return view('mypinjaman', compact('sedangDipinjam', 'riwayatSelesai'));
@@ -162,21 +167,18 @@ class PeminjamanController extends Controller
 
     public function destroy($id)
     {
-        $peminjaman = Peminjaman::findOrFail($id);
+        $peminjaman = Peminjaman::where('id_pinjam', $id)->firstOrFail();
 
-        if ($peminjaman->status == 'pending') {
-
+        if ($peminjaman->status == 'menunggu') {
             DB::transaction(function () use ($peminjaman) {
                 if ($peminjaman->buku) {
-                    $peminjaman->buku->increment('jumlah', $peminjaman->total_pinjam);
+                    $peminjaman->buku->increment('jumlah'); // Kembalikan stok karena batal
                 }
-                $peminjaman->update([
-                    'status' => 'dibatalkan'
-                ]);
+                $peminjaman->delete(); // Atau update status ke 'dibatalkan'
             });
-            return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan dan stok dikembalikan.');
+            return redirect()->back()->with('success', 'Peminjaman dibatalkan.');
         }
-        return redirect()->back()->with('error', 'Gagal membatalkan. Status buku sudah berubah.');
+        return redirect()->back()->with('error', 'Tidak bisa membatalkan buku yang sudah dipinjam.');
     }
 
 
@@ -190,7 +192,7 @@ class PeminjamanController extends Controller
         $books = collect([$buku_tunggal]);
         $totalBukuAktif = Peminjaman::where('id', auth()->id())
             ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
-            ->sum('total_pinjam') ?? 0;
+            ->count();
         return view('peminjaman', compact('books', 'totalBukuAktif'));
     }
 
@@ -205,44 +207,48 @@ class PeminjamanController extends Controller
         $books = Buku::whereIn('id_buku', $idsArray)->get();
         $totalBukuAktif = Peminjaman::where('id', auth()->id())
             ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
-            ->sum('total_pinjam') ?? 0;
+            ->count();
         return view('peminjaman', compact('books', 'totalBukuAktif'));
     }
 
     public function storeMasal(Request $request)
     {
         $request->validate([
-            'id_buku' => 'required|array',
-            'total_pinjam' => 'required|array',
-            'tgl_kembali' => 'required|date',
+            'id_buku'       => 'required|array',
+            'tgl_kembali'   => 'required|array',
+            'tgl_kembali.*' => 'required|date',
         ]);
 
         try {
-            DB::transaction(function () use ($request) {
-                $userId = auth()->id();
-                $tgl_kembali = $request->tgl_kembali;
-                foreach ($request->id_buku as $key => $id_buku) {
-                    $jumlah_pinjam = $request->total_pinjam[$key];
-                    $buku = Buku::findOrFail($id_buku);
-                    Peminjaman::create([
-                        'id_buku' => $id_buku,
-                        'id' => $userId,
-                        'tgl_pinjam' => now(),
-                        'tgl_jatuh_tempo' => $tgl_kembali,
-                        'status' => 'pending',
-                        'total_pinjam' => $jumlah_pinjam,
-                        'denda' => 0,
-                    ]);
-                    $buku->decrement('jumlah', $jumlah_pinjam);
-                    \App\Models\Wishlist::where('id', $userId)
-                        ->where('id_buku', $id_buku)
-                        ->delete();
-                }
-            });
+            DB::beginTransaction();
+            $userId = Auth::id();
 
-            return redirect()->route('katalog')->with('success', 'Peminjaman berhasil diajukan dan wishlist diperbarui!');
+            foreach ($request->id_buku as $key => $id) {
+                // 1. Simpan ke tabel peminjaman
+                Peminjaman::create([
+                    'id'              => $userId,
+                    'id_buku'         => $id,
+                    'tgl_pinjam'      => now(),
+                    'tgl_jatuh_tempo' => $request->tgl_kembali[$key],
+                    'status'          => 'menunggu', // Sesuai logika Blade
+                    'denda'           => 0,
+                ]);
+
+                // 2. Langsung kurangi stok
+                $buku = Buku::where('id_buku', $id)->first();
+                if ($buku) {
+                    $buku->decrement('jumlah');
+                }
+
+                // 3. Hapus dari wishlist
+                Wishlist::where('id', $userId)->where('id_buku', $id)->delete();
+            }
+
+            DB::commit();
+            return redirect()->route('mypinjaman')->with('success', 'Berhasil mengajukan pinjaman!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
         }
     }
 
@@ -262,17 +268,14 @@ class PeminjamanController extends Controller
         });
     }
 
-    public function setujuiPinjam($id) 
-{
-    $pinjam = Peminjaman::where('id_pinjam', $id)->first();
-    if (!$pinjam) {
-        return "Data dengan ID $id tidak ditemukan di database!";
-    }
-    $pinjam->update([
-        'status'     => 'dipinjam',
-        'tgl_pinjam' => now(),
-    ]);
+    public function setujuiPinjam($id)
+    {
+        $pinjam = Peminjaman::where('id_pinjam', $id)->firstOrFail();
+        $pinjam->update([
+            'status'     => 'dipinjam',
+            'tgl_pinjam' => now(),
+        ]);
 
-    return redirect()->route('index')->with('success', 'Peminjaman disetujui!');
-}
+        return redirect()->back()->with('success', 'Peminjaman disetujui!');
+    }
 }

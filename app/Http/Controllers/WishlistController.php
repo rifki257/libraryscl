@@ -4,28 +4,29 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Wishlist;
+use App\Models\Buku;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Peminjaman;
 
 class WishlistController extends Controller
 {
     public function index()
-{
-    $userId = auth()->id();
+    {
+        $userId = auth()->id();
 
-    $wishlistItems = Wishlist::with('buku')
-        ->where('id', $userId)
-        ->latest()
-        ->get();
+        $wishlistItems = Wishlist::with('buku')
+            ->where('id', $userId)
+            ->latest()
+            ->get();
 
-    $totalDipinjam = Peminjaman::where('id', $userId)
-        ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])
-        ->sum('total_pinjam') ?? 0;
+        $totalDipinjam = Peminjaman::where('id', $userId)
+            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu'])
+            ->count();
 
-    $sisaJatah = 6 - $totalDipinjam;
+        $sisaJatah = 6 - $totalDipinjam;
 
-    return view('wishlist', compact('wishlistItems', 'sisaJatah'));
-}
+        return view('wishlist', compact('wishlistItems', 'sisaJatah'));
+    }
 
     public function store(Request $request)
     {
@@ -70,5 +71,16 @@ class WishlistController extends Controller
         }
 
         return back()->with('error', 'Data tidak ditemukan.');
+    }
+    public function peminjamanBeda(Request $request)
+    {
+        // Mengambil ID buku dari parameter URL ?ids=1,2,3
+        $ids = explode(',', $request->query('ids'));
+
+        // Ambil data buku berdasarkan ID tersebut
+        $bukuTerpilih = Buku::whereIn('id_buku', $ids)->get();
+
+        // Kirim ke view pinjambeda.blade.php
+        return view('pinjambeda', compact('bukuTerpilih'));
     }
 }

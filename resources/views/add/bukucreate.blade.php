@@ -1,11 +1,20 @@
 <head>
     @vite (['resources/css/app.scss', 'resources/js/app.js'])
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
 </head>
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Tambah Buku') }}
-        </h2>
+        <div class="d-flex align-items-center gap-2">
+            <a
+                href="{{ route('kategori.buku') }}"
+                class="btn btn-success d-flex align-items-center gap-1"
+            >
+                <i class="bi bi-list-ul"></i> Kategori
+            </a>
+        </div>
     </x-slot>
 
     <div class="py-12">
@@ -29,7 +38,7 @@
                         >
                             @csrf
                             <div class="row">
-                                <div class="col-12">
+                                <div class="col-6">
                                     <div class="mb-3">
                                         <label class="form-label">Gambar</label>
                                         <input
@@ -38,8 +47,6 @@
                                             class="form-control"
                                         />
                                     </div>
-                                </div>
-                                <div class="col-6">
                                     <div class="mb-3">
                                         <label class="form-label">Judul</label>
                                         <input
@@ -83,17 +90,50 @@
                                             name="jumlah"
                                             class="form-control"
                                             placeholder="Jumlah Buku"
+                                            min="1"
+                                            oninput="
+                                                this.value =
+                                                    !!this.value &&
+                                                    Math.abs(this.value) >= 0
+                                                        ? Math.abs(this.value)
+                                                        : null
+                                            "
                                             required
                                         />
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            >Kategori Buku</label
+                                        >
+                                        <select
+                                            name="id_kategori"
+                                            class="form-select"
+                                            required
+                                        >
+                                            <option value="" selected disabled>
+                                                -- Pilih Kategori --
+                                            </option>
+                                            @foreach ($kategoris as $item)
+                                                <option
+                                                    value="{{ $item->id_kategori }}"
+                                                >
+                                                    {{ $item->nama_kategori }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-                            <button class="btn btn-success mt-3">Simpan</button>
+                            <button class="btn btn-success mt-3" id="simpan" style="width: 80px">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
                             <a
                                 href="{{ route('buku') }}"
                                 class="btn btn-secondary mt-3"
-                                >Kembali</a
-                            >
+                                id="kembali"
+                                style="width: 80px"
+                                ><i class="fa-solid fa-arrow-left me-1"></i
+                            ></a>
                         </form>
                     </div>
                 </div>

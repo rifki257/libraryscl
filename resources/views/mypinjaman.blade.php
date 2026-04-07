@@ -22,18 +22,22 @@
                     @forelse ($sedangDipinjam as $item)
                         @php
         $tglJatuhTempo = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
+        $hariIni = \Carbon\Carbon::now()->startOfDay();
         
-        // Status pending = belum dikonfirmasi pinjam sama sekali
-        $isPending = $item->status == 'pending'; 
-        
-        // Status proses = sudah pinjam, tapi sedang mengajukan pengembalian
-        $isWaitingReturn = $item->status == 'proses'; 
+        // Hitung keterlambatan
+        $isTerlambat = $hariIni->gt($tglJatuhTempo);
+        $jumlahHariTerlambat = $isTerlambat ? $hariIni->diffInDays($tglJatuhTempo) : 0;
+        $totalDenda = $jumlahHariTerlambat * 50000; // Misal denda 1000 per hari
+
+        // Status-status
+        $isPending = ($item->status == 'menunggu' || $item->status == 'pending'); 
+        $isWaitingAdmin = $isPending;
+        $isWaitingReturn = ($item->status == 'ajukan_kembali' || $item->status == 'proses'); 
 
         $gambarBuku = $item->buku->gambar 
             ? asset('storage/' . $item->buku->gambar) 
             : asset('images/default-book.png');
             
-        // Efek visual jika sedang diproses (pending atau nunggu balik)
         $isProcessing = ($isPending || $isWaitingReturn);
     @endphp
                         <div class="col-12 col-md-6 col-lg-4">
@@ -54,23 +58,49 @@
                                     style="z-index: 2"
                                 >
                                     <div class="mb-3">
-                    @if ($isPending)
-                        <span class="badge bg-secondary px-3 py-2 shadow-sm">
-                            <i class="bi bi-hourglass-split me-1"></i> Menunggu Konfirmasi
-                        </span>
-                    @elseif ($isWaitingReturn)
-                        <span class="badge bg-info px-3 py-2 shadow-sm text-dark">
-                            <i class="bi bi-arrow-repeat me-1"></i> Proses Kembali
-                        </span>
-                    @else
-                        <span class="badge bg-primary px-3 py-2 shadow-sm">
-                            <i class="bi bi-book me-1"></i> Sedang Dipinjam
-                        </span>
-                    @endif
-                </div>
+                                        @if ($isWaitingAdmin)
+                                            <span
+                                                class="badge bg-secondary px-3 py-2 shadow-sm animate-bounce"
+                                                style="cursor: pointer"
+                                            >
+                                                <i
+                                                    class="bi bi-hourglass-split me-1"
+                                                ></i>
+                                                Menunggu Konfirmasi Pinjam
+                                            </span>
+                                        @elseif ($isWaitingReturn)
+                                            <span
+                                                class="badge bg-info px-3 py-2 shadow-sm animate-bounce"
+                                                style="cursor: pointer"
+                                            >
+                                                <i
+                                                    class="bi bi-arrow-repeat me-1"
+                                                ></i>
+                                                Menunggu Konfirmasi Kembali
+                                            </span>
+                                        @elseif ($isTerlambat)
+                                            <span
+                                                class="badge bg-danger px-3 py-2 shadow-sm animate-bounce"
+                                                style="cursor: pointer"
+                                            >
+                                                <i
+                                                    class="bi bi-exclamation-triangle-fill me-1"
+                                                ></i>
+                                                Segera Kembalikan Buku!
+                                            </span>
+                                        @else
+                                            <span
+                                                class="badge bg-primary px-3 py-2 shadow-sm animate-bounce"
+                                                style="cursor: pointer"
+                                            >
+                                                <i class="bi bi-book me-1"></i>
+                                                Sedang Dipinjam
+                                            </span>
+                                        @endif
+                                    </div>
 
                                     <h5
-                                        class="card-title fw-bold text-white mb-2 fs-4"
+                                        class="card-title fw-bold text-white mb-2 fs-4 capitalize"
                                     >
                                         {{ $item->buku->judul }}
                                     </h5>
@@ -97,26 +127,68 @@
                                     </div>
 
                                     <div class="mt-2">
-                    @if ($isPending)
-                        <button type="button" class="btn btn-outline-light w-100 py-2 fw-bold" onclick="konfirmasiBatal('{{ $item->id_pinjam }}')">
-                            <i class="bi bi-x-circle me-1"></i> Batalkan Peminjaman
-                        </button>
+                                        @if ($isWaitingAdmin)
+                                            {{-- 1. Pastikan Form ini ADA di dalam loop dan ID-nya unik --}}
+                                            <form
+                                                id="form-cancel-{{ $item->id_pinjam }}"
+                                                {{-- !! ID harus pakai id_pinjam --}}
+                                                action="{{ route('peminjaman.cancel', $item->id_pinjam) }}"
+                                                method="POST"
+                                                style="display: none"
+                                            >
+                                                @csrf
+                                                @method ('DELETE')
+                                            </form>
+                                            {{-- 2. Pastikan onClick mengirim id_pinjam yang sama --}}
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-light w-100 py-2 fw-bold"
+                                                onclick="konfirmasiBatal('{{ $item->id_pinjam }}')"
+                                                {{-- !! Harus kirim id_pinjam --}}
+                                            >
+                                                <i
+                                                    class="bi bi-x-circle me-1"
+                                                ></i>
+                                                Batalkan Peminjaman
+                                            </button>
+                                        @elseif ($isWaitingReturn)
+                                            <button
+                                                type="button"
+                                                class="btn btn-secondary w-100 py-2 fw-bold shadow-sm"
+                                                disabled
+                                            >
+                                                Sedang Diproses Admin
+                                            </button>
 
-                    @elseif ($isWaitingReturn)
-                        <button type="button" class="btn btn-secondary w-100 py-2 fw-bold shadow-sm" disabled style="cursor: not-allowed;">
-                            <i class="bi bi-clock-history me-1"></i> Sedang Mengajukan Kembali
-                        </button>
+                                        @elseif ($isTerlambat)
+                                            <button
+                                                type="button"
+                                                onclick="showDendaDetail('{{ $item->buku->judul }}', {{ $jumlahHariTerlambat }}, {{ $totalDenda }})"
+                                                class="btn btn-danger w-100 py-2 fw-bold shadow-sm"
+                                            >
+                                                Cek Detail Denda
+                                            </button>
 
-                    @else
-                        <form id="form-kembali-{{ $item->id_pinjam }}" action="{{ route('peminjaman.ajukan_kembali', $item->id_pinjam) }}" method="POST" style="display: none">
-                            @csrf
-                            @method('PUT')
-                        </form>
-                        <button type="button" onclick="konfirmasiKembali('{{ $item->id_pinjam }}')" class="btn btn-warning w-100 py-2 fw-bold text-dark shadow">
-                            <i class="bi bi-arrow-return-left me-1"></i> Ajukan Pengembalian
-                        </button>
-                    @endif
-                </div>
+                                        @else
+                                            {{-- Kondisi Normal: Tombol Kuning muncul --}}
+                                            <form
+                                                id="form-kembali-{{ $item->id_pinjam }}"
+                                                action="{{ route('peminjaman.ajukan_kembali', $item->id_pinjam) }}"
+                                                method="POST"
+                                                style="display: none"
+                                            >
+                                                @csrf
+                                                @method ('PUT')
+                                            </form>
+                                            <button
+                                                type="button"
+                                                onclick="konfirmasiKembali('{{ $item->id_pinjam }}')"
+                                                class="btn btn-warning w-100 py-2 fw-bold text-dark shadow"
+                                            >
+                                                Ajukan Pengembalian
+                                            </button>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -167,6 +239,47 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Fungsi Detail Denda & WhatsApp Admin
+        function showDendaDetail(judul, hari, total) {
+            const formatRupiah = (angka) => {
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0,
+                }).format(angka);
+            };
+
+            Swal.fire({
+                title: '<span class="text-danger">Detail Keterlambatan</span>',
+                html: `
+                <div class="text-start border p-3 rounded bg-light">
+                    <p class="mb-1"><strong>Judul Buku:</strong> <br>${judul}</p>
+                    <hr>
+                    <p class="mb-1"><strong>Jumlah Hari:</strong> ${hari} Hari</p>
+                    <p class="mb-0 text-danger"><strong>Total Denda:</strong> ${formatRupiah(total)}</p>
+                </div>
+                <p class="mt-3 small text-muted">Harap segera mengembalikan buku ke perpustakaan untuk menghindari penambahan denda.</p>
+            `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#25D366',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText:
+                    '<i class="bi bi-whatsapp me-2"></i>Hubungi Admin',
+                cancelButtonText: 'Tutup',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const noAdmin = '6281234567890'; // Ganti dengan nomor admin kamu
+                    const pesan = `Halo Admin, saya ingin bertanya terkait denda keterlambatan buku "${judul}" selama ${hari} hari.`;
+                    window.open(
+                        `https://wa.me/${noAdmin}?text=${encodeURIComponent(pesan)}`,
+                        '_blank'
+                    );
+                }
+            });
+        }
+
+        // Fungsi Konfirmasi Pengembalian
         function konfirmasiKembali(idPinjam, denda, hariTelat) {
             let pesan =
                 'Apakah Anda yakin ingin mengajukan pengembalian buku ini?';
@@ -195,14 +308,6 @@
             });
         }
 
-        function showDendaDetail(hari, nominal) {
-            Swal.fire({
-                title: 'Detail Keterlambatan',
-                html: `<div class="text-start">Total Hari: <b>${hari} Hari</b><br>Total Denda: <b class="text-danger">Rp ${new Intl.NumberFormat('id-ID').format(nominal)}</b></div>`,
-                icon: 'info',
-            });
-        }
-
         function konfirmasiBatal(idPinjam) {
             Swal.fire({
                 title: 'Batalkan Peminjaman?',
@@ -215,8 +320,20 @@
                 cancelButtonText: 'Kembali',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Menjalankan form hidden berdasarkan ID
-                    document.getElementById(`form-cancel-${idPinjam}`).submit();
+                    // Cek apakah ID form-cancel-[ID] benar-benar ada di halaman
+                    const form = document.getElementById(
+                        `form-cancel-${idPinjam}`
+                    );
+                    if (form) {
+                        form.submit();
+                    } else {
+                        console.error(
+                            `Form dengan ID form-cancel-${idPinjam} tidak ditemukan!`
+                        );
+                        alert(
+                            'Terjadi kesalahan teknis, form tidak ditemukan.'
+                        );
+                    }
                 }
             });
         }

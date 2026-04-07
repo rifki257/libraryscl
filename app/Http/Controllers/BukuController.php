@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Buku;
-
+use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,13 +15,17 @@ class BukuController extends Controller
             return redirect()->route('katalog')->with('error', 'Akses ditolak!');
         }
 
-        $dataBuku = Buku::all();
+        $dataBuku = Buku::with('kategori')->get();
         return view('buku', compact('dataBuku'));
     }
 
     public function create()
     {
-        return view('add.bukucreate');
+        // 1. Ambil semua data kategori dari tabel kategoris
+        $kategoris = Kategori::all();
+
+        // 2. Kirim data tersebut ke view menggunakan compact
+        return view('add.bukucreate', compact('kategoris'));
     }
 
     public function store(Request $request)
@@ -31,6 +35,8 @@ class BukuController extends Controller
             'penerbit' => 'required|max:225',
             'penulis' => 'required|max:225',
             'jumlah' => 'required|numeric',
+            // Tambahkan validasi untuk id_kategori agar tidak error SQL nantinya
+            'id_kategori' => 'required|exists:kategoris,id_kategori',
             'gambar' => 'nullable|image|max:2048',
         ]);
 
@@ -38,6 +44,7 @@ class BukuController extends Controller
         if ($request->hasFile('gambar')) {
             $data['gambar'] = $request->file('gambar')->store('buku', 'public');
         }
+
         Buku::create($data);
         return redirect()->route('buku')->with('success', 'Buku berhasil ditambah!');
     }

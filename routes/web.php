@@ -8,7 +8,9 @@ use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\PeminjamandataController;
 use App\Http\Controllers\UserdashboardController;
 use App\Http\Controllers\PengembalianController;
+use App\Http\Controllers\AdminPengembalianController;
 use App\Http\Controllers\AdminPeminjamanController;
+use App\Http\Controllers\PeminjamanBedaController;
 use App\Http\Controllers\UserpengembalianController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WishlistController;
@@ -80,6 +82,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Pastikan tujuannya ke PeminjamanController
     Route::put('/admin/setujui/{id}', [PeminjamanController::class, 'setujuiPinjam'])->name('admin.setujui');
     Route::get('/pinjam-masal', [PeminjamanController::class, 'createMasal'])->name('peminjaman.masal');
+    Route::get('/peminjaman-beda', [WishlistController::class, 'peminjamanBeda'])->name('peminjaman.beda');
     // Pastikan ada ->name('peminjaman') di ujungnya
     Route::get('/pinjam/{id}', [PeminjamanController::class, 'pinjam'])->name('peminjaman');
 
@@ -111,16 +114,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/wishlist/store', [WishlistController::class, 'store'])->name('wishlist.store');
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
-    //
-    // Pastikan ini di dalam middleware 'auth' dan checkRole admin
-    // Route::get('/admin/persetujuan', [AdminPeminjamanController::class, 'index'])->name('admin.persetujuan');
-    // Route::patch('/admin/persetujuan/{id}/setujui', [AdminPeminjamanController::class, 'setujui'])->name('admin.setujui');
-    Route::patch('/admin/persetujuan/{id}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('admin.tolak');
 
-    // Halaman Daftar Kategori (Index)
+    Route::patch('/admin/persetujuan/{id}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('admin.tolak');
+    Route::get('/admin/pengembalian', [AdminPengembalianController::class, 'index'])->name('admin.pengembalian.index');
+    Route::put('/admin/pengembalian/{id}/konfirmasi', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.pengembalian.konfirmasi');
+
     Route::get('/kategori-buku', [KategoriController::class, 'index'])->name('kategori.buku');
 
     Route::get('/kategori-buku/create', [KategoriController::class, 'create'])->name('kategori.create');
     Route::post('/kategori-buku/store', [KategoriController::class, 'store'])->name('kategori.store');
     Route::post('/kategori-buku', [KategoriController::class, 'store'])->name('kategori.store');
+    Route::put('/kategori/{id}', [KategoriController::class, 'update'])->name('kategori.update');
+    Route::delete('/kategori/{id}', [KategoriController::class, 'destroy'])->name('kategori.destroy');
 });
