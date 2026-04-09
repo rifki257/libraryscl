@@ -2,251 +2,194 @@
     @vite (['resources/css/app.scss', 'resources/js/app.js'])
 </head>
 <x-app-layout>
-    <x-slot name="header">
-        <div
-            class="d-flex align-items-center justify-content-between flex-wrap gap-3"
-        >
-            <div class="d-flex align-items-center gap-4 flex-grow-1">
-                <h2
-                    class="font-semibold text-xl text-gray-800 leading-tight mb-0"
-                >
-                    {{ __('Pengembalian') }}
-                </h2>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 
-                <ul
-                    class="nav nav-tabs border-bottom-0"
-                    id="returnTab"
-                    role="tablist"
-                >
-                    <li class="nav-item" role="presentation">
-                        <button
-                            class="nav-link active fw-bold text-gray-600"
-                            id="confirmation-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#confirmation-pane"
-                            type="button"
-                            role="tab"
-                        >
-                            <i class="bi bi-check2-circle me-1"></i> Konfirmasi
-                            Pengembalian
-
-                            <span
-                                class="badge bg-danger ms-1"
-                                id="pending-count"
-                            >
-                                {{ $totalKonfirmasi }}
-                            </span>
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button
-                            class="nav-link fw-bold text-gray-600"
-                            id="all-data-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#all-data-pane"
-                            type="button"
-                            role="tab"
-                        >
-                            <i class="bi bi-collection-play me-1"></i> Semua
-                            Data
-
-                            <span class="badge bg-primary ms-1">
-                                {{ $totalSemua }}
-                            </span>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="d-flex align-items-center gap-2">
-                <div class="input-group" style="max-width: 300px">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-                    <input
-                        type="text"
-                        id="search-input"
-                        class="form-control border-start-0 border-end-0 ps-0 shadow-none"
-                        placeholder="Cari..."
-                        autocomplete="off"
-                    />
-                    <button
-                        class="btn bg-white border border-start-0 d-none d-flex align-items-center gap-1"
-                        type="button"
-                        id="reset-search"
-                    >
-                        <i class="bi bi-x-circle-fill text-danger"></i>
-                    </button>
-                </div>
-
-                <div class="dropdown">
-                    <button
-                        class="btn btn-outline-dark dropdown-toggle"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                    >
-                        <i class="bi bi-funnel"></i> Filter
-                    </button>
-                    <ul
-                        class="dropdown-menu dropdown-menu-end p-3"
-                        style="min-width: 200px"
-                    >
-                        <li>
-                            <div class="form-check mb-2">
-                                <input
-                                    class="form-check-input filter-checkbox"
-                                    type="radio"
-                                    name="status-filter"
-                                    value="status-terlambat"
-                                    id="fTelat"
-                                />
-                                <label
-                                    class="form-check-label text-danger fw-bold"
-                                    for="fTelat"
-                                    >Denda</label
-                                >
-                            </div>
-                        </li>
-                        <li>
-                            <div class="form-check mb-2">
-                                <input
-                                    class="form-check-input filter-checkbox"
-                                    type="radio"
-                                    name="status-filter"
-                                    value="status-aman"
-                                    id="fAman"
-                                />
-                                <label
-                                    class="form-check-label text-success fw-bold"
-                                    for="fAman"
-                                    >Tepat Waktu</label
-                                >
-                            </div>
-                        </li>
-                        <li><hr class="dropdown-divider" /></li>
-                        <li>
-                            <button
-                                class="btn btn-sm btn-light w-100"
-                                id="btn-reset-filter"
-                            >
-                                <i class="bi bi-arrow-counterclockwise"></i>
-                                Reset
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </x-slot>
-
-    <div class="py-12">
+    {{-- Pindahkan x-data ke level teratas agar mencakup tabel DAN modal --}}
+    <div class="py-12" x-data="{ openModal: false, selectedItem: {} }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div
-                class="overflow-hidden shadow-sm sm:rounded-lg"
-                style="background-color: rgb(235, 235, 235)"
-            >
-                <div class="p-6 text-gray-900">
-                    <div class="container">
-                        <div class="card-body">
-                            <div id="tabel-buku" class="mt-4">
-                                <div class="tab-content" id="returnTabContent">
-                                    <div
-                                        class="tab-pane fade show active"
-                                        id="confirmation-pane"
-                                        role="tabpanel"
-                                        tabindex="0"
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr class="text-capitalize text-center">
+                        <th>Peminjam</th>
+                        <th>Buku</th>
+                        <th>Tgl pinjam</th>
+                        <th>Jatuh tempo</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($semuaPeminjaman as $item)
+                        @php
+                            $jt = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
+                            $hariIni = now()->startOfDay();
+                            $isTelat = $hariIni->gt($jt);
+                            $selisihHari = $isTelat ? abs($hariIni->diffInDays($jt)) : 0;
+                            $totalDenda = $selisihHari * 50000;
+                        @endphp
+                        <tr class="text-capitalize text-center align-middle">
+                            <td>{{ $item->user->name }}</td>
+                            <td>{{ $item->buku->judul ?? '-' }}</td>
+                            <td>
+                                {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}
+                            </td>
+                            <td>
+                                {{ \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->format('d M Y') }}
+                            </td>
+                            <td>
+                                @if ($item->status == 'dipinjam' && !$isTelat)
+                                    <span
+                                        class="bg-gray-100 text-gray-500 px-3 py-1 rounded text-[10px] font-bold uppercase border border-gray-200"
                                     >
-                                        @include ('partials.konfirmasi_pengembalian')
-                                    </div>
+                                        Sedang Dipinjam
+                                    </span>
+                                @else
+                                    <button
+                                        type="button"
+                                        {{-- Tambahkan type button agar tidak trigger submit --}}
+                                        @click="
+                                            selectedItem = { 
+                                                id: '{{ $item->id_pinjam }}',
+                                                name: '{{ $item->user->name }}',
+                                                judul: '{{ $item->buku->judul }}',
+                                                kelas: '{{ $item->user->kelas }}',
+                                                email: '{{ $item->user->email }}',
+                                                nis: '{{ $item->user->nis }}',
+                                                totalHari: {{ $selisihHari }},
+                                                totalDenda: '{{ number_format($totalDenda, 0, ',', '.') }}'
+                                            };
+                                            openModal = true;
+                                        "
+                                        class="{{ $isTelat ? 'bg-red-500 hover:bg-red-600' : 'bg-indigo-500 hover:bg-indigo-600' }} text-white px-4 py-1.5 rounded-md text-xs font-bold uppercase shadow-sm transition"
+                                    >
+                                        {{ $isTelat ? 'Konfirmasi Denda' : 'Konfirmasi' }}
+                                    </button>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td
+                                colspan="5"
+                                class="px-6 py-12 text-center text-gray-500 italic"
+                            >
+                                Belum ada data.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-                                    <div
-                                        class="tab-pane fade"
-                                        id="all-data-pane"
-                                        role="tabpanel"
-                                        tabindex="0"
-                                    >
-                                        @include ('partials.data_pengembalian')
-                                    </div>
-                                </div>
+        {{-- MODAL BOX - Pastikan berada di dalam div x-data --}}
+        <div
+            x-show="openModal"
+            class="fixed inset-0 z-[999] overflow-y-auto"
+            {{-- Naikkan Z-index --}}
+            x-transition
+            x-cloak
+        >
+            <div
+                class="flex items-center justify-center min-h-screen px-4 pb-20 text-center"
+            >
+                <div
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                    @click="openModal = false"
+                ></div>
+
+                <div
+                    class="inline-block bg-white rounded-lg shadow-xl transform transition-all sm:max-w-lg sm:w-full overflow-hidden text-left align-middle"
+                >
+                    <div
+                        class="px-6 py-4 bg-gray-50 border-b border-gray-200 font-bold text-gray-800"
+                    >
+                        Detail Konfirmasi Pengembalian
+                    </div>
+
+                    <div class="px-6 py-4 space-y-3">
+                        <div class="flex justify-between border-b pb-2">
+                            <span
+                                class="text-gray-500 text-xs font-bold uppercase"
+                                >Nama Peminjam</span
+                            >
+                            <span
+                                class="text-gray-900 text-sm font-semibold"
+                                x-text="selectedItem.name"
+                            ></span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span
+                                class="text-gray-500 text-xs font-bold uppercase"
+                                >Judul Buku</span
+                            >
+                            <span
+                                class="text-gray-900 text-sm font-semibold"
+                                x-text="selectedItem.judul"
+                            ></span>
+                        </div>
+
+                        <div
+                            x-show="selectedItem.totalHari > 0"
+                            class="p-3 bg-red-50 rounded-md border border-red-100 mt-4"
+                        >
+                            <div class="flex justify-between">
+                                <span
+                                    class="text-red-700 text-xs font-bold uppercase"
+                                    >Total Keterlambatan</span
+                                >
+                                <span class="text-red-700 text-sm font-bold"
+                                    ><span
+                                        x-text="selectedItem.totalHari"
+                                    ></span>
+                                    Hari</span
+                                >
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span
+                                    class="text-red-700 text-xs font-bold uppercase"
+                                    >Total Denda</span
+                                >
+                                <span
+                                    class="text-red-700 text-lg font-black italic"
+                                    >Rp
+                                    <span
+                                        x-text="selectedItem.totalDenda"
+                                    ></span
+                                ></span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 flex gap-2">
+                        <button
+                            type="button"
+                            @click="openModal = false"
+                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md font-bold text-xs uppercase"
+                        >
+                            Batal
+                        </button>
+
+                        <form
+                            :action="'/admin/konfirmasi-kembali/' +
+                            selectedItem.id"
+                            method="POST"
+                            class="flex-1"
+                        >
+                            @csrf
+                            @method ('PUT')
+                            <button
+                                type="submit"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-bold text-xs uppercase transition shadow-md"
+                            >
+                                Konfirmasi Selesai
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('search-input');
-            const btnResetSearch = document.getElementById('reset-search');
-            const btnResetFilter = document.getElementById('btn-reset-filter');
-            const filters = document.querySelectorAll('.filter-checkbox');
-            const rows = document.querySelectorAll('.item-peminjaman');
-            const dropdownToggle = document.querySelector(
-                '[data-bs-toggle="dropdown"]'
-            );
-
-            function applyAllFilters() {
-                const searchText = searchInput.value.toLowerCase();
-
-                let activeFilterValue = null;
-                filters.forEach((f) => {
-                    if (f.checked) activeFilterValue = f.value;
-                });
-
-                if (searchText.length > 0) {
-                    btnResetSearch.classList.remove('d-none');
-                } else {
-                    btnResetSearch.classList.add('d-none');
-                }
-
-                rows.forEach((row) => {
-                    const textContent = row.innerText.toLowerCase();
-                    const textMatch = textContent.includes(searchText);
-
-                    const filterMatch =
-                        !activeFilterValue ||
-                        row.classList.contains(activeFilterValue);
-
-                    if (textMatch && filterMatch) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-            }
-
-            function closeDropdown() {
-                if (window.bootstrap && bootstrap.Dropdown) {
-                    const instance =
-                        bootstrap.Dropdown.getOrCreateInstance(dropdownToggle);
-                    instance.hide();
-                } else {
-                    dropdownToggle.click();
-                }
-            }
-
-            searchInput.addEventListener('input', applyAllFilters);
-
-            filters.forEach((radio) => {
-                radio.addEventListener('change', function () {
-                    applyAllFilters();
-                    closeDropdown();
-                });
-            });
-
-            btnResetSearch.addEventListener('click', function () {
-                searchInput.value = '';
-                applyAllFilters();
-                searchInput.focus();
-            });
-
-            btnResetFilter.addEventListener('click', function () {
-                filters.forEach((f) => (f.checked = false));
-                applyAllFilters();
-                closeDropdown();
-            });
-        });
-    </script></x-app-layout
->
+</x-app-layout>

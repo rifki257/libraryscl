@@ -82,13 +82,56 @@
                             </p>
                         </div>
 
-                        {{-- Tombol Pinjam --}}
+                        @php
+    $isOutOfStock = $buku->jumlah <= 0;
+    $isGuest = !Auth::check();
+    
+    // Hitung buku yang sedang aktif dipinjam (Jika sudah login)
+    $totalPinjam = 0;
+    if (!$isGuest) {
+        $totalPinjam = \App\Models\Peminjaman::where('id', auth()->id())
+            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu', 'ajukan_kembali'])
+            ->count();
+    }
+    $isLimit = $totalPinjam >= 6;
+
+    // Tentukan URL dan Onclick
+    if ($isOutOfStock) {
+        $url = 'javascript:void(0)';
+        $onclick = "Swal.fire({icon: 'error', title: 'Stok Habis', text: 'Buku tidak tersedia.', confirmButtonColor: '#ef4444'})";
+    } elseif ($isGuest) {
+        $url = 'javascript:void(0)';
+        $onclick = "Swal.fire({icon: 'info', title: 'Login dulu', text: 'Silakan login untuk meminjam.', showCancelButton: true, confirmButtonText: 'Login'}).then((r) => { if(r.isConfirmed) window.location.href='".route('login')."'; })";
+    } elseif ($isLimit) {
+        $url = 'javascript:void(0)';
+        $onclick = "Swal.fire({icon: 'warning', title: 'Limit Tercapai', text: 'Kamu sudah meminjam/mengajukan 6 buku. Kembalikan buku dulu ya!', confirmButtonColor: '#6366F1'})";
+    } else {
+        $url = route('peminjaman.beda', ['id' => $buku->id_buku]);
+        $onclick = "";
+    }
+@endphp
+
                         <a
                             href="{{ $url }}"
-                            onclick="{{ $onclick }}"
-                            class="w-full py-2 rounded-lg text-center text-xs font-bold transition-all {{ $isOutOfStock ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20 shadow-lg' }}"
+                            onclick="{!! $onclick !!}"
+                            class="w-full py-2 rounded-lg text-center text-xs font-bold transition-all 
+    {{ $isOutOfStock || ($isLimit && !$isGuest)
+        ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20 shadow-lg' 
+    }}"
+                            style="
+                                display: block;
+                                width: 140px;
+                                text-decoration: none;
+                            "
                         >
-                            {{ $isOutOfStock ? 'TIDAK TERSEDIA' : 'PINJAM SEKARANG' }}
+                            @if ($isOutOfStock)
+                                TIDAK TERSEDIA
+                            @elseif ($isLimit && !$isGuest)
+                                KUOTA PENUH
+                            @else
+                                PINJAM SEKARANG
+                            @endif
                         </a>
                     </div>
                 </div>

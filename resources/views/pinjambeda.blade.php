@@ -27,22 +27,6 @@
                     {{ session('error') }}
                 </div>
             @endif
-
-            {{-- Info Slot --}}
-            <div
-                class="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 mb-4 shadow-sm rounded-r-lg"
-            >
-                <p class="text-sm">
-                    <i class="bi bi-info-circle-fill"></i>
-                    Batas maksimal pinjam: <strong>6 buku</strong>.
-                    <span
-                        class="ml-2 px-2 py-0.5 bg-yellow-200 rounded-full font-bold"
-                    >
-                        Sisa slot kamu: {{ 6 - ($totalBukuAktif ?? 0) }} buku
-                    </span>
-                </p>
-            </div>
-
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-4">
                     Konfirmasi Peminjaman
@@ -55,56 +39,56 @@
                 >
                     @csrf
 
-                    <div class="space-y-4 mb-8" id="book-container">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         @forelse ($bukuTerpilih as $index => $buku)
                             <div
                                 x-data="itemPeminjaman('{{ $index }}')"
-                                class="p-5 bg-gray-50 rounded-xl border border-gray-200 shadow-sm book-item relative"
+                                class="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm book-item relative flex flex-col justify-between"
                             >
-                                <div class="flex flex-col md:flex-row gap-6">
-                                    <div class="flex gap-4 flex-grow">
+                                <div class="flex flex-col gap-4">
+                                    <div class="flex gap-3 relative">
                                         <input
                                             type="hidden"
                                             name="id_buku[]"
                                             value="{{ $buku->id_buku }}"
                                         />
+
                                         <img
                                             src="{{ asset('storage/' . $buku->gambar) }}"
-                                            class="w-20 h-28 object-cover rounded-lg shadow-md flex-shrink-0"
+                                            class="w-16 h-24 object-cover rounded-lg shadow-md flex-shrink-0"
                                         />
-                                        <div class="flex-grow">
+
+                                        <div class="flex-grow pr-12">
                                             <h3
-                                                class="text-lg font-bold text-blue-900 capitalize leading-tight mb-1"
+                                                class="text-md font-bold text-blue-900 capitalize leading-tight mb-1 line-clamp-2"
                                             >
                                                 {{ $buku->judul }}
                                             </h3>
-                                            <p class="text-xs text-blue-700">Stok Tersedia: <span class="font-bold">{{ $buku->jumlah }}</span></p>
-                                            <p class="text-xs text-red-600 italic">Denda: Rp50.000/Hari keterlambatan</p>
+                                            <p class="text-[11px] text-blue-700">Stok: <span class="font-bold">{{ $buku->jumlah }}</span></p>
+                                            <p class="text-[9px] text-red-600 italic">Denda: Rp50rb/Hari</p>
                                         </div>
-                                    </div>
 
-                                    <div
-                                        class="flex flex-col justify-between items-end min-w-[200px]"
-                                    >
                                         <button
                                             type="button"
                                             @click="removeBook($el, '{{ $index }}')"
-                                            class="text-red-600 hover:text-red-800 flex items-center gap-1"
+                                            class="absolute top-0 right-0 text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors"
                                         >
                                             <span
-                                                class="text-[11px] font-bold uppercase"
+                                                class="text-[13px] font-bold uppercase"
                                                 >Hapus</span
                                             >
-                                            <i class="bi bi-trash text-lg"></i>
                                         </button>
+                                    </div>
 
-                                        <div
-                                            class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm w-full"
+                                    <div
+                                        class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm"
+                                    >
+                                        <label
+                                            class="block text-[9px] font-bold text-gray-400 uppercase mb-1"
                                         >
-                                            <label
-                                                class="block text-[10px] font-bold text-gray-400 uppercase mb-1"
-                                                >Tanggal Kembali</label
-                                            >
+                                            Tanggal Kembali
+                                        </label>
+                                        <div class="flex items-center gap-2">
                                             <input
                                                 type="date"
                                                 name="tgl_kembali[]"
@@ -112,16 +96,13 @@
                                                 @input="updateStatus()"
                                                 :min="minDate"
                                                 :max="maxDate"
-                                                class="w-full text-xs border-gray-300 rounded focus:ring-blue-500 p-1"
+                                                class="flex-grow text-xs border-gray-200 rounded focus:ring-blue-500 p-1.5"
                                                 required
                                             />
+
                                             <div
-                                                class="mt-1 flex justify-between items-center"
+                                                class="bg-green-50 px-2 py-1.5 rounded border border-green-100 flex-shrink-0"
                                             >
-                                                <span
-                                                    class="text-[9px] text-gray-400 uppercase"
-                                                    >Durasi:</span
-                                                >
                                                 <span
                                                     class="text-[10px] font-black text-green-600"
                                                     x-text="durationText"
@@ -149,7 +130,7 @@
                         class="flex items-center justify-end gap-4 border-t pt-6"
                     >
                         <a
-                            href="{{ route('wishlist.index') }}"
+                            href="{{ route('katalog') }}"
                             class="text-gray-600 text-sm font-medium"
                             >Batal</a
                         >
@@ -208,21 +189,43 @@
         }
 
         function removeBook(el, id) {
-            if (confirm('Hapus buku ini?')) {
-                const item = el.closest('.book-item');
+            Swal.fire({
+                title: 'Hapus dari daftar?',
+                text: 'Buku ini akan dihapus dari rencana peminjaman saat ini.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 1. Ambil element card buku
+                    const item = el.closest('.book-item');
 
-                // Ambil data dari scope Alpine
-                const alpineData = document.querySelector('[x-data]').__x.$data;
+                    // 2. Beri efek transisi biar nggak kaku saat hilang
+                    item.style.transition = 'all 0.3s ease';
+                    item.style.opacity = '0';
+                    item.style.transform = 'scale(0.9)';
 
-                // Hapus key dari filledInputs agar tidak dihitung lagi
-                delete alpineData.filledInputs[id];
+                    setTimeout(() => {
+                        // 3. Ambil data dari scope Alpine (untuk update validasi tombol)
+                        // Menggunakan cara yang lebih aman untuk akses data Alpine
+                        const alpineElement = document.querySelector('[x-data]');
+                        if (alpineElement && alpineElement.__x) {
+                            const alpineData = alpineElement.__x.$data;
+                            // Hapus key dari filledInputs agar tombol "Pinjam" update statusnya
+                            delete alpineData.filledInputs[id];
+                        }
 
-                item.remove();
+                        // 4. Hapus element dari DOM
+                        item.remove();
 
-                if (document.querySelectorAll('.book-item').length === 0) {
-                    window.location.href = '{{ route("wishlist.index") }}';
+                        
+                    }, 300); // Tunggu animasi selesai
                 }
-            }
+            });
         }
     </script>
 </x-app-layout>

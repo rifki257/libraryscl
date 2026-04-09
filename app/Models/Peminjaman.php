@@ -23,7 +23,6 @@ class Peminjaman extends Model
         'tgl_pinjam',
         'tgl_jatuh_tempo',
         'status',
-        'denda',
     ];
 
     protected static function booted()

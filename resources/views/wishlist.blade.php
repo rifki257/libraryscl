@@ -1,34 +1,26 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center w-full">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Wishlist Saya') }}
-            </h2>
-            <div class="flex justify-end gap-3">
-                {{-- Tombol Bulk Action (Muncul jika checklist > 1) --}}
-                <div id="bulk-action-container" class="invisible">
-                    <button
-                        onclick="bukaModalPilihan()"
-                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-1 rounded-full font-bold text-sm shadow-lg transition-all flex items-center gap-2"
-                    >
-                        <i class="bi bi-check-all text-lg"></i> Pinjam Terpilih
-                        (<span id="count-checked">0</span>)
-                    </button>
-                </div>
-                <span
-                    class="inline-flex items-center px-4 py-1 bg-[#6366F1] text-white text-sm font-bold rounded-full shadow-sm"
-                >
-                    {{ $wishlistItems->count() }} Buku
-                </span>
-            </div>
-        </div>
-    </x-slot>
-
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div
                 class="bg-[#ebebeb] overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6"
             >
+                <div class="flex justify-end gap-3">
+                    {{-- Tombol Bulk Action (Muncul jika checklist > 1) --}}
+                    <div id="bulk-action-container" class="invisible">
+                        <button
+                            onclick="eksekusiLangsung()"
+                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-1 rounded-full font-bold text-sm shadow-lg transition-all flex items-center gap-2"
+                        >
+                            <i class="bi bi-check-all text-lg"></i> Pinjam
+                            (<span id="count-checked">0</span>)
+                        </button>
+                    </div>
+                    <span
+                        class="inline-flex items-center px-4 py-1 bg-[#6366F1] text-white text-sm font-bold rounded-full shadow-sm"
+                    >
+                        {{ $wishlistItems->count() }} Buku
+                    </span>
+                </div>
                 @forelse ($wishlistItems as $item)
                     {{-- Card Buku --}}
                     <div
@@ -90,8 +82,8 @@
                                 </div>
 
                                 <div class="flex items-center gap-4">
-                                    {{-- Form Remove --}}
                                     <form
+                                        id="form-remove-{{ $item->id_wishlist }}"
                                         action="{{ route('wishlist.destroy', $item->id_wishlist) }}"
                                         method="POST"
                                         class="m-0"
@@ -99,25 +91,31 @@
                                         @csrf
                                         @method ('DELETE')
                                         <button
-                                            type="submit"
-                                            onclick="
-                                                return confirm(
-                                                    'Yakin ingin menghapus buku ini?'
-                                                );
-                                            "
+                                            type="button"
+                                            {{-- Ubah dari submit ke button agar tidak langsung kirim --}}
+                                            onclick="konfirmasiHapus('form-remove-{{ $item->id_wishlist }}')"
                                             class="text-gray-300 hover:text-red-400 text-sm transition-colors underline-offset-4 hover:underline"
                                         >
                                             Remove
                                         </button>
                                     </form>
 
-                                    {{-- Tombol Pinjam Satuan --}}
-                                    <a
-                                        href="{{ route('peminjaman', $item->buku->id_buku) }}"
-                                        class="px-6 py-2 border-2 border-white text-white hover:bg-white hover:text-[#467599] rounded-md font-bold text-sm transition-all shadow-sm"
-                                    >
-                                        Pinjam
-                                    </a>
+                                    @if ($sisaJatah > 0)
+                                        <a
+                                            href="{{ route('peminjaman.beda', ['id' => $item->buku->id_buku]) }}"
+                                            class="px-6 py-2 border-2 border-white text-white hover:bg-white hover:text-[#467599] rounded-md font-bold text-sm transition-all shadow-sm"
+                                        >
+                                            Pinjam
+                                        </a>
+                                    @else
+                                        <button
+                                            disabled
+                                            class="px-6 py-2 border-2 border-gray-400 text-gray-400 cursor-not-allowed rounded-md font-bold text-sm shadow-sm"
+                                            title="Jatah peminjaman kamu sudah habis"
+                                        >
+                                            Pinjam
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -140,83 +138,11 @@
             </div>
         </div>
     </div>
-
-    {{-- MODAL PILIHAN (POP-UP) --}}
-    <div
-        id="peminjaman-modal"
-        class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm"
-    >
-        <div
-            id="modal-content"
-            class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all scale-95 opacity-0 duration-300"
-        >
-            <div class="text-center">
-                <div
-                    class="bg-indigo-100 text-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                >
-                    <i class="bi bi-calendar2-check text-3xl"></i>
-                </div>
-                <h3 class="text-2xl font-black text-gray-800">
-                    Opsi Peminjaman
-                </h3>
-                <p class="text-gray-500 text-sm mt-2">Pilih metode pengembalian untuk <span id="modal-count-text" class="font-bold text-indigo-600"></span> buku ini.</p>
-            </div>
-
-            <div class="mt-8 space-y-4">
-                {{-- Opsi 1: Hari Sama --}}
-                <button
-                    onclick="eksekusiPeminjaman('sama')"
-                    class="w-full flex items-center justify-between px-5 py-4 bg-emerald-50 border-2 border-emerald-100 hover:border-emerald-500 rounded-xl group transition-all"
-                >
-                    <div class="flex items-center gap-4 text-left">
-                        <i
-                            class="bi bi-clock-fill text-2xl text-emerald-600"
-                        ></i>
-                        <div>
-                            <span
-                                class="block font-bold text-emerald-900 text-sm"
-                                >Kembali Di Tanggal yang Sama</span
-                            >
-                            <span class="text-[11px] text-emerald-700 italic"
-                                >Buku di kembalikan pada tanggal yang sama.</span
-                            >
-                        </div>
-                    </div>
-                </button>
-
-                {{-- Opsi 2: Hari Berbeda --}}
-                <button
-                    onclick="eksekusiPeminjaman('beda')"
-                    class="w-full flex items-center justify-between px-5 py-4 bg-blue-50 border-2 border-blue-100 hover:border-blue-500 rounded-xl group transition-all"
-                >
-                    <div class="flex items-center gap-4 text-left">
-                        <i
-                            class="bi bi-calendar-range-fill text-2xl text-blue-600"
-                        ></i>
-                        <div>
-                            <span class="block font-bold text-blue-900 text-sm"
-                                >Kembali Di Tanggal Berbeda</span
-                            >
-                            <span class="text-[11px] text-blue-700 italic"
-                                >Buku di kembalikan sesuai tanggal kembali masing masing.</span
-                            >
-                        </div>
-                    </div>
-                </button>
-
-                <button
-                    onclick="tutupModal()"
-                    class="w-full py-3 text-gray-400 text-sm font-bold hover:text-red-500 transition-colors mt-2"
-                >
-                    BATALKAN
-                </button>
-            </div>
-        </div>
-    </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const modal = document.getElementById('peminjaman-modal');
         const modalContent = document.getElementById('modal-content');
+        const sisaJatahAwal = {{ $sisaJatah }};
 
         function updateBulkAction() {
             const checkboxes = document.querySelectorAll('.wishlist-checkbox:checked');
@@ -225,12 +151,28 @@
 
             countLabel.innerText = checkboxes.length;
 
+            // Validasi Modern dengan SweetAlert2
+            if (checkboxes.length > sisaJatahAwal) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kuota Peminjaman Penuh',
+                    text: `Sisa jatah pinjam buku kamu ${sisaJatahAwal} lagi.`,
+                    confirmButtonColor: '#6366F1',
+                    showConfirmButton: true,
+                    timer: 5000,
+                });
+
+                event.target.checked = false;
+                countLabel.innerText = document.querySelectorAll(
+                    '.wishlist-checkbox:checked'
+                ).length;
+                return;
+            }
+
             if (checkboxes.length >= 2) {
-                bulkContainer.classList.remove('invisible');
-                bulkContainer.classList.add('visible');
+                bulkContainer.classList.replace('invisible', 'visible');
             } else {
-                bulkContainer.classList.remove('visible');
-                bulkContainer.classList.add('invisible');
+                bulkContainer.classList.replace('visible', 'invisible');
             }
         }
 
@@ -253,20 +195,58 @@
             }, 200);
         }
 
-        function eksekusiPeminjaman(tipe) {
+        function eksekusiLangsung() {
             const checkboxes = document.querySelectorAll('.wishlist-checkbox:checked');
-            let ids = Array.from(checkboxes).map((cb) => cb.value);
+            const ids = Array.from(checkboxes).map((cb) => cb.value);
+
+            if (ids.length > sisaJatahAwal) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Limit Tercapai',
+                    text: 'Kurangi pilihan buku kamu agar sesuai jatah.',
+                    confirmButtonColor: '#EF4444',
+                });
+                return;
+            }
 
             if (ids.length > 0) {
-                if (tipe === 'sama') {
-                    window.location.href = `{{ route('peminjaman.masal') }}?ids=${ids.join(',')}`;
-                } else {
-                    window.location.href = `{{ route('peminjaman.beda') }}?ids=${ids.join(',')}`;
-                }
+                Swal.fire({
+                    title: 'Mohon Tunggu',
+                    text: 'Sedang menyiapkan data peminjaman...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                });
+
+                window.location.href = `{{ route('peminjaman.beda') }}?ids=${ids.join(',')}`;
             }
         }
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) tutupModal();
-        });
+
+        function konfirmasiHapus(formId) {
+            Swal.fire({
+                title: 'Yakin ingin menghapus?',
+                text: 'Buku ini akan dihapus dari daftar wishlist kamu.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444', 
+                cancelButtonColor: '#6b7280', 
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true, 
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Menghapus...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                    });
+                    // Kirim form-nya
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
     </script>
 </x-app-layout>

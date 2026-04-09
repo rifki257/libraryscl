@@ -5,18 +5,13 @@ use App\Http\Controllers\BukuController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\PeminjamanController;
-use App\Http\Controllers\PeminjamandataController;
-use App\Http\Controllers\UserdashboardController;
-use App\Http\Controllers\PengembalianController;
-use App\Http\Controllers\AdminPengembalianController;
 use App\Http\Controllers\AdminPeminjamanController;
-use App\Http\Controllers\PeminjamanBedaController;
-use App\Http\Controllers\UserpengembalianController;
+use App\Http\Controllers\AdminPengembalianController;
+use App\Http\Controllers\PengembalianController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\KategoriController;
-use App\Models\Buku;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 // --- PUBLIC ROUTE ---
 Route::get('/', function () {
@@ -25,6 +20,11 @@ Route::get('/', function () {
 
 Route::get('/', [KatalogController::class, 'index'])->name('katalog');
 require __DIR__ . '/auth.php';
+
+Route::get('/mark-read', function () {
+    Auth::user()->unreadNotifications->markAsRead();
+    return back();
+})->name('markNotificationsRead');
 
 // --- SEMUA HARUS LOGIN ---
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -69,55 +69,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // 4. PEMINJAMAN
     Route::get('/pinjam/{id}', [App\Http\Controllers\PeminjamanController::class, 'create'])->name('peminjaman');
+    Route::get('/peminjaman-beda', [WishlistController::class, 'peminjamanBeda'])->name('peminjaman.beda');
     Route::post('/peminjaman/store', [PeminjamanController::class, 'store'])->name('peminjaman.store');
-    // Tambahkan ini untuk memproses simpan banyak buku sekaligus
     Route::post('/peminjaman/store-masal', [PeminjamanController::class, 'storeMasal'])->name('peminjaman.store.masal');
     Route::get('/my-peminjaman', [PeminjamanController::class, 'history'])->name('mypinjaman');
     Route::put('/peminjaman/ajukan-kembali/{id}', [PeminjamanController::class, 'ajukanKembali'])
         ->name('peminjaman.ajukan_kembali');
     Route::delete('/peminjaman/{id}/batal', [PeminjamanController::class, 'destroy'])->name('peminjaman.cancel');
     Route::get('/my-history', [PeminjamanController::class, 'history'])->name('peminjaman.history');
-    // Contoh rute yang benar
     Route::get('/admin/persetujuan', [PeminjamanController::class, 'persetujuan'])->name('admin.persetujuan');
-    // Pastikan tujuannya ke PeminjamanController
     Route::put('/admin/setujui/{id}', [PeminjamanController::class, 'setujuiPinjam'])->name('admin.setujui');
     Route::get('/pinjam-masal', [PeminjamanController::class, 'createMasal'])->name('peminjaman.masal');
-    Route::get('/peminjaman-beda', [WishlistController::class, 'peminjamanBeda'])->name('peminjaman.beda');
-    // Pastikan ada ->name('peminjaman') di ujungnya
     Route::get('/pinjam/{id}', [PeminjamanController::class, 'pinjam'])->name('peminjaman');
-
-    // 8. AKUN ADMIN DAN USER
     Route::middleware(['auth'])->group(function () {
         Route::get('/akun-admin', [UserController::class, 'index'])->name('akun_admin');
         Route::delete('/akun-admin/{id}', [UserController::class, 'destroy'])->name('admin.destroy');
         Route::put('/akun-admin/update-password/{id}', [UserController::class, 'updatePassword'])->name('admin.updatePassword');
     });
 
-    // 9. AKUN USER
+
     Route::middleware(['auth'])->group(function () {
         Route::get('/users', [UserController::class, 'indexAnggota'])->name('akun_user');
         Route::put('/users/{id}/password', [UserController::class, 'updatePassword'])->name('user.updatePassword');
         Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('user.destroy');
     });
 
-    // 10. PENGEMBALIAN
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/pengembalian', [PengembalianController::class, 'index'])->name('pengembalian');
-
-        Route::put('/admin/konfirmasi-pengembalian/{id_pinjam}', [PengembalianController::class, 'konfirmasi'])
-            ->name('admin.konfirmasi_kembali');
-    });
-    // 11. BALIK
-    Route::get('/mybalik', [UserpengembalianController::class, 'history'])->name('mybalik');
-    Route::post('/mybalik/store/{id}', [UserpengembalianController::class, 'store'])->name('mybalik.store');
 
     Route::post('/wishlist/store', [WishlistController::class, 'store'])->name('wishlist.store');
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
 
     Route::patch('/admin/persetujuan/{id}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('admin.tolak');
-    Route::get('/admin/pengembalian', [AdminPengembalianController::class, 'index'])->name('admin.pengembalian.index');
-    Route::put('/admin/pengembalian/{id}/konfirmasi', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.pengembalian.konfirmasi');
+
 
     Route::get('/kategori-buku', [KategoriController::class, 'index'])->name('kategori.buku');
 
@@ -126,4 +109,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/kategori-buku', [KategoriController::class, 'store'])->name('kategori.store');
     Route::put('/kategori/{id}', [KategoriController::class, 'update'])->name('kategori.update');
     Route::delete('/kategori/{id}', [KategoriController::class, 'destroy'])->name('kategori.destroy');
+
+    Route::put('/admin/pengembalian/konfirmasi/{id}', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.konfirmasi_kembali');
+
+
+    Route::put('/admin/pengembalian/konfirmasi/{id}', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.konfirmasi_kembali');
+    Route::get('/admin/pengembalian/data', [AdminPengembalianController::class, 'history'])->name('pengembalian.data');
+    Route::get('/admin/peminjaman/data', [PeminjamanController::class, 'index'])->name('admin.peminjaman.data');
+
+    Route::get('/admin/pengembalian/data', [AdminPengembalianController::class, 'history'])
+        ->name('mybalik');
+
+    Route::get('/admin/pengembalian', [AdminPengembalianController::class, 'index'])->name('pengembalian');
+    Route::get('/admin/peminjaman/data', [AdminPengembalianController::class, 'peminjamanData'])
+        ->name('persetujuan.data');
+    Route::put('/admin/konfirmasi-kembali/{id}', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.konfirmasi_kembali');
+    Route::get('/admin/pengembalian/data', [AdminPengembalianController::class, 'history'])
+        ->name('pengembalian.data');
 });

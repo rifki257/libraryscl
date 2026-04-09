@@ -8,32 +8,22 @@ class Pengembalian extends Model
 {
     protected $table = 'pengembalian';
     protected $primaryKey = 'id_kembali';
-    protected $fillable = [
-        'id_pinjam',
-        'tgl_kembali',
-        'tgl_jatuh_tempo',
-        'id_buku',        
-        'tgl_pinjam',     
-        'id',           
-        'denda'
-    ];
-    protected $casts = [
-        'tgl_kembali' => 'date',
-        'tgl_pinjam'  => 'date',
-        'tgl_jatuh_tempo' => 'date',
-    ];
-    public function buku()
+    protected $fillable = ['id_pinjam', 'id_buku', 'id', 'tgl_kembali', 'tgl_pinjam', 'tgl_jatuh_tempo', 'denda'];
+
+    public function book()
     {
-        return $this->belongsTo(Buku::class, 'id_buku', 'id_buku');
+        return $this->belongsTo(Buku::class, 'id_buku');
     }
 
+    // Relasi ke User (menggunakan id sesuai gambar)
     public function user()
     {
-        return $this->belongsTo(User::class, 'id', 'id');
+        return $this->belongsTo(User::class, 'id');
     }
 
+    // Relasi ke Peminjaman (menggunakan id_pinjam sesuai gambar)
     public function peminjaman()
     {
-        return $this->belongsTo(Peminjaman::class, 'id_pinjam', 'id_pinjam');
+        return $this->belongsTo(Peminjaman::class, 'id_pinjam');
     }
 }

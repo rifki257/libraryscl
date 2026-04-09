@@ -2,17 +2,6 @@
     @vite (['resources/css/app.scss', 'resources/js/app.js'])
 </head>
 <x-app-layout>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight mb-0">
-                {{ __('Buku yang Sedang Dipinjam') }}
-            </h2>
-            <span class="badge bg-primary rounded-pill"
-                >{{ $sedangDipinjam->count() }} Buku</span
-            >
-        </div>
-    </x-slot>
-
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div
@@ -318,21 +307,37 @@
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Ya, Batalkan!',
                 cancelButtonText: 'Kembali',
+                reverseButtons: true, // Opsional: Biar tombol batal di kiri, ya di kanan
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Cek apakah ID form-cancel-[ID] benar-benar ada di halaman
                     const form = document.getElementById(
                         `form-cancel-${idPinjam}`
                     );
+
                     if (form) {
+                        // --- Tambahkan Bagian Loading Ini ---
+                        Swal.fire({
+                            title: 'Memproses Pembatalan...',
+                            text: 'Mohon tunggu sebentar ya.',
+                            allowOutsideClick: false,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            },
+                        });
+                        // ------------------------------------
+
                         form.submit();
                     } else {
                         console.error(
                             `Form dengan ID form-cancel-${idPinjam} tidak ditemukan!`
                         );
-                        alert(
-                            'Terjadi kesalahan teknis, form tidak ditemukan.'
-                        );
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Waduh!',
+                            text: 'Terjadi kesalahan teknis, form tidak ditemukan.',
+                            confirmButtonColor: '#6366F1',
+                        });
                     }
                 }
             });

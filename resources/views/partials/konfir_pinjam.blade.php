@@ -1,15 +1,14 @@
 @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
 @endif
-
-<table class="table table-striped">
-    <thead>
+<table class="table table-bordered">
+    <thead class="table-dark">
         <tr class="text-capitalize text-center">
-            <th>Nama Peminjam</th>
-            <th>Judul Buku</th>
-            <th>Tgl Pengajuan</th>
-            <th>Rencana Kembali</th>
-            <th>Aksi</th>
+            <th>Peminjam</th>
+            <th>Buku</th>
+            <th>Tgl Pinjam</th>
+            <th>Tgl jatuh tempo</th>
+            <th>Persetujuan</th>
         </tr>
     </thead>
     <tbody>
@@ -25,63 +24,85 @@
                     <div
                         class="d-flex justify-content-center align-items-center gap-1"
                     >
-                        {{-- KONDISI 1: JIKA STATUSNYA PENDING / MENUNGGU (Minta Pinjam) --}}
-                        @if ($item->status == 'pending' || $item->status == 'menunggu')
-                            <form
-                                action="{{ route('admin.setujui', $item->id_pinjam) }}"
-                                method="POST"
+                        <form
+                            action="{{ route('admin.setujui', $item->id_pinjam) }}"
+                            method="POST"
+                        >
+                            @csrf
+                            @method ('PUT')
+                            <button type="submit" class="btn btn-success">
+                                Konfirmasi
+                            </button>
+                        </form>
+
+                        <form
+                            id="form-tolak-{{ $item->id_pinjam }}"
+                            action="{{ route('admin.tolak', $item->id_pinjam) }}"
+                            method="POST"
+                        >
+                            @csrf
+                            @method ('PATCH')
+                            <input
+                                type="hidden"
+                                name="alasan"
+                                id="alasan-{{ $item->id_pinjam }}"
+                            />
+
+                            <button
+                                type="button"
+                                class="btn btn-danger"
+                                onclick="tolakPeminjaman('{{ $item->id_pinjam }}', '{{ $item->buku->judul }}')"
                             >
-                                @csrf
-                                @method ('PUT')
-                                <button
-                                    type="submit"
-                                    class="btn btn-success btn-sm"
-                                >
-                                    Setujui Pinjam
-                                </button>
-                            </form>
-                            <form
-                                action="{{ route('admin.tolak', ['id' => $item->id_pinjam]) }}"
-                                method="POST"
-                            >
-                                @csrf
-                                @method ('PATCH')
-                                <button
-                                    type="submit"
-                                    class="btn btn-danger btn-sm"
-                                    onclick="
-                                        return confirm('Tolak peminjaman ini?');
-                                    "
-                                >
-                                    Tolak
-                                </button>
-                            </form>
-                            {{-- KONDISI 2: JIKA STATUSNYA AJUKAN_KEMBALI (Minta Balikin Buku) --}}
-                        @elseif ($item->status == 'ajukan_kembali')
-                            <form
-                                action="{{ route('admin.peminjaman.konfirmasi', $item->id_pinjam) }}"
-                                method="POST"
-                            >
-                                @csrf
-                                @method ('PUT')
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary btn-sm"
-                                >
-                                    <i class="bi bi-check-all"></i> Konfirmasi
-                                    Pengembalian
-                                </button>
-                            </form>
-                            {{-- KONDISI 3: JIKA SUDAH DIPINJAM (Hanya Label) --}}
-                        @elseif ($item->status == 'dipinjam')
-                            <span class="badge bg-info text-dark"
-                                >Sedang Dipinjam</span
-                            >
-                        @endif
+                                Tolak
+                            </button>
+                        </form>
                     </div>
                 </td>
             </tr>
         @empty
+            <tr>
+                <td colspan="5" class="text-center">
+                    Tidak ada permintaan baru.
+                </td>
+            </tr>
         @endforelse
     </tbody>
 </table>
+
+<script>
+    function tolakPeminjaman(id, judulBuku) {
+    Swal.fire({
+        title: 'Tolak Peminjaman?',
+        text: `Memberikan alasan penolakan untuk buku: ${judulBuku}`,
+        icon: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Contoh: Maaf, stok buku saat ini sedang habis...',
+        inputValue: 'Maaf, stok habis.', // Alasan default
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Kirim & Tolak',
+        cancelButtonText: 'Batal',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Alasan harus diisi agar user tidak bingung!'
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Isi input hidden dengan alasan dari SweetAlert
+            document.getElementById(`alasan-${id}`).value = result.value;
+            
+            // Tampilkan loading
+            Swal.fire({
+                title: 'Mengirim Penolakan...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // Submit form
+            document.getElementById(`form-tolak-${id}`).submit();
+        }
+    });
+}
+</script>

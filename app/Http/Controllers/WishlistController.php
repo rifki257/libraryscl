@@ -74,13 +74,46 @@ class WishlistController extends Controller
     }
     public function peminjamanBeda(Request $request)
     {
-        // Mengambil ID buku dari parameter URL ?ids=1,2,3
-        $ids = explode(',', $request->query('ids'));
+        $userId = auth()->id();
 
-        // Ambil data buku berdasarkan ID tersebut
-        $bukuTerpilih = Buku::whereIn('id_buku', $ids)->get();
+        // Ambil input dari URL
+        $singleId = $request->query('id');   // Jalur 1 & 3
+        $multiIds = $request->query('ids');  // Jalur 2 (Checkbox)
 
-        // Kirim ke view pinjambeda.blade.php
-        return view('pinjambeda', compact('bukuTerpilih'));
+        if ($singleId) {
+            // --- JALUR 1 & 3: PINJAM 1 BUKU (Langsung atau dari Wishlist tanpa checkbox) ---
+            $books = \App\Models\Buku::where('id_buku', $singleId)->get();
+        } elseif ($multiIds) {
+            // --- JALUR 2: PINJAM BANYAK BUKU (Hasil Checkbox) ---
+            $ids = explode(',', $multiIds);
+            $books = \App\Models\Buku::whereIn('id_buku', $ids)->get();
+        } else {
+            // --- JALUR CADANGAN: AMBIL SEMUA DARI WISHLIST ---
+            // Jika user masuk ke halaman ini tanpa parameter apa pun
+            // Gunakan 'id' atau 'user_id' sesuai kolom di tabel wishlist phpMyAdmin-mu
+            $books = \App\Models\Wishlist::where('id', $userId)
+                ->with('buku')
+                ->get()
+                ->pluck('buku')
+                ->filter();
+        }
+
+        // Proteksi: Jika buku tidak ditemukan atau parameter ngawur
+        if ($books->isEmpty()) {
+            return redirect()->route('katalog')->with('error', 'Pilih buku terlebih dahulu.');
+        }
+
+        // Hitung sisa slot (Maksimal 6)
+        // Sesuai error sebelumnya, kolom user di tabel peminjaman kamu adalah 'id'
+        $totalBukuAktif = \App\Models\Peminjaman::where('id', $userId)
+            ->whereIn('status', ['diajukan', 'dipinjam'])
+            ->count();
+
+        // Kirim data ke view
+        return view('pinjambeda', [
+            'books' => $books,           // Variabel utama
+            'bukuTerpilih' => $books,    // Cadangan jika view pakai nama ini
+            'totalBukuAktif' => $totalBukuAktif
+        ]);
     }
 }

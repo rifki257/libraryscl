@@ -1,9 +1,11 @@
-<table class="table table-striped">
-    <thead>
+<table class="table table-bordered">
+    <thead class="table-dark">
         <tr class="text-capitalize text-center">
             <th>id buku</th>
             <th>gambar</th>
             <th>judul</th>
+            <th>penulis</th>
+            <th>Jumlah</th>
             <th>Kategori</th>
             <th>aksi</th>
         </tr>
@@ -25,14 +27,18 @@
                         <span class="text-muted">No Image</span>
                     @endif
                 </td>
-
-                {{-- Kolom Judul --}}
                 <td
                     class="{{ $buku->jumlah <= 0 ? 'text-danger fw-bold' : '' }}"
                 >
                     {{ $buku->judul }}
                 </td>
 
+                <td>
+                    {{ $buku->penulis ?? 'Tidak Ada Penulis' }}
+                </td>
+                <td>
+                    {{ $buku->jumlah ?? 'Tidak Ada Penulis' }}
+                </td>
                 <td>
                     {{ $buku->kategori->nama_kategori ?? 'Tidak Ada Kategori' }}
                 </td>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\PeminjamanDitolak;
 use App\Models\Peminjaman;
 use App\Models\Buku;
 use Illuminate\Http\Request;
@@ -49,11 +50,22 @@ class AdminPeminjamanController extends Controller
         }
     }
 
-    public function tolak($id)
+    public function tolak(Request $request, $id)
     {
+        // 1. Cari data peminjaman
         $pinjam = Peminjaman::where('id_pinjam', $id)->firstOrFail();
-        $pinjam->update(['status' => 'ditolak']);
-        return back()->with('info', 'Permintaan peminjaman telah ditolak.');
+
+        // 2. Update status (dan simpan alasan ke kolom pesan_admin jika ada)
+        $pinjam->update([
+            'status' => 'ditolak',
+            'pesan_admin' => $request->alasan
+        ]);
+
+        // 3. Kirim notifikasi ke User pemilik pinjaman
+        $user = $pinjam->user; // Pastikan relasi 'user' ada di Model Peminjaman
+        $user->notify(new PeminjamanDitolak($pinjam, $request->alasan));
+
+        return back()->with('info', 'Permintaan ditolak dan notifikasi telah dikirim.');
     }
 
     public function konfirmasi($id)

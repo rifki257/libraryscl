@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Peminjaman;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -16,7 +17,7 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        $totalPinjamAktif = \App\Models\Peminjaman::where('status', 'dipinjam')->count();
+        $totalPinjamAktif = \App\Models\Peminjaman::whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat'])->count();
         $totalSudahKembali = \App\Models\Peminjaman::where('status', 'kembali')->count();
         $totalRiwayat = $totalPinjamAktif + $totalSudahKembali;
 
