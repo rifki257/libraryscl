@@ -14,11 +14,8 @@ use App\Http\Controllers\KategoriController;
 use Illuminate\Support\Facades\Auth;
 
 // --- PUBLIC ROUTE ---
-Route::get('/', function () {
-    return view('katalog');
-});
 
-Route::get('/', [KatalogController::class, 'index'])->name('katalog');
+Route::get('/', [KategoriController::class, 'katalog'])->name('katalog');
 require __DIR__ . '/auth.php';
 
 Route::get('/mark-read', function () {
@@ -113,8 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/admin/pengembalian/konfirmasi/{id}', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.konfirmasi_kembali');
 
 
-    Route::put('/admin/pengembalian/konfirmasi/{id}', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.konfirmasi_kembali');
-    Route::get('/admin/pengembalian/data', [AdminPengembalianController::class, 'history'])->name('pengembalian.data');
+    
     Route::get('/admin/peminjaman/data', [PeminjamanController::class, 'index'])->name('admin.peminjaman.data');
 
     Route::get('/admin/pengembalian/data', [AdminPengembalianController::class, 'history'])
@@ -124,6 +120,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/peminjaman/data', [AdminPengembalianController::class, 'peminjamanData'])
         ->name('persetujuan.data');
     Route::put('/admin/konfirmasi-kembali/{id}', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.konfirmasi_kembali');
-    Route::get('/admin/pengembalian/data', [AdminPengembalianController::class, 'history'])
-        ->name('pengembalian.data');
+    Route::get('/admin/pengembalian/data', [AdminPengembalianController::class, 'history'])->name('pengembalian.data');
+
+    Route::get('/kategori/{id}', [KategoriController::class, 'show'])->name('isikategori');
 });

@@ -68,41 +68,44 @@
         @endforelse
     </tbody>
 </table>
-
+<div>{{ $semuaPeminjaman->links() }}</div>
 <script>
     function tolakPeminjaman(id, judulBuku) {
-    Swal.fire({
-        title: 'Tolak Peminjaman?',
-        text: `Memberikan alasan penolakan untuk buku: ${judulBuku}`,
-        icon: 'warning',
-        input: 'textarea',
-        inputPlaceholder: 'Contoh: Maaf, stok buku saat ini sedang habis...',
-        inputValue: 'Maaf, stok habis.', // Alasan default
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Kirim & Tolak',
-        cancelButtonText: 'Batal',
-        inputValidator: (value) => {
-            if (!value) {
-                return 'Alasan harus diisi agar user tidak bingung!'
-            }
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Isi input hidden dengan alasan dari SweetAlert
-            document.getElementById(`alasan-${id}`).value = result.value;
-            
-            // Tampilkan loading
-            Swal.fire({
-                title: 'Mengirim Penolakan...',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
+        Swal.fire({
+            title: 'Tolak Peminjaman?',
+            text: `Memberikan alasan penolakan untuk buku: ${judulBuku}`,
+            icon: 'warning',
+            input: 'textarea',
+            inputPlaceholder:
+                'Contoh: Maaf, stok buku saat ini sedang habis...',
+            inputValue: 'Maaf, stok habis.', // Alasan default
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Kirim & Tolak',
+            cancelButtonText: 'Batal',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Alasan harus diisi agar user tidak bingung!';
+                }
+            },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Isi input hidden dengan alasan dari SweetAlert
+                document.getElementById(`alasan-${id}`).value = result.value;
 
-            // Submit form
-            document.getElementById(`form-tolak-${id}`).submit();
-        }
-    });
-}
+                // Tampilkan loading
+                Swal.fire({
+                    title: 'Mengirim Penolakan...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                });
+
+                // Submit form
+                document.getElementById(`form-tolak-${id}`).submit();
+            }
+        });
+    }
 </script>

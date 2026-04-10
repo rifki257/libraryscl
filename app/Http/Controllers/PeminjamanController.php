@@ -23,13 +23,14 @@ class PeminjamanController extends Controller
         return view('partials.pinjam_data', compact('semuaPeminjaman'));
     }
 
+
     // PeminjamanController.php
     public function persetujuan()
     {
         $semuaPeminjaman = Peminjaman::with(['buku', 'user'])
             ->where('status', 'menunggu') // HAPUS 'ajukan_kembali' dari sini
             ->latest()
-            ->get();
+            ->paginate(8);
 
         return view('admin_persetujuan', compact('semuaPeminjaman'));
     }

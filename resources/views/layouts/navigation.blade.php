@@ -75,11 +75,12 @@
         </x-slot>
 
         <x-slot name="content">
-            <div class="block px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+            <div class="w-80 sm:w-96">
+                <div class="block px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
                 Pemberitahuan
             </div>
 
-            <div class="max-h-64 overflow-y-auto">
+            <div class="max-h-80 overflow-y-auto">
                 @auth
                     @forelse(auth()->user()->notifications as $notification)
                         <div class="px-4 py-3 hover:bg-gray-50 transition border-b border-gray-50 last:border-0 {{ $notification->read_at ? 'opacity-60' : '' }}">
@@ -113,6 +114,7 @@
                     </a>
                 @endif
             @endauth
+            </div>
         </x-slot>
     </x-dropdown>
     {{-- akhir notif --}}

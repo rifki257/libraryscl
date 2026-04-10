@@ -2,6 +2,13 @@
     @vite (['resources/css/app.scss', 'resources/js/app.js'])
 </head>
 <x-app-layout>
+    <x-slot name="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight mb-0">
+                {{ __('Dashboard') }}
+            </h2>
+        </div>
+    </x-slot>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <table class="table table-bordered">
@@ -18,8 +25,10 @@
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($semuaPeminjaman as $item)
                         @php
+                                    $tanggalSelesai = $item->tgl_kembali ?? $item->updated_at;
                                     $jt = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
                                     $kb = \Carbon\Carbon::parse($item->updated_at)->startOfDay();
+
                                     $isTelat = $kb->gt($jt);
                                     $selisihHari = $isTelat ? $kb->diffInDays($jt) : 0;
                                     $totalDenda = $selisihHari * 50000;
@@ -27,38 +36,28 @@
                         <tr class="text-capitalize text-center align-middle">
                             <td>
                                 <div class="flex flex-col">
-                                    <span
-                                        class="text-sm font-bold text-gray-800"
-                                        >{{ $item->user->name }}</span
-                                    >
+                                    <span>{{ $item->user->name }}</span>
                                 </div>
                             </td>
                             <td>
-                                <div class="text-sm text-gray-600 font-medium">
-                                    {{ $item->buku->judul }}
+                                <div>{{ $item->buku->judul }}</div>
+                            </td>
+                            <td>
+                                <div>
+                                    {{ \Carbon\Carbon::parse($item->tgl_pinjam)->format('d M Y') }}
                                 </div>
                             </td>
                             <td>
-                                <div class="text-sm text-gray-600 font-medium">
-                                    {{ $item->tgl_pinjam }}
+                                <div>
+                                    {{ \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->format('d M Y') }}
                                 </div>
                             </td>
                             <td>
-                                <div class="text-sm text-gray-600 font-medium">
-                                    {{ $item->tgl_jatuh_tempo }}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="text-sm text-gray-600 font-medium">
-                                    @if (isset($item->tgl_kembali))
+                                <div>
+                                    @if ($item->tgl_kembali)
                                         {{ \Carbon\Carbon::parse($item->tgl_kembali)->format('d M Y') }}
-                                    @elseif (isset($item['tgl_kembali']))
-                                        {{ \Carbon\Carbon::parse($item['tgl_kembali'])->format('d M Y') }}
                                     @else
-                                        {{-- Jika ini yang muncul, berarti data memang tidak sampai ke View --}}
-                                        <span class="text-red-500 font-bold"
-                                            >Data tidak ditemukan</span
-                                        >
+                                        <span>{{ $kb->format('d M Y') }}</span>
                                     @endif
                                 </div>
                             </td>

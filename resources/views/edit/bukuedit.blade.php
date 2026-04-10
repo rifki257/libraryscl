@@ -110,8 +110,45 @@
                                         />
                                     </div>
                                 </div>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <x-input-label
+                                            for="id_kategori"
+                                            value="Kategori"
+                                        />
+                                        <select
+                                            name="id_kategori"
+                                            id="id_kategori"
+                                            class="form-control @error('id_kategori') is-invalid @enderror"
+                                            required
+                                        >
+                                            <option value="" disabled>
+                                                -- Pilih Kategori --
+                                            </option>
+                                            @foreach ($kategoris as $kategori)
+                                                <option
+                                                    value="{{ $kategori->id_kategori }}"
+                                                    {{ old('id_kategori', $buku->id_kategori) == $kategori->id_kategori ? 'selected' : '' }}
+                                                >
+                                                    {{ $kategori->nama_kategori }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+
+                                        @error ('id_kategori')
+                                            <div class="text-danger small mt-1">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+                                    </div>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-success mt-3" id="simpan" style="width: 80px">
+                            <button
+                                type="submit"
+                                class="btn btn-success mt-3"
+                                id="simpan"
+                                style="width: 80px"
+                            >
                                 <i class="fa-solid fa-floppy-disk"></i>
                             </button>
                             <a

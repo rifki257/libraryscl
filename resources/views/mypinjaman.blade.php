@@ -5,8 +5,9 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div
-                class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 p-md-5"
+                class="bg-[#ebebeb] overflow-hidden shadow-sm sm:rounded-lg p-4 p-md-5"
             >
+            <a href="">Lihat laporan</a>
                 <div class="row g-4">
                     @forelse ($sedangDipinjam as $item)
                         @php
@@ -182,6 +183,19 @@
                             </div>
                         </div>
                     @empty
+                    <div
+                        class="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-300"
+                    >
+                        <i
+                            class="bi bi-bookmark-x text-5xl text-gray-300 mb-4 block"
+                        ></i>
+                        <p class="text-gray-500 font-medium">Belum ada peminjaman.</p>
+                        <a
+                            href="{{ route('katalog') }}"
+                            class="text-blue-500 hover:text-blue-700 underline mt-2 inline-block"
+                            >Jelajahi Katalog Buku</a
+                        >
+                    </div>
                     @endforelse
                 </div>
             </div>
