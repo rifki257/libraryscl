@@ -39,7 +39,7 @@
                                         "
                     class="{{ $isTelat ? 'bg-red-500 hover:bg-red-600' : 'bg-indigo-500 hover:bg-indigo-600' }} text-white px-4 py-1.5 rounded-md text-xs font-bold uppercase shadow-sm transition"
                 >
-                    {{ $isTelat ? 'Konfirmasi Denda' : 'Konfirmasi' }}
+                    {{ $isTelat ? 'Konfirmasi' : 'Konfirmasi' }}
                 </button>
             @endif
         </td>

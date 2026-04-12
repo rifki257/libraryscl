@@ -10,7 +10,7 @@ class UserController extends Controller
 {
     // admin
     public function index(Request $request)
-{
+    {
     // Proteksi role
     if (auth()->user()->role !== 'kepper') {
         abort(403, 'Anda tidak memiliki akses ke halaman ini.');
@@ -23,57 +23,50 @@ class UserController extends Controller
         $search = $request->search;
         $query->where(function($q) use ($search) {
             $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('email', 'like', '%' . $search . '%');
+            ->orWhere('email', 'like', '%' . $search . '%');
         });
-        // Ambil semua data (tanpa pagination) saat mencari agar hasil terlihat semua
         $admins = $query->latest()->get();
     } else {
-        // Gunakan pagination saat tampilan normal
         $admins = $query->latest()->paginate(1); 
     }
 
-    // Jika request datang dari AJAX (Live Search)
     if ($request->ajax()) {
         return view('admin.table_admin_rows', compact('admins'))->render();
     }
 
     return view('akun_admin', compact('admins'));
-}
+    }
 
-public function indexSiswa(Request $request)
-{
+    public function indexSiswa(Request $request)
+    {
     $query = \App\Models\User::where('role', 'anggota');
 
-    // 1. Logika Pencarian Global (Navbar)
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function($q) use ($search) {
             $q->where('name', 'like', "%$search%")
-              ->orWhere('nis', 'like', "%$search%")
-              ->orWhere('email', 'like', "%$search%")
-              ->orWhere('no_hp', 'like', "%$search%");
+            ->orWhere('nis', 'like', "%$search%")
+            ->orWhere('email', 'like', "%$search%")
+            ->orWhere('no_hp', 'like', "%$search%");
         });
     }
 
-    // 2. Logika Filter Kelas (Dropdown)
     if ($request->filled('filter_kelas')) {
         $query->where('kelas', $request->filter_kelas);
     }
 
-    // 3. Respon untuk AJAX
     if ($request->ajax()) {
         $users = $query->orderBy('kelas', 'asc')->get();
         return view('admin.table_siswa_rows', compact('users'))->render();
     }
 
-    // Load halaman normal (pertama kali)
     $users = $query->orderBy('kelas', 'asc')->paginate(10)->withQueryString();
     
     return view('partials.siswa', [
         'users' => $users,
         'title' => 'Daftar Siswa'
     ]);
-}
+    }
 
     public function create()
     {
@@ -125,9 +118,8 @@ public function indexSiswa(Request $request)
 
         return redirect()->back()->with('success', count($ids) . ' akun berhasil dihapus.');
     }
-public function bulkUpdateKelas(Request $request)
-{
-    // Pastikan kolom 'kelas' ada di property $fillable Model User.php
+    public function bulkUpdateKelas(Request $request)
+    {
     $ids = $request->input('ids');
     $newKelas = $request->input('kelas');
 
@@ -143,7 +135,7 @@ public function bulkUpdateKelas(Request $request)
     }
 
     return response()->json(['success' => false, 'message' => 'Data kurang'], 400);
-}
+    }
 
     public function destroy(string $id)
     {
@@ -154,7 +146,7 @@ public function bulkUpdateKelas(Request $request)
     }
 
     public function updatePassword(Request $request, $id)
-{
+    {
     $request->validate([
         'password' => ['required', 'string', 'min:8'],
     ]);
@@ -164,7 +156,6 @@ public function bulkUpdateKelas(Request $request)
         $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
         $user->save();
 
-        // Kembalikan JSON agar SweetAlert bisa sukses
         return response()->json([
             'success' => true,
             'message' => 'Password ' . $user->name . ' berhasil diperbarui!'
@@ -175,24 +166,56 @@ public function bulkUpdateKelas(Request $request)
             'message' => 'Gagal memperbarui password.'
         ], 500);
     }
-}
-// Menghapus Siswa
-public function destroySiswa($id)
-{
-    $user = \App\Models\User::findOrFail($id);
-    $user->delete();
+    }
 
-    return response()->json(['success' => 'Data siswa berhasil dihapus.']);
+    public function destroySiswa($id)
+{
+    try {
+        $user = \App\Models\User::where('role', 'anggota')->findOrFail($id);
+        $user->delete();
+
+        return response()->json([
+            'success' => 'Data siswa ' . $user->name . ' berhasil dihapus!'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Gagal menghapus: ' . $e->getMessage()
+        ], 500);
+    }
 }
 
-// Reset Password ke Default (misal: 12345678)
-public function resetPassword($id)
-{
-    $user = \App\Models\User::findOrFail($id);
+    public function resetPassword($id)
+    {
+    $user = \App\Models\User::where('id', $id)->first();
+
+    if (!$user) {
+        return response()->json(['error' => 'User tidak ditemukan'], 404);
+    }
+
     $user->update([
-        'password' => \Hash::make('12345678')
+        'password' => \Illuminate\Support\Facades\Hash::make('12345678')
     ]);
 
-    return response()->json(['success' => 'Password berhasil direset menjadi: 12345678']);
+    return response()->json(['success' => 'Password ' . $user->name . ' berhasil direset!']);
+    }
+
+    // reset pw user
+    public function resetPasswordSiswa($id)
+{
+    try {
+        $user = \App\Models\User::findOrFail($id);
+        $user->update([
+            'password' => \Hash::make('12345678')
+        ]);
+
+        return response()->json([
+            'success' => 'Password ' . $user->name . ' berhasil direset!'
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
 }
 }

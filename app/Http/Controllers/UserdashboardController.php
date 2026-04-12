@@ -10,7 +10,6 @@ class UserdashboardController extends Controller
 {
     $id = auth()->id();
 
-    // 1. Hitung data untuk Chart
     $countAjuan = \App\Models\Peminjaman::where('id', $id)
                     ->whereIn('status', ['menunggu', 'pending'])->count();
                     
@@ -20,7 +19,6 @@ class UserdashboardController extends Controller
     $countKembali = \App\Models\Peminjaman::where('id', $id)
                     ->whereIn('status', ['proses', 'ajukan_kembali'])->count();
 
-    // 2. Ambil 3 Aktivitas Terakhir
     $recentActivities = \App\Models\Peminjaman::with('buku')
                         ->where('id', $id)
                         ->orderBy('updated_at', 'desc')

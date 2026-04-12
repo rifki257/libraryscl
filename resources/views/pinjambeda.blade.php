@@ -146,7 +146,7 @@
                             "
                             class="text-white px-10 py-3 rounded-lg font-bold transition-all duration-200 flex items-center gap-2"
                         >
-                            <i class="bi bi-send-check"></i> Pinjam
+                            <i class="bi bi-send-check"></i>Pinjam
                         </button>
                     </div>
                 </form>

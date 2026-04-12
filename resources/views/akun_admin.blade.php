@@ -132,8 +132,8 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        // Mengarah ke fungsi resetPassword di UserController
-                        url: `/admin/users/siswa/reset-password/${id}`,
+                        // SINKRONKAN URL DENGAN ROUTE KAMU
+                        url: `/admin/reset-password/${id}`,
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
@@ -150,8 +150,14 @@
                                 showConfirmButton: false,
                             });
                         },
-                        error: function () {
-                            Swal.fire('Error!', 'Gagal mereset password.', 'error');
+                        error: function (xhr) {
+                            // Cek log di console F12 jika ini terpicu
+                            console.error(xhr.responseText);
+                            Swal.fire(
+                                'Error!',
+                                'Gagal mereset password. Cek koneksi atau role anda.',
+                                'error'
+                            );
                         },
                     });
                 }

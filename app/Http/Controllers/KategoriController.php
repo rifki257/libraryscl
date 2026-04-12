@@ -9,19 +9,17 @@ use Illuminate\Support\Facades\Storage;
 
 class KategoriController extends Controller
 {
-   // Tambahkan Request di sini
+    // data kategori
 public function index(Request $request) 
-{
+    {
     $query = Kategori::withCount('buku');
 
-    // Sekarang $request sudah terdefinisi dan bisa digunakan
     if ($request->has('search') && $request->search != '') {
         $query->where('nama_kategori', 'like', '%' . $request->search . '%');
     }
 
-    $kategoris = $query->paginate(3); // Gunakan paginate sesuai kebutuhan
+    $kategoris = $query->paginate(3); 
 
-    // Cek jika permintaan datang dari AJAX (Live Search)
     if ($request->ajax()) {
         return response()->json([
             'html' => view('admin.table_rows', compact('kategoris'))->render()
@@ -29,13 +27,12 @@ public function index(Request $request)
     }
 
     return view('kategori', compact('kategoris'));
-}
+    }
 
-
+    // halaman buku user
     public function katalog()
-{
-    // Ambil 5 kategori dengan jumlah buku terbanyak
-    $kategoris = Kategori::withCount('buku') // Asumsi relasi di model Kategori bernama 'buku'
+    {
+    $kategoris = Kategori::withCount('buku') 
         ->orderBy('buku_count', 'desc')     
         ->take(5)                        
         ->get();
@@ -43,25 +40,26 @@ public function index(Request $request)
     $dataBuku = Buku::all(); 
 
     return view('katalog', compact('kategoris', 'dataBuku'));
-}
+    }
     
-public function show($id)
-{
+    // isi katgeori
+    public function show($id)
+    {
     $kategori = Kategori::findOrFail($id);
     $dataBuku = \App\Models\Buku::where('id_kategori', $id)->paginate(6);
     return view('isikategori', compact('kategori', 'dataBuku'));
-}
+    }
 
+    // proses buat kategori
     public function store(Request $request)
     {
         $request->validate([
             'nama_kategori' => 'required|string|max:255',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048' // Validasi gambar
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048' 
         ]);
 
         $nama_file = null;
 
-        // Logika simpan gambar untuk Create
         if ($request->hasFile('gambar')) {
             $file = $request->file('gambar');
             $nama_file = time() . '_' . $file->getClientOriginalName();
@@ -76,6 +74,7 @@ public function show($id)
         return redirect()->back()->with('success', 'Kategori berhasil ditambahkan!');
     }
 
+    // update
     public function update(Request $request, $id)
     {
         $kategori = Kategori::findOrFail($id);
@@ -86,12 +85,10 @@ public function show($id)
         ]);
 
         if ($request->hasFile('gambar')) {
-            // Hapus gambar lama jika ada di storage
             if ($kategori->gambar && Storage::disk('public')->exists('kategori/' . $kategori->gambar)) {
                 Storage::disk('public')->delete('kategori/' . $kategori->gambar);
             }
 
-            // Simpan gambar baru
             $file = $request->file('gambar');
             $nama_file = time() . '_' . $file->getClientOriginalName();
             $file->storeAs('kategori', $nama_file, 'public');
@@ -105,11 +102,11 @@ public function show($id)
         return redirect()->back()->with('success', 'Kategori berhasil diperbarui!');
     }
 
+    // hapus
     public function destroy($id)
     {
         $kategori = Kategori::findOrFail($id);
 
-        // Hapus file gambar dari storage saat data dihapus
         if ($kategori->gambar && Storage::disk('public')->exists('kategori/' . $kategori->gambar)) {
             Storage::disk('public')->delete('kategori/' . $kategori->gambar);
         }

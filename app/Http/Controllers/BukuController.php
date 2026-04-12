@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 class BukuController extends Controller
 {
+    // halaman buku
     public function index(Request $request)
 {
     if (auth()->check() && auth()->user()->role === 'anggota') {
@@ -18,39 +19,36 @@ class BukuController extends Controller
     $kategoris = Kategori::all();
     $query = Buku::with('kategori');
 
-    // Filter Search (Judul & Penulis)
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function($q) use ($search) {
             $q->where('judul', 'like', "%{$search}%")
-              ->orWhere('penulis', 'like', "%{$search}%");
+            ->orWhere('penulis', 'like', "%{$search}%");
         });
     }
 
-    // Filter Kategori
     if ($request->filled('filter_kategori')) {
         $query->where('id_kategori', $request->filter_kategori);
     }
 
     $dataBuku = $query->paginate(6)->withQueryString();
 
-    // JIKA REQUEST ADALAH AJAX, kembalikan hanya tabel isinya saja
     if ($request->ajax()) {
         return view('partials.tabel_isi', compact('dataBuku'))->render();
     }
 
     return view('buku', compact('dataBuku', 'kategoris'));
-}
+    }
 
+    // buat buku
     public function create()
     {
-        // 1. Ambil semua data kategori dari tabel kategoris
         $kategoris = Kategori::all();
 
-        // 2. Kirim data tersebut ke view menggunakan compact
         return view('add.bukucreate', compact('kategoris'));
     }
 
+    // create buku sistemnya atau proses
     public function store(Request $request)
     {
         $request->validate([
@@ -58,7 +56,6 @@ class BukuController extends Controller
             'penerbit' => 'required|max:225',
             'penulis' => 'required|max:225',
             'jumlah' => 'required|numeric',
-            // Tambahkan validasi untuk id_kategori agar tidak error SQL nantinya
             'id_kategori' => 'required|exists:kategoris,id_kategori',
             'gambar' => 'nullable|image|max:2048',
         ]);
@@ -72,12 +69,14 @@ class BukuController extends Controller
         return redirect()->route('buku')->with('success', 'Buku berhasil ditambah!');
     }
 
+    // detail
     public function show($id)
     {
         $buku = Buku::findOrFail($id);
         return view('detail.bukudetail', compact('buku'));
     }
 
+    // edit buku
     public function edit($id)
     {
         $buku = Buku::findOrFail($id);
@@ -85,6 +84,7 @@ class BukuController extends Controller
         return view('edit.bukuedit', compact('buku','kategoris'));
     }
 
+    // update buku proses
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -106,6 +106,7 @@ class BukuController extends Controller
         return redirect()->route('buku')->with('success', 'Buku berhasil diperbarui!');
     }
 
+    // hapus buku
     public function destroy($id)
     {
         $buku = Buku::findOrFail($id);
@@ -117,6 +118,7 @@ class BukuController extends Controller
         return redirect()->route('buku')->with('success', 'Buku berhasil dihapus!');
     }
 
+    // cari buku
     public function search(Request $request)
     {
         $search = $request->query('search');

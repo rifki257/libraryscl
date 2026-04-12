@@ -62,90 +62,59 @@
         <div
             x-show="openModal"
             class="fixed inset-0 z-[999] overflow-y-auto"
-            {{-- Naikkan Z-index --}}
-            x-transition
+            x-transition.opacity
             x-cloak
         >
-            <div
-                class="flex items-center justify-center min-h-screen px-4 pb-20 text-center"
-            >
+            <div class="flex items-center justify-center min-h-screen p-4">
                 <div
-                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                    class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
                     @click="openModal = false"
                 ></div>
 
                 <div
-                    class="inline-block bg-white rounded-lg shadow-xl transform transition-all sm:max-w-lg sm:w-full overflow-hidden text-left align-middle"
+                    class="relative bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden transition-all"
                 >
-                    <div
-                        class="px-6 py-4 bg-gray-50 border-b border-gray-200 font-bold text-gray-800"
-                    >
-                        Detail Konfirmasi Pengembalian
-                    </div>
-
-                    <div class="px-6 py-4 space-y-3">
-                        <div class="flex justify-between border-b pb-2">
-                            <span
-                                class="text-gray-500 text-xs font-bold uppercase"
-                                >Nama Peminjam</span
-                            >
-                            <span
-                                class="text-gray-900 text-sm font-semibold"
-                                x-text="selectedItem.name"
-                            ></span>
-                        </div>
-                        <div class="flex justify-between border-b pb-2">
-                            <span
-                                class="text-gray-500 text-xs font-bold uppercase"
-                                >Judul Buku</span
-                            >
-                            <span
-                                class="text-gray-900 text-sm font-semibold"
-                                x-text="selectedItem.judul"
-                            ></span>
-                        </div>
-
-                        <div
-                            x-show="selectedItem.totalHari > 0"
-                            class="p-3 bg-red-50 rounded-md border border-red-100 mt-4"
+                    <div class="p-6">
+                        <h3
+                            class="text-lg font-bold text-gray-900 mb-4 text-center"
                         >
-                            <div class="flex justify-between">
+                            Konfirmasi Pengembalian
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between text-sm italic">
+                                <span class="text-gray-500">Peminjam:</span>
                                 <span
-                                    class="text-red-700 text-xs font-bold uppercase"
-                                    >Total Keterlambatan</span
-                                >
-                                <span class="text-red-700 text-sm font-bold"
-                                    ><span
-                                        x-text="selectedItem.totalHari"
-                                    ></span>
-                                    Hari</span
-                                >
-                            </div>
-                            <div class="flex justify-between mt-1">
-                                <span
-                                    class="text-red-700 text-xs font-bold uppercase"
-                                    >Total Denda</span
-                                >
-                                <span
-                                    class="text-red-700 text-lg font-black italic"
-                                    >Rp
-                                    <span
-                                        x-text="selectedItem.totalDenda"
-                                    ></span
+                                    class="font-semibold text-gray-800"
+                                    x-text="selectedItem.name"
                                 ></span>
                             </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Buku:</span>
+                                <span
+                                    class="font-semibold text-gray-800 text-right ml-4"
+                                    x-text="selectedItem.judul"
+                                ></span>
+                            </div>
+
+                            <template x-if="selectedItem.totalHari > 0">
+                                <div
+                                    class="mt-6 p-4 bg-red-50 rounded-xl border border-red-100 text-center"
+                                >
+                                    <p class="text-xs text-red-600 font-bold uppercase tracking-wider">Terlambat <span x-text="selectedItem.totalHari"></span> Hari</p>
+                                    <p class="text-2xl font-black text-red-700 mt-1">Rp <span x-text="selectedItem.totalDenda"></span></p>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
-                    <div class="px-6 py-4 bg-gray-50 flex gap-2">
+                    <div class="p-4 bg-gray-50 flex gap-3">
                         <button
-                            type="button"
                             @click="openModal = false"
-                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md font-bold text-xs uppercase"
+                            class="flex-1 px-4  text-sm font-bold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                         >
-                            Batal
+                            BATAL
                         </button>
-
                         <form
                             :action="'/admin/konfirmasi-kembali/' +
                             selectedItem.id"
@@ -156,9 +125,9 @@
                             @method ('PUT')
                             <button
                                 type="submit"
-                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-bold text-xs uppercase transition shadow-md"
+                                class="w-full px-4 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 transition"
                             >
-                                Konfirmasi Selesai
+                                KONFIRMASI
                             </button>
                         </form>
                     </div>

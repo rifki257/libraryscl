@@ -13,6 +13,7 @@ use App\Models\Wishlist;
 
 class PeminjamanController extends Controller
 {
+    // peminjamnan
     public function index()
     {
         $semuaPeminjaman = Peminjaman::with(['buku', 'user'])
@@ -23,8 +24,9 @@ class PeminjamanController extends Controller
         return view('partials.pinjam_data', compact('semuaPeminjaman'));
     }
 
-public function peminjamanData(Request $request)
-{
+    // peminjaman table
+    public function peminjamanData(Request $request)
+    {
     $query = Peminjaman::with(['buku', 'user'])
         ->whereIn('status', ['dipinjam', 'kembali', 'ditolak']);
 
@@ -39,36 +41,34 @@ public function peminjamanData(Request $request)
             })->orWhere('id_pinjam', 'like', '%' . $search . '%');
         });
 
-        // Jika search, ambil semua (tanpa paginate)
         $semuaPeminjaman = $query->latest()->get();
     } else {
-        // Jika normal, gunakan paginate
         $semuaPeminjaman = $query->latest()->paginate(5);
     }
 
-    // Jika request dari AJAX (Live Search)
     if ($request->ajax()) {
         return view('admin.table_peminjaman_rows', compact('semuaPeminjaman'))->render();
     }
 
     return view('partials.pinjam_data', compact('semuaPeminjaman'));
-}
-    
-
-    public function create($id = null)
-    {
-        if (!$id) {
-            return redirect()->route('katalog');
-        }
-        $buku = Buku::findOrFail($id);
-        $totalBukuAktif = DB::table('peminjaman')
-            ->where('id', auth()->id())
-            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu'])
-            ->count(); // Gunakan count() karena kolom total_pinjam sudah tidak ada
-
-        return view('peminjaman', compact('buku', 'totalBukuAktif'));
     }
+    
+    
+    // public function create($id = null)
+    // {
+    //     if (!$id) {
+    //         return redirect()->route('katalog');
+    //     }
+    //     $buku = Buku::findOrFail($id);
+    //     $totalBukuAktif = DB::table('peminjaman')
+    //         ->where('id', auth()->id())
+    //         ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu'])
+    //         ->count(); 
 
+    //     return view('peminjaman', compact('buku', 'totalBukuAktif'));
+    // }
+
+    // proses minjam kayaknya
     public function store(Request $request)
     {
         $request->validate([
@@ -119,6 +119,7 @@ public function peminjamanData(Request $request)
         }
     }
 
+    // user peminjaman
     public function myPinjaman(Request $request)
     {
         $sedangDipinjam = Peminjaman::where('id_user', auth()->id())
@@ -139,37 +140,35 @@ public function peminjamanData(Request $request)
         return view('mypinjaman', compact('sedangDipinjam', 'riwayatSelesai'));
     }
 
+    // user ajukan penembalian
     public function ajukanKembali($id)
     {
         $peminjaman = Peminjaman::findOrFail($id);
         $peminjaman->update([
-            'status' => 'ajukan_kembali' // Ubah dari 'proses' ke 'ajukan_kembali' agar sinkron
+            'status' => 'ajukan_kembali'
         ]);
 
         return redirect()->back()->with('success', 'Pengembalian diajukan ke admin.');
     }
 
+    // konfir kembali admin
     public function konfirmasi_kembali(Request $request, $id)
     {
-        // 1. Cari data peminjaman berdasarkan ID
         $peminjaman = \App\Models\Peminjaman::findOrFail($id);
 
-        // 2. Update status menjadi 'kembali' (atau sesuai status di database kamu)
         $peminjaman->update([
-            'status' => 'kembali', // Ubah ke status final setelah buku diterima admin
-            'tgl_kembali_aktual' => now(), // Opsional: jika ada kolom tanggal kembali asli
+            'status' => 'kembali', 
+            'tgl_kembali_aktual' => now(), 
         ]);
 
-        // 3. Update stok buku (tambah 1 karena buku sudah balik)
-        // Pastikan relasi 'book' sudah benar di Model Peminjaman
         if ($peminjaman->book) {
             $peminjaman->book->increment('stok');
         }
 
-        // 4. Redirect kembali dengan pesan sukses
         return redirect()->back()->with('success', 'Buku berhasil dikonfirmasi dan stok telah diperbarui.');
     }
 
+    // histori user
     public function history()
     {
         $userId = auth()->id();
@@ -189,6 +188,7 @@ public function peminjamanData(Request $request)
         return view('mypinjaman', compact('sedangDipinjam', 'riwayatSelesai'));
     }
 
+    // hapus
     public function destroy($id)
     {
         $peminjaman = Peminjaman::where('id_pinjam', $id)->firstOrFail();
@@ -196,18 +196,16 @@ public function peminjamanData(Request $request)
         if ($peminjaman->status == 'menunggu') {
             DB::transaction(function () use ($peminjaman) {
                 if ($peminjaman->buku) {
-                    $peminjaman->buku->increment('jumlah'); // Kembalikan stok karena batal
+                    $peminjaman->buku->increment('jumlah'); 
                 }
-                $peminjaman->delete(); // Atau update status ke 'dibatalkan'
+                $peminjaman->delete(); 
             });
             return redirect()->back()->with('success', 'Peminjaman dibatalkan.');
         }
         return redirect()->back()->with('error', 'Tidak bisa membatalkan buku yang sudah dipinjam.');
     }
 
-
-
-
+    // minjam banyak
     public function storeMasal(Request $request)
     {
         $request->validate([
@@ -219,15 +217,12 @@ public function peminjamanData(Request $request)
         $limitMaksimal = 6;
         $userId = Auth::id();
 
-        // 1. Hitung buku yang sudah dipinjam sebelumnya
         $totalBukuAktif = Peminjaman::where('id', $userId)
             ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu', 'ajukan_kembali'])
             ->count();
 
-        // 2. Hitung berapa banyak yang mau dipinjam sekarang
         $jumlahBaru = count($request->id_buku);
 
-        // 3. Validasi: Jika total lama + baru melebihi limit
         if (($totalBukuAktif + $jumlahBaru) > $limitMaksimal) {
             $sisaSlot = $limitMaksimal - $totalBukuAktif;
             return back()->with('error', "Gagal! Sisa kuota pinjam kamu hanya $sisaSlot buku lagi.");
@@ -236,7 +231,6 @@ public function peminjamanData(Request $request)
         try {
             DB::beginTransaction();
             foreach ($request->id_buku as $key => $id) {
-                // ... kode simpan peminjaman Anda ...
                 Peminjaman::create([
                     'id'              => $userId,
                     'id_buku'         => $id,
@@ -260,7 +254,7 @@ public function peminjamanData(Request $request)
         }
     }
 
-
+    // tolak peminjaman
     public function tolakPinjam($id)
     {
         return DB::transaction(function () use ($id) {
@@ -276,6 +270,7 @@ public function peminjamanData(Request $request)
         });
     }
 
+    // stujui pinjam
     public function setujuiPinjam($id)
     {
         $pinjam = Peminjaman::where('id_pinjam', $id)->firstOrFail();
@@ -287,18 +282,17 @@ public function peminjamanData(Request $request)
         return redirect()->back()->with('success', 'Peminjaman disetujui!');
     }
 
+    // laporan
     public function halamanLaporan(Request $request)
-{
+    {
     $query = Peminjaman::with(['user', 'buku']);
     $tgl_mulai = $request->tgl_mulai;
     $tgl_selesai = $request->tgl_selesai;
     $jenis = $request->get('jenis', 'peminjaman');
 
-    // Filter Tanggal
     if ($request->filled('tgl_mulai') && $request->filled('tgl_selesai')) {
         $query->whereBetween('tgl_pinjam', [$tgl_mulai, $tgl_selesai]);
     } else {
-        // Default: Data Bulan Ini
         $query->whereMonth('tgl_pinjam', now()->month)->whereYear('tgl_pinjam', now()->year);
     }
 
@@ -309,10 +303,11 @@ public function peminjamanData(Request $request)
     $semuaPeminjaman = $query->latest()->paginate(20)->withQueryString();
 
     return view('admin.laporan', compact('semuaPeminjaman', 'tgl_mulai', 'tgl_selesai', 'jenis'));
-}
+    }
 
-public function exportWord(Request $request)
-{
+    // ekspor ke word
+    public function exportWord(Request $request)
+    {
     $jenis = $request->jenis;
     $tgl_mulai = $request->tgl_mulai;
     $tgl_selesai = $request->tgl_selesai;
@@ -339,27 +334,23 @@ public function exportWord(Request $request)
     return response()->view('admin.export_word', compact('data', 'jenis', 'periode', 'totalDenda', 'tgl_mulai', 'tgl_selesai'))
         ->header('Content-Type', 'application/msword')
         ->header('Content-Disposition', "attachment; filename=$filename");
-}
+    }
 
-public function laporanUser(Request $request)
-{
-    // Ambil ID user yang sedang login
+    // laporan user
+    public function laporanUser(Request $request)
+    {
     $id = auth()->id();
     
     $query = \App\Models\Peminjaman::with('buku')
-                // Ganti 'id' menjadi 'id' agar yang muncul adalah riwayat milik user tersebut
                 ->where('id', $id) 
                 ->orderBy('created_at', 'desc');
 
-    // Filter berdasarkan Status (Tanpa Filter Denda)
     $query->when($request->status, function ($q) use ($request) {
         return $q->where('status', $request->status);
     });
 
-    // Tetap gunakan withQueryString agar pagination tidak rusak saat filter aktif
     $riwayat = $query->paginate(10)->withQueryString();
 
     return view('laporan_user', compact('riwayat'));
-}
-
+    }
 }

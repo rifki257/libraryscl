@@ -68,28 +68,28 @@
                         aria-labelledby="dropdownFilterKelas"
                         style="width: 300px; border-radius: 12px"
                     >
-                        <div class="input-group input-group-sm mb-3">
-                            <span class="input-group-text bg-light border-end-0"
-                                ><i class="fas fa-search text-muted"></i
-                            ></span>
-                            <input
-                                type="text"
-                                id="inputSearchKelas"
-                                class="form-control bg-light border-start-0"
-                                placeholder="Cari kelas (contoh: XII PPLG)..."
-                                autocomplete="off"
-                            />
-                        </div>
+                        <div class="input-group input-group-sm mb-3"
+                        <span class="input-group-text bg-light border-end-0"
+                            ><i class="fas fa-search text-muted"></i
+                        ></span>
+                        <input
+                            type="text"
+                            id="inputSearchKelas"
+                            class="form-control bg-light border-start-0"
+                            placeholder="Cari kelas (contoh: XII PPLG)..."
+                            autocomplete="off"
+                        />
+                    </div>
 
-                        <div
-                            id="listKelasScroll"
-                            style="
-                                max-height: 300px;
-                                overflow-y: auto;
-                                scrollbar-width: thin;
-                            "
-                        >
-                            @php
+                    <div
+                        id="listKelasScroll"
+                        style="
+                            max-height: 300px;
+                            overflow-y: auto;
+                            scrollbar-width: thin;
+                        "
+                    >
+                        @php
         $jurusanConfig = [
             'PPLG' => ['levels' => ['X', 'XI', 'XII'], 'count' => 3],
             'APHP' => ['levels' => ['X', 'XI', 'XII'], 'count' => 3],
@@ -101,39 +101,39 @@
         ];
     @endphp
 
-                            @foreach ($jurusanConfig as $namaJurusan => $config)
-                                <h6
-                                    class="dropdown-header border-bottom mt-2 bg-light text-dark fw-bold"
-                                >
-                                    {{ $namaJurusan }}
-                                </h6>
-                                @foreach ($config['levels'] as $tkt)
-                                    @for ($i = 1; $i <= $config['count']; $i++)
-                                        @php $namaKelas = "$tkt $namaJurusan $i"; @endphp
-                                        <button
-                                            class="dropdown-item filter-opt"
-                                            data-value="{{ $namaKelas }}"
-                                            type="button"
-                                        >
-                                            {{ $namaKelas }}
-                                        </button>
-                                    @endfor
-                                @endforeach
+                        @foreach ($jurusanConfig as $namaJurusan => $config)
+                            <h6
+                                class="dropdown-header border-bottom mt-2 bg-light text-dark fw-bold"
+                            >
+                                {{ $namaJurusan }}
+                            </h6>
+                            @foreach ($config['levels'] as $tkt)
+                                @for ($i = 1; $i <= $config['count']; $i++)
+                                    @php $namaKelas = "$tkt $namaJurusan $i"; @endphp
+                                    <button
+                                        class="dropdown-item filter-opt"
+                                        data-value="{{ $namaKelas }}"
+                                        type="button"
+                                    >
+                                        {{ $namaKelas }}
+                                    </button>
+                                @endfor
                             @endforeach
-                        </div>
+                        @endforeach
                     </div>
                 </div>
-
-                <button
-                    type="button"
-                    id="btnResetFilter"
-                    class="btn btn-outline-danger shadow-sm"
-                    style="display: none"
-                    onclick="resetFilter()"
-                >
-                    <i class="fas fa-sync-alt"></i> Reset
-                </button>
             </div>
+
+            <button
+                type="button"
+                id="btnResetFilter"
+                class="btn btn-outline-danger shadow-sm"
+                style="display: none"
+                onclick="resetFilter()"
+            >
+                <i class="fas fa-sync-alt"></i> Reset
+            </button>
+        </div>
         </div>
     </x-slot>
     <div class="py-3">
@@ -162,161 +162,178 @@
             </table>
             <div class="mt-4">{{ $users->links() }}</div>
         </div>
-    </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
-        $(document).ready(function () {
-            // 1. Deklarasikan State secara Global di dalam ready agar bisa diakses semua fungsi
-            let currentKelas = '';
-            let currentSearch = '';
+        <script>
+            $(document).ready(function () {
+                // 1. Deklarasikan State secara Global di dalam ready agar bisa diakses semua fungsi
+                let currentKelas = '';
+                let currentSearch = '';
 
-            // 2. Fungsi Utama AJAX (Satu pintu)
-            function fetchSiswa() {
-                $.ajax({
-                    url: '{{ route('users.siswa') }}',
-                    type: 'GET',
-                    data: {
-                        search: currentSearch,
-                        filter_kelas: currentKelas,
-                    },
-                    beforeSend: function () {
-                        $('#siswaTableBody').html(
-                            '<tr><td colspan="7" class="text-center">Memuat data...</td></tr>'
+                // 2. Fungsi Utama AJAX (Satu pintu)
+                function fetchSiswa() {
+                    $.ajax({
+                        url: '{{ route('users.siswa') }}',
+                        type: 'GET',
+                        data: {
+                            search: currentSearch,
+                            filter_kelas: currentKelas,
+                        },
+                        beforeSend: function () {
+                            $('#siswaTableBody').html(
+                                '<tr><td colspan="7" class="text-center">Memuat data...</td></tr>'
+                            );
+                        },
+                        success: function (data) {
+                            $('#siswaTableBody').html(data);
+                        },
+                        error: function (xhr) {
+                            console.error('Error Fetch:', xhr.responseText);
+                        },
+                    });
+                }
+
+                // 3. EVENT: Live Search (Nama, NIS, Email, No HP)
+                $('#liveSearch').on('keyup', function () {
+                    currentSearch = $(this).val();
+
+                    // Tampilkan/Sembunyikan tombol X (clear)
+                    if (currentSearch.length > 0) {
+                        $('#clearSearch').fadeIn();
+                    } else {
+                        $('#clearSearch').fadeOut();
+                    }
+
+                    fetchSiswa();
+                });
+
+                // 4. EVENT: Tombol Silang (Clear Search)
+                $('#clearSearch').on('click', function () {
+                    currentSearch = '';
+                    $('#liveSearch').val('');
+                    $(this).fadeOut();
+                    fetchSiswa();
+                });
+
+                // 5. EVENT: Klik Pilihan Kelas di Dropdown
+                $(document).on('click', '.filter-opt', function (e) {
+                    e.preventDefault();
+                    currentKelas = $(this).data('value');
+
+                    // Update UI
+                    $('#selectedKelasLabel').text(currentKelas);
+                    $('#btnResetFilter').fadeIn();
+
+                    fetchSiswa();
+                });
+
+                // 6. EVENT: Search DI DALAM Dropdown (Hanya visual filter list)
+                $('#inputSearchKelas').on('keyup', function () {
+                    let value = $(this).val().toLowerCase();
+                    $('#listKelasScroll .filter-opt').each(function () {
+                        let text = $(this).text().toLowerCase();
+                        $(this).toggle(text.indexOf(value) > -1);
+                    });
+
+                    $('.dropdown-header').each(function () {
+                        let nextItems = $(this).nextUntil(
+                            '.dropdown-header',
+                            '.filter-opt:visible'
                         );
-                    },
-                    success: function (data) {
-                        $('#siswaTableBody').html(data);
-                    },
-                    error: function (xhr) {
-                        console.error('Error Fetch:', xhr.responseText);
-                    },
+                        $(this).toggle(nextItems.length > 0);
+                    });
                 });
-            }
 
-            // 3. EVENT: Live Search (Nama, NIS, Email, No HP)
-            $('#liveSearch').on('keyup', function () {
-                currentSearch = $(this).val();
-
-                // Tampilkan/Sembunyikan tombol X (clear)
-                if (currentSearch.length > 0) {
-                    $('#clearSearch').fadeIn();
-                } else {
+                // 7. EVENT: Reset Semua Filter
+                window.resetFilter = function () {
+                    currentKelas = '';
+                    currentSearch = '';
+                    $('#liveSearch').val('');
+                    $('#inputSearchKelas').val('');
+                    $('#selectedKelasLabel').text('Pilih Kelas');
+                    $('#btnResetFilter').fadeOut();
                     $('#clearSearch').fadeOut();
-                }
+                    $('.filter-opt, .dropdown-header').show();
 
-                fetchSiswa();
+                    fetchSiswa();
+                };
             });
+            // --- FITUR HAPUS SISWA ---
+            $(document).on('click', '.btn-delete-siswa', function () {
+                let id = $(this).data('id');
 
-            // 4. EVENT: Tombol Silang (Clear Search)
-            $('#clearSearch').on('click', function () {
-                currentSearch = '';
-                $('#liveSearch').val('');
-                $(this).fadeOut();
-                fetchSiswa();
-            });
-
-            // 5. EVENT: Klik Pilihan Kelas di Dropdown
-            $(document).on('click', '.filter-opt', function (e) {
-                e.preventDefault();
-                currentKelas = $(this).data('value');
-
-                // Update UI
-                $('#selectedKelasLabel').text(currentKelas);
-                $('#btnResetFilter').fadeIn();
-
-                fetchSiswa();
-            });
-
-            // 6. EVENT: Search DI DALAM Dropdown (Hanya visual filter list)
-            $('#inputSearchKelas').on('keyup', function () {
-                let value = $(this).val().toLowerCase();
-                $('#listKelasScroll .filter-opt').each(function () {
-                    let text = $(this).text().toLowerCase();
-                    $(this).toggle(text.indexOf(value) > -1);
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: 'Data siswa ini akan dihapus permanen!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            // SESUAIKAN: admin/siswa/{id} sesuai route:list kamu
+                            url: `/admin/siswa/${id}`,
+                            type: 'DELETE',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                            },
+                            success: function (response) {
+                                // Cek apakah response punya success atau error
+                                if (response.success) {
+                                    Swal.fire('Terhapus!', response.success, 'success');
+                                    fetchSiswa(); // Refresh tabel
+                                } else {
+                                    Swal.fire('Gagal!', response.error, 'error');
+                                }
+                            },
+                            error: function (xhr) {
+                                // Intip di F12 -> Console untuk liat error aslinya
+                                console.error('Status: ' + xhr.status);
+                                console.error('Response: ' + xhr.responseText);
+                                Swal.fire(
+                                    'Error!',
+                                    'Terjadi kesalahan sistem. Cek Console (F12).',
+                                    'error'
+                                );
+                            },
+                        });
+                    }
                 });
+            });
 
-                $('.dropdown-header').each(function () {
-                    let nextItems = $(this).nextUntil(
-                        '.dropdown-header',
-                        '.filter-opt:visible'
-                    );
-                    $(this).toggle(nextItems.length > 0);
+            // --- FITUR RESET PASSWORD SISWA ---
+            $(document).on('click', '.btn-reset-pw', function () {
+                let id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Reset Password?',
+                    text: 'Password akan diubah menjadi default: 12345678',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Reset!',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            // HAPUS kata '/users', sesuaikan dengan php artisan route:list kamu
+                            url: `/admin/siswa/reset-password/${id}`,
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                            },
+                            success: function (response) {
+                                Swal.fire('Berhasil!', response.success, 'success');
+                            },
+                            error: function (xhr) {
+                                console.error(xhr.responseText); // Intip error aslinya di F12 Console
+                                Swal.fire('Error!', 'Gagal mereset password.', 'error');
+                            },
+                        });
+                    }
                 });
             });
-
-            // 7. EVENT: Reset Semua Filter
-            window.resetFilter = function () {
-                currentKelas = '';
-                currentSearch = '';
-                $('#liveSearch').val('');
-                $('#inputSearchKelas').val('');
-                $('#selectedKelasLabel').text('Pilih Kelas');
-                $('#btnResetFilter').fadeOut();
-                $('#clearSearch').fadeOut();
-                $('.filter-opt, .dropdown-header').show();
-
-                fetchSiswa();
-            };
-        });
-        // --- FITUR HAPUS SISWA ---
-        $(document).on('click', '.btn-delete-siswa', function () {
-            let id = $(this).data('id');
-
-            Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: 'Data siswa ini akan dihapus permanen!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: `/admin/users/siswa/${id}`, // Sesuaikan dengan route Anda
-                        type: 'DELETE',
-                        data: { _token: '{{ csrf_token() }}' },
-                        success: function (response) {
-                            Swal.fire('Terhapus!', response.success, 'success');
-                            fetchSiswa(); // Refresh tabel
-                        },
-                        error: function () {
-                            Swal.fire('Error!', 'Gagal menghapus data.', 'error');
-                        },
-                    });
-                }
-            });
-        });
-
-        // --- FITUR RESET PASSWORD ---
-        $(document).on('click', '.btn-reset-pw', function () {
-            let id = $(this).data('id');
-
-            Swal.fire({
-                title: 'Reset Password?',
-                text: 'Password akan diubah menjadi default: 12345678',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, Reset!',
-                cancelButtonText: 'Batal',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: `/admin/users/siswa/reset-password/${id}`, // Sesuaikan dengan route Anda
-                        type: 'POST',
-                        data: { _token: '{{ csrf_token() }}' },
-                        success: function (response) {
-                            Swal.fire('Berhasil!', response.success, 'success');
-                        },
-                        error: function () {
-                            Swal.fire('Error!', 'Gagal mereset password.', 'error');
-                        },
-                    });
-                }
-            });
-        });
-    </script>
-</x-app-layout>
+        </script></x-app-layout
+>

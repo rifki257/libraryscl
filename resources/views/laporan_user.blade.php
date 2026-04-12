@@ -44,11 +44,11 @@
                                     {{ request('status') == 'dipinjam' ? 'selected' : '' }}
                                     >Sedang Dipinjam
                                 </option>
-                                <option
+                                {{-- <option
                                     value="proses"
                                     {{ request('status') == 'proses' ? 'selected' : '' }}
                                     >Proses Pengembalian
-                                </option>
+                                </option> --}}
                                 <option
                                     value="kembali"
                                     {{ request('status') == 'kembali' ? 'selected' : '' }}
