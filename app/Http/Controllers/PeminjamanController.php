@@ -23,17 +23,37 @@ class PeminjamanController extends Controller
         return view('partials.pinjam_data', compact('semuaPeminjaman'));
     }
 
+public function peminjamanData(Request $request)
+{
+    $query = Peminjaman::with(['buku', 'user'])
+        ->whereIn('status', ['dipinjam', 'kembali', 'ditolak']);
 
-    // PeminjamanController.php
-    public function persetujuan()
-    {
-        $semuaPeminjaman = Peminjaman::with(['buku', 'user'])
-            ->where('status', 'menunggu') // HAPUS 'ajukan_kembali' dari sini
-            ->latest()
-            ->paginate(8);
+    // Logika Pencarian
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->whereHas('user', function($u) use ($search) {
+                $u->where('name', 'like', '%' . $search . '%');
+            })->orWhereHas('buku', function($b) use ($search) {
+                $b->where('judul', 'like', '%' . $search . '%');
+            })->orWhere('id_pinjam', 'like', '%' . $search . '%');
+        });
 
-        return view('admin_persetujuan', compact('semuaPeminjaman'));
+        // Jika search, ambil semua (tanpa paginate)
+        $semuaPeminjaman = $query->latest()->get();
+    } else {
+        // Jika normal, gunakan paginate
+        $semuaPeminjaman = $query->latest()->paginate(5);
     }
+
+    // Jika request dari AJAX (Live Search)
+    if ($request->ajax()) {
+        return view('admin.table_peminjaman_rows', compact('semuaPeminjaman'))->render();
+    }
+
+    return view('partials.pinjam_data', compact('semuaPeminjaman'));
+}
+    
 
     public function create($id = null)
     {
@@ -266,4 +286,58 @@ class PeminjamanController extends Controller
 
         return redirect()->back()->with('success', 'Peminjaman disetujui!');
     }
+
+    public function halamanLaporan(Request $request)
+{
+    $query = Peminjaman::with(['user', 'buku']);
+    $tgl_mulai = $request->tgl_mulai;
+    $tgl_selesai = $request->tgl_selesai;
+    $jenis = $request->get('jenis', 'peminjaman');
+
+    // Filter Tanggal
+    if ($request->filled('tgl_mulai') && $request->filled('tgl_selesai')) {
+        $query->whereBetween('tgl_pinjam', [$tgl_mulai, $tgl_selesai]);
+    } else {
+        // Default: Data Bulan Ini
+        $query->whereMonth('tgl_pinjam', now()->month)->whereYear('tgl_pinjam', now()->year);
+    }
+
+    if ($jenis == 'pengembalian') {
+        $query->where('status', 'kembali');
+    }
+
+    $semuaPeminjaman = $query->latest()->paginate(20)->withQueryString();
+
+    return view('admin.laporan', compact('semuaPeminjaman', 'tgl_mulai', 'tgl_selesai', 'jenis'));
+}
+
+public function exportWord(Request $request)
+{
+    $jenis = $request->jenis;
+    $tgl_mulai = $request->tgl_mulai;
+    $tgl_selesai = $request->tgl_selesai;
+
+    $query = Peminjaman::with(['user', 'buku']);
+
+    if ($tgl_mulai && $tgl_selesai) {
+        $query->whereBetween('tgl_pinjam', [$tgl_mulai, $tgl_selesai]);
+        $periode = \Carbon\Carbon::parse($tgl_mulai)->format('d M Y') . ' - ' . \Carbon\Carbon::parse($tgl_selesai)->format('d M Y');
+    } else {
+        $query->whereMonth('tgl_pinjam', now()->month)->whereYear('tgl_pinjam', now()->year);
+        $periode = now()->translatedFormat('F Y');
+    }
+
+    if ($jenis == 'pengembalian') {
+        $query->where('status', 'kembali');
+    }
+
+    $data = $query->get();
+    $totalDenda = $data->sum('denda');
+
+    $filename = "Laporan_" . ucfirst($jenis) . ".doc";
+
+    return response()->view('admin.export_word', compact('data', 'jenis', 'periode', 'totalDenda', 'tgl_mulai', 'tgl_selesai'))
+        ->header('Content-Type', 'application/msword')
+        ->header('Content-Disposition', "attachment; filename=$filename");
+}
 }

@@ -5,11 +5,46 @@
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight mb-0">
-                {{ __('Data peminjam') }}
+                {{ __('Data Peminjam') }}
             </h2>
+
+            <div class="position-relative shadow-sm" style="width: 300px">
+                <span
+                    class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
+                    style="z-index: 5"
+                >
+                    <i class="bi bi-search"></i>
+                </span>
+
+                <input
+                    type="text"
+                    id="liveSearch"
+                    class="form-control ps-5 pe-5"
+                    placeholder="Cari peminjam atau buku..."
+                    autocomplete="off"
+                    style="
+                        border-radius: 8px;
+                        border: 1px solid #ddd;
+                    "
+                />
+
+                <button
+                    id="clearSearch"
+                    type="button"
+                    class="btn position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+                    style="
+                        display: none;
+                        border: none;
+                        background: transparent;
+                        z-index: 5;
+                    "
+                >
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+            </div>
         </div>
     </x-slot>
-    <div class="py-12">
+    <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <table class="table table-bordered">
                 <thead class="table-dark">
@@ -23,101 +58,11 @@
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse ($semuaPeminjaman as $data)
-                        @php
-        $tglJatuhTempo = \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->startOfDay();
-        $tglSekarang = \Carbon\Carbon::now()->startOfDay();
-        $selisih = $tglSekarang->diffInDays($tglJatuhTempo, false);
-        $hariTerlambat = $selisih < 0 ? abs($selisih) : 0;
-        $totalDenda = $hariTerlambat * 50000;
-    @endphp
-                        <tr class="text-capitalize text-center align-middle">
-                            <td>{{ $data->id_pinjam }}</td>
-                            <td>
-                                <div
-                                    class="fw-bold {{ $hariTerlambat > 0 && $data->status == 'dipinjam' ? 'text-danger' : '' }}"
-                                >
-                                    {{ $data->user->name }}
-                                </div>
-                            </td>
-                            <td>{{ $data->buku->judul }}</td>
-                            <td>
-                                {{ $data->tgl_pinjam ? \Carbon\Carbon::parse($data->tgl_pinjam)->format('d M Y') : '-' }}
-                            </td>
-                            <td>
-                                {{ \Carbon\Carbon::parse($data->tgl_jatuh_tempo)->format('d M Y') }}
-                            </td>
-                            <td>
-                                @if ($data->status == 'dipinjam')
-                                    <span class="badge bg-primary p-2"
-                                        >Dipinjam</span
-                                    >
-                                    @if ($hariTerlambat > 0)
-                                        <br
-                                        /><small class="text-danger fw-bold"
-                                            >Denda: Rp {{ number_format($totalDenda, 0, ',', '.') }}</small
-                                        >
-                                    @endif
-                                @elseif ($data->status == 'ajukan_kembali')
-                                    <span
-                                        class="badge bg-success p-2 text-white"
-                                    >
-                                        Konfir Pengembalian
-                                    </span>
-
-                                @elseif ($data->status == 'kembali')
-                                    {{-- Sudah selesai dikembalikan --}}
-                                    <span class="badge bg-secondary p-2">
-                                        Selesai
-                                    </span>
-
-                                @else
-                                    {{-- Status lainnya --}}
-                                    <span class="badge bg-warning p-2">
-                                        {{ $data->status }}
-                                    </span>
-                                @endif
-                            </td>
-                            <td>
-                                @if ($hariTerlambat > 0)
-                                    <button
-                                        type="button"
-                                        class="btn btn-danger btn-sm fw-bold"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalKembali"
-                                        data-id="{{ $data->id_pinjam }}"
-                                        data-nama="{{ $data->user->name }}"
-                                        data-email="{{ $data->user->email }}"
-                                        data-hp="{{ $data->user->no_hp }}"
-                                        data-kelas="{{ $data->user->kelas }}"
-                                        data-nis="{{ $data->user->nis }}"
-                                        data-buku="{{ $data->buku->judul }}"
-                                        data-tgl-tempo="{{ $data->tgl_jatuh_tempo }}"
-                                        data-total-denda="{{ number_format($totalDenda, 0, ',', '.') }}"
-                                        data-hari-telat="{{ $hariTerlambat }}"
-                                    >
-                                        Check Denda
-                                    </button>
-                                @else
-                                    <span class="btn btn-primary btn-sm">
-                                        Tidak ada denda
-                                    </span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                Data tidak ditemukan.
-                            </td>
-                        </tr>
-                    @endforelse
+                <tbody id="peminjamanTableBody">
+                    @include ('admin.table_peminjaman_rows')
                 </tbody>
             </table>
-            <div>
-                {{ $semuaPeminjaman->links() }}
-            </div>
+            <div>{{ $semuaPeminjaman->links() }}</div>
             <div
                 class="modal fade"
                 id="modalKembali"
@@ -198,7 +143,7 @@
             </div>
         </div>
     </div>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modalKembali = document.getElementById('modalKembali');
@@ -279,6 +224,48 @@
                         btnWA.href = `https://api.whatsapp.com/send?phone=${cleanHP}`;
                     }
                 }
+            });
+        });
+        $(document).ready(function () {
+            // Fungsi utama pencarian AJAX
+            function doSearch(query) {
+                $.ajax({
+                    url: '{{ route('persetujuan.data') }}', // Sesuaikan nama route Anda
+                    type: 'GET',
+                    data: { search: query },
+                    beforeSend: function () {
+                        $('#peminjamanTableBody').css('opacity', '0.5');
+                    },
+                    success: function (data) {
+                        $('#peminjamanTableBody').html(data);
+                        $('#peminjamanTableBody').css('opacity', '1');
+                    },
+                    error: function () {
+                        $('#peminjamanTableBody').css('opacity', '1');
+                    },
+                });
+            }
+
+            // 1. Logika saat mengetik (Live Search)
+            $('#liveSearch').on('keyup', function () {
+                let val = $(this).val();
+
+                // Tampilkan/Sembunyikan tombol X
+                if (val.length > 0) {
+                    $('#clearSearch').fadeIn(200); // Muncul perlahan
+                } else {
+                    $('#clearSearch').fadeOut(200); // Hilang perlahan
+                }
+
+                doSearch(val);
+            });
+
+            // 2. Logika saat tombol Reset (X) diklik
+            $('#clearSearch').on('click', function () {
+                $('#liveSearch').val(''); // Kosongkan input kotak search
+                $(this).hide(); // Sembunyikan dirinya sendiri (tombol X)
+                doSearch(''); // Panggil AJAX dengan string kosong untuk reset data
+                $('#liveSearch').focus(); // Kembalikan kursor ke kotak search
             });
         });
     </script>

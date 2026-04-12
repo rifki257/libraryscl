@@ -7,9 +7,39 @@
             display: none !important;
         }
     </style>
+    <x-slot name="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight mb-0">
+                {{ __('Pengembalian Buku') }}
+            </h2>
 
+            <div class="position-relative shadow-sm" style="width: 300px">
+                <span
+                    class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
+                    style="z-index: 5"
+                >
+                    <i class="bi bi-search"></i>
+                </span>
+                <input
+                    type="text"
+                    id="liveSearch"
+                    class="form-control ps-5 pe-5"
+                    placeholder="Cari peminjam atau buku..."
+                    autocomplete="off"
+                    style="border-radius: 8px; border: 1px solid #ddd"
+                />
+                <button
+                    id="clearSearch"
+                    class="btn position-absolute top-50 end-0 translate-middle-y me-2"
+                    style="display: none; border: none; background: transparent"
+                >
+                    <i class="bi bi-x-circle-fill text-muted"></i>
+                </button>
+            </div>
+        </div>
+    </x-slot>
     {{-- Pindahkan x-data ke level teratas agar mencakup tabel DAN modal --}}
-    <div class="py-12" x-data="{ openModal: false, selectedItem: {} }">
+    <div class="py-3" x-data="{ openModal: false, selectedItem: {} }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <table class="table table-bordered">
                 <thead class="table-dark">
@@ -21,67 +51,11 @@
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse ($semuaPeminjaman as $item)
-                        @php
-                            $jt = \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->startOfDay();
-                            $hariIni = now()->startOfDay();
-                            $isTelat = $hariIni->gt($jt);
-                            $selisihHari = $isTelat ? abs($hariIni->diffInDays($jt)) : 0;
-                            $totalDenda = $selisihHari * 50000;
-                        @endphp
-                        <tr class="text-capitalize text-center align-middle">
-                            <td>{{ $item->user->name }}</td>
-                            <td>{{ $item->buku->judul ?? '-' }}</td>
-                            <td>
-                                {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}
-                            </td>
-                            <td>
-                                {{ \Carbon\Carbon::parse($item->tgl_jatuh_tempo)->format('d M Y') }}
-                            </td>
-                            <td>
-                                @if ($item->status == 'dipinjam' && !$isTelat)
-                                    <span
-                                        class="bg-gray-100 text-gray-500 px-3 py-1 rounded text-[10px] font-bold uppercase border border-gray-200"
-                                    >
-                                        Sedang Dipinjam
-                                    </span>
-                                @else
-                                    <button
-                                        type="button"
-                                        {{-- Tambahkan type button agar tidak trigger submit --}}
-                                        @click="
-                                            selectedItem = { 
-                                                id: '{{ $item->id_pinjam }}',
-                                                name: '{{ $item->user->name }}',
-                                                judul: '{{ $item->buku->judul }}',
-                                                kelas: '{{ $item->user->kelas }}',
-                                                email: '{{ $item->user->email }}',
-                                                nis: '{{ $item->user->nis }}',
-                                                totalHari: {{ $selisihHari }},
-                                                totalDenda: '{{ number_format($totalDenda, 0, ',', '.') }}'
-                                            };
-                                            openModal = true;
-                                        "
-                                        class="{{ $isTelat ? 'bg-red-500 hover:bg-red-600' : 'bg-indigo-500 hover:bg-indigo-600' }} text-white px-4 py-1.5 rounded-md text-xs font-bold uppercase shadow-sm transition"
-                                    >
-                                        {{ $isTelat ? 'Konfirmasi Denda' : 'Konfirmasi' }}
-                                    </button>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td
-                                colspan="5"
-                                class="px-6 py-12 text-center text-gray-500 italic"
-                            >
-                                Belum ada data.
-                            </td>
-                        </tr>
-                    @endforelse
+                <tbody id="pengembalianTableBody">
+                    @include ('admin.table_pengembalian_rows')
                 </tbody>
             </table>
+            <div class="mt-4">{{ $semuaPeminjaman->links() }}</div>
         </div>
 
         {{-- MODAL BOX - Pastikan berada di dalam div x-data --}}
@@ -192,4 +166,33 @@
             </div>
         </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            function doSearch(query) {
+                $.ajax({
+                    url: '{{ route('pengembalian') }}', // Ganti dengan nama route Anda
+                    type: 'GET',
+                    data: { search: query },
+                    success: function (data) {
+                        $('#pengembalianTableBody').html(data);
+                    },
+                });
+            }
+
+            $('#liveSearch').on('keyup', function () {
+                let val = $(this).val();
+                val.length > 0 ? $('#clearSearch').show() : $('#clearSearch').hide();
+                doSearch(val);
+            });
+
+            $('#clearSearch').on('click', function () {
+                $('#liveSearch').val('');
+                $(this).hide();
+                doSearch('');
+                $('#liveSearch').focus();
+            });
+        });
+    </script>
 </x-app-layout>

@@ -33,12 +33,8 @@
                     {{ $buku->judul }}
                 </td>
 
-                <td>
-                    {{ $buku->penulis ?? 'Tidak Ada Penulis' }}
-                </td>
-                <td>
-                    {{ $buku->jumlah ?? 'Tidak Ada Penulis' }}
-                </td>
+                <td>{{ $buku->penulis ?? 'Tidak Ada Penulis' }}</td>
+                <td>{{ $buku->jumlah ?? 'Tidak Ada Penulis' }}</td>
                 <td>
                     {{ $buku->kategori->nama_kategori ?? 'Tidak Ada Kategori' }}
                 </td>
@@ -87,3 +83,15 @@
         @endforeach
     </tbody>
 </table>
+<div class="mt-4">{{ $dataBuku->links() }}</div>
+<script>
+    // Agar pagination tetap AJAX
+    $('.pagination a').on('click', function (e) {
+        e.preventDefault();
+        let url = $(this).attr('href');
+
+        $.get(url, function (data) {
+            $('#container-buku').html(data);
+        });
+    });
+</script>

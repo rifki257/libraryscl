@@ -92,4 +92,30 @@ class AdminPeminjamanController extends Controller
             return back()->with('error', 'Gagal konfirmasi: ' . $e->getMessage());
         }
     }
+    public function persetujuan(Request $request)
+{
+    $query = Peminjaman::with(['buku', 'user'])
+        ->where('status', 'menunggu');
+
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->whereHas('user', function($u) use ($search) {
+                $u->where('name', 'like', '%' . $search . '%');
+            })->orWhereHas('buku', function($b) use ($search) {
+                $b->where('judul', 'like', '%' . $search . '%');
+            });
+        });
+        
+    }
+
+    $semuaPeminjaman = $query->latest()->paginate(2); 
+
+    // Jika request AJAX (untuk Live Search)
+    if ($request->ajax()) {
+        return view('partials.konfir_pinjam', compact('semuaPeminjaman'))->render();
+    }
+
+    return view('admin_persetujuan', compact('semuaPeminjaman'));
+}
 }

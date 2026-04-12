@@ -3,128 +3,96 @@
 </head>
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('akun admin') }}
-        </h2>
-        <div class="flex justify-end">
-            <div class="input-group" style="max-width: 350px">
-                <span class="input-group-text bg-white border-end-0">
-                    <i class="bi bi-search text-muted"></i>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight mb-0">
+                {{ __('Kelola Akun Admin') }}
+            </h2>
+
+            <div class="position-relative" shadow-sm style="width: 300px">
+                <span
+                    class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
+                    style="z-index: 5"
+                >
+                    <i class="bi bi-search"></i>
                 </span>
                 <input
                     type="text"
-                    id="search-input"
-                    name="search"
-                    class="form-control border-start-0 border-end-0 ps-0 shadow-none"
-                    placeholder="Cari nama, email, no hp..."
-                    onkeyup="searchTable()"
+                    id="liveSearch"
+                    class="form-control ps-5 pe-5 shadow-sm"
+                    placeholder="Cari admin atau email..."
                     autocomplete="off"
+                    style="border-radius: 8px; border: 1px solid #ddd"
                 />
                 <button
-                    class="btn bg-white border border-start-0 d-none align-items-center gap-1"
-                    type="button"
-                    id="reset-search"
-                    onclick="resetTable()"
-                    style="z-index: 5"
+                    id="clearSearch"
+                    class="btn position-absolute top-50 end-0 translate-middle-y me-2"
+                    style="
+                        display: none;
+                        border: none;
+                        background: transparent;
+                        z-index: 10;
+                    "
                 >
-                    <i class="bi bi-x-circle-fill text-danger"></i>
-                    <span style="font-size: 0.8rem" class="text-muted fw-bold"
-                        >Reset</span
-                    >
+                    <i class="bi bi-x-circle-fill text-muted"></i>
                 </button>
             </div>
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div
-                class="overflow-hidden shadow-sm sm:rounded-lg"
-                style="background-color: rgb(235, 235, 235)"
-            >
-                <div class="p-6 text-gray-900">
-                    <div class="container">
-                        <div class="card-body">
-                            <div id="tabel-akun" class="mt-4">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr class="text-center">
-                                            <th>Nama</th>
-                                            <th>Email</th>
-                                            <th>No HP</th>
-                                            <th>Jabatan</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-center">
-                                        @foreach ($admins as $admin)
-                                            <tr
-                                                class="align-middle border-b hover:bg-gray-50"
-                                            >
-                                                <td>{{ $admin->name }}</td>
-                                                <td>{{ $admin->email }}</td>
-                                                <td>
-                                                    {{ $admin->no_hp ?? '-' }}
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        class="px-2 py-1 text-xs font-bold rounded {{ $admin->role == 'kepper' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }}"
-                                                    >
-                                                        {{ strtoupper($admin->role) }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        type="button"
-                                                        onclick="editPassword({{ $admin->id }}, '{{ $admin->name }}')"
-                                                        class="btn btn-primary text-white"
-                                                    >
-                                                        Password
-                                                    </button>
-                                                    <form
-                                                        id="delete-form-{{ $admin->id }}"
-                                                        action="{{ route('admin.destroy', $admin->id) }}"
-                                                        method="POST"
-                                                        class="inline-block m-0"
-                                                    >
-                                                        @csrf
-                                                        @method ('DELETE')
-                                                        <button
-                                                            type="button"
-                                                            onclick="confirmDelete({{ $admin->id }})"
-                                                            class="btn btn-danger"
-                                                        >
-                                                            Hapus
-                                                        </button>
-                                                    </form>
-                                                    <form
-                                                        id="update-pw-form-{{ $admin->id }}"
-                                                        action="{{ route('admin.updatePassword', $admin->id) }}"
-                                                        method="POST"
-                                                        style="display: none"
-                                                    >
-                                                        @csrf
-                                                        @method ('PUT')
-                                                        <input
-                                                            type="hidden"
-                                                            name="password"
-                                                            id="pw-input-{{ $admin->id }}"
-                                                        />
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr class="text-center">
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>No HP</th>
+                        <th>Jabatan</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody" class="text-center">
+                    @include ('admin.table_admin_rows')
+                </tbody>
+            </table>
+            <div class="mt-4">{{ $admins->links() }}</div>
         </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        $(document).ready(function () {
+            // Fungsi Fetch Data
+            function fetchAdmins(query) {
+                $.ajax({
+                    url: '{{ route('akun_admin') }}', // Ganti dengan nama route index Anda
+                    type: 'GET',
+                    data: { search: query },
+                    success: function (data) {
+                        $('#adminTableBody').html(data);
+                    },
+                });
+            }
+
+            // Input Event (Ketuk Keyboard)
+            $('#liveSearch').on('keyup', function () {
+                let val = $(this).val();
+                // Tampilkan/Sembunyikan tombol reset (X)
+                val.length > 0
+                    ? $('#clearSearch').fadeIn(100)
+                    : $('#clearSearch').fadeOut(100);
+                fetchAdmins(val);
+            });
+
+            // Klik Tombol Reset (X)
+            $('#clearSearch').on('click', function () {
+                $('#liveSearch').val('');
+                $(this).hide();
+                fetchAdmins('');
+                $('#liveSearch').focus();
+            });
+        });
         @if (session('success'))
         Swal.fire({
             icon: 'success',
@@ -164,62 +132,43 @@
                 confirmButtonText: 'Update Password',
                 confirmButtonColor: '#3b82f6',
                 cancelButtonText: 'Batal',
+                showLoaderOnConfirm: true, // Menampilkan loading saat proses
                 inputValidator: (value) => {
-                    if (!value) {
-                        return 'Password tidak boleh kosong!';
-                    }
-                    if (value.length < 8) {
-                        return 'Password minimal 8 karakter!';
-                    }
+                    if (!value) return 'Password tidak boleh kosong!';
+                    if (value.length < 8) return 'Password minimal 8 karakter!';
                 },
+                preConfirm: (newPassword) => {
+                    // Gunakan AJAX Fetch di sini daripada form.submit()
+                    return fetch(`/akun-admin/update-password/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            Accept: 'application/json',
+                        },
+                        body: JSON.stringify({ password: newPassword }),
+                    })
+                        .then((response) => {
+                            if (!response.ok)
+                                throw new Error('Gagal memperbarui password');
+                            return response.json();
+                        })
+                        .catch((error) => {
+                            Swal.showValidationMessage(`Request failed: ${error}`);
+                        });
+                },
+                allowOutsideClick: () => !Swal.isLoading(),
             }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('pw-input-' + id).value = result.value;
-                    document.getElementById('update-pw-form-' + id).submit();
+                if (result.isConfirmed && result.value.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: result.value.message,
+                        timer: 2000,
+                        showConfirmButton: false,
+                    });
                 }
             });
-        }
-        function searchTable() {
-            let input = document.getElementById('search-input');
-            let filter = input.value.toLowerCase();
-            let table = document.querySelector('table');
-            let tr = table.getElementsByTagName('tr');
-            let btnReset = document.getElementById('reset-search');
-
-            if (filter.length > 0) {
-                btnReset.classList.remove('d-none');
-                btnReset.classList.add('d-flex');
-            } else {
-                btnReset.classList.add('d-none');
-                btnReset.classList.remove('d-flex');
-            }
-
-            for (let i = 1; i < tr.length; i++) {
-                let tdNama = tr[i].getElementsByTagName('td')[0];
-                let tdEmail = tr[i].getElementsByTagName('td')[1];
-                let tdNoHp = tr[i].getElementsByTagName('td')[2];
-
-                if (tdNama || tdEmail || tdNoHp) {
-                    let textNama = tdNama.textContent || tdNama.innerText;
-                    let textEmail = tdEmail.textContent || tdEmail.innerText;
-                    let textNoHp = tdNoHp.textContent || tdNoHp.innerText;
-
-                    let combinedText = textNama + ' ' + textEmail + ' ' + textNoHp;
-
-                    if (combinedText.toLowerCase().indexOf(filter) > -1) {
-                        tr[i].style.display = '';
-                    } else {
-                        tr[i].style.display = 'none';
-                    }
-                }
-            }
-        }
-
-        function resetTable() {
-            let input = document.getElementById('search-input');
-            input.value = '';
-            searchTable();
-            input.focus();
         }
     </script>
 </x-app-layout>

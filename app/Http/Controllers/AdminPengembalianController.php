@@ -10,15 +10,33 @@ use Carbon\Carbon;
 
 class AdminPengembalianController extends Controller
 {
-    public function index()
-    {
-        // Menggunakan 'buku' sesuai model
-        $semuaPeminjaman = Peminjaman::with(['user', 'buku'])
-            ->whereIn('status', ['dipinjam', 'dikembalikan', 'ajukan_kembali', 'Dikembalikan'])
-            ->get();
+    public function index(Request $request)
+{
+    $query = Peminjaman::with(['user', 'buku'])
+        ->whereIn('status', ['dipinjam', 'dikembalikan', 'ajukan_kembali', 'Dikembalikan']);
 
-        return view('pengembalian', compact('semuaPeminjaman'));
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->whereHas('user', function($u) use ($search) {
+                $u->where('name', 'like', '%' . $search . '%');
+            })->orWhereHas('buku', function($b) use ($search) {
+                $b->where('judul', 'like', '%' . $search . '%');
+            });
+        });
+        // Hilangkan pagination saat search
+        $semuaPeminjaman = $query->latest()->get();
+    } else {
+        // Gunakan pagination saat normal
+        $semuaPeminjaman = $query->latest()->paginate(1);
     }
+
+    if ($request->ajax()) {
+        return view('admin.table_pengembalian_rows', compact('semuaPeminjaman'))->render();
+    }
+
+    return view('pengembalian', compact('semuaPeminjaman'));
+}
 
     public function konfirmasi(Request $request, $id)
 {
@@ -74,23 +92,31 @@ class AdminPengembalianController extends Controller
     return redirect()->route('pengembalian')->with('success', 'Buku berhasil dikonfirmasi dan denda otomatis dicatat!');
 }
 
-    public function history()
-    {
-        $semuaPeminjaman = \App\Models\Peminjaman::with(['user', 'buku'])
-            ->where('status', 'kembali')
-            ->latest()
-            ->get();
-        return view('datapengembalian', compact('semuaPeminjaman'));
+    public function history(Request $request)
+{
+    $query = \App\Models\Peminjaman::with(['user', 'buku'])
+        ->where('status', 'kembali');
+
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->whereHas('user', function($u) use ($search) {
+                $u->where('name', 'like', '%' . $search . '%');
+            })->orWhereHas('buku', function($b) use ($search) {
+                $b->where('judul', 'like', '%' . $search . '%');
+            });
+        });
+        $semuaPeminjaman = $query->latest()->get(); // Ambil semua saat search
+    } else {
+        $semuaPeminjaman = $query->latest()->paginate(2); // Paginate saat normal
     }
 
-    public function peminjamanData()
-    {
-        // Pastikan pakai paginate(8), bukan get()
-        $semuaPeminjaman = Peminjaman::with(['buku', 'user'])
-            ->whereIn('status', ['dipinjam', 'kembali', 'ditolak'])
-            ->latest()
-            ->paginate(8);
-
-        return view('partials.pinjam_data', compact('semuaPeminjaman'));
+    if ($request->ajax()) {
+        return view('admin.table_history_rows', compact('semuaPeminjaman'))->render();
     }
+
+    return view('datapengembalian', compact('semuaPeminjaman'));
+}
+
+
 }

@@ -175,7 +175,9 @@
                     if (this.tglKembali) {
                         const selected = new Date(this.tglKembali);
                         const diffTime = Math.abs(selected - today);
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        const diffDays = Math.ceil(
+                            diffTime / (1000 * 60 * 60 * 24)
+                        );
                         this.durationText = diffDays + ' Hari';
 
                         // Set status TRUE di form utama
@@ -212,7 +214,8 @@
                     setTimeout(() => {
                         // 3. Ambil data dari scope Alpine (untuk update validasi tombol)
                         // Menggunakan cara yang lebih aman untuk akses data Alpine
-                        const alpineElement = document.querySelector('[x-data]');
+                        const alpineElement =
+                            document.querySelector('[x-data]');
                         if (alpineElement && alpineElement.__x) {
                             const alpineData = alpineElement.__x.$data;
                             // Hapus key dari filledInputs agar tombol "Pinjam" update statusnya
@@ -221,8 +224,6 @@
 
                         // 4. Hapus element dari DOM
                         item.remove();
-
-                        
                     }, 300); // Tunggu animasi selesai
                 }
             });

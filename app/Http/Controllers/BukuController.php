@@ -9,15 +9,38 @@ use Illuminate\Support\Facades\Storage;
 
 class BukuController extends Controller
 {
-    public function index()
-    {
-        if (auth()->check() && auth()->user()->role === 'anggota') {
-            return redirect()->route('katalog')->with('error', 'Akses ditolak!');
-        }
-
-        $dataBuku = Buku::with('kategori')->get();
-        return view('buku', compact('dataBuku'));
+    public function index(Request $request)
+{
+    if (auth()->check() && auth()->user()->role === 'anggota') {
+        return redirect()->route('katalog')->with('error', 'Akses ditolak!');
     }
+
+    $kategoris = Kategori::all();
+    $query = Buku::with('kategori');
+
+    // Filter Search (Judul & Penulis)
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('judul', 'like', "%{$search}%")
+              ->orWhere('penulis', 'like', "%{$search}%");
+        });
+    }
+
+    // Filter Kategori
+    if ($request->filled('filter_kategori')) {
+        $query->where('id_kategori', $request->filter_kategori);
+    }
+
+    $dataBuku = $query->paginate(6)->withQueryString();
+
+    // JIKA REQUEST ADALAH AJAX, kembalikan hanya tabel isinya saja
+    if ($request->ajax()) {
+        return view('partials.tabel_isi', compact('dataBuku'))->render();
+    }
+
+    return view('buku', compact('dataBuku', 'kategoris'));
+}
 
     public function create()
     {

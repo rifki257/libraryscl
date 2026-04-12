@@ -8,21 +8,73 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index()
-    {
-        if (auth()->user()->role !== 'kepper') {
-            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
-        }
-        $admins = \App\Models\User::whereIn('role', ['kepper', 'petugas'])->get();
-
-        return view('akun_admin', compact('admins'));
+    // admin
+    public function index(Request $request)
+{
+    // Proteksi role
+    if (auth()->user()->role !== 'kepper') {
+        abort(403, 'Anda tidak memiliki akses ke halaman ini.');
     }
 
-    public function indexAnggota()
-    {
-        $users = \App\Models\User::where('role', 'anggota')->get();
-        return view('akun_user', compact('users'));
+    $query = \App\Models\User::whereIn('role', ['kepper', 'petugas']);
+
+    // Logika Pencarian
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', '%' . $search . '%')
+              ->orWhere('email', 'like', '%' . $search . '%');
+        });
+        // Ambil semua data (tanpa pagination) saat mencari agar hasil terlihat semua
+        $admins = $query->latest()->get();
+    } else {
+        // Gunakan pagination saat tampilan normal
+        $admins = $query->latest()->paginate(1); 
     }
+
+    // Jika request datang dari AJAX (Live Search)
+    if ($request->ajax()) {
+        return view('admin.table_admin_rows', compact('admins'))->render();
+    }
+
+    return view('akun_admin', compact('admins'));
+}
+
+public function indexSiswa(Request $request)
+{
+    $query = \App\Models\User::where('role', 'anggota');
+
+    // 1. Logika Pencarian Global (Navbar)
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%$search%")
+              ->orWhere('nis', 'like', "%$search%")
+              ->orWhere('email', 'like', "%$search%")
+              ->orWhere('no_hp', 'like', "%$search%");
+        });
+    }
+
+    // 2. Logika Filter Kelas (Dropdown)
+    if ($request->filled('filter_kelas')) {
+        $query->where('kelas', $request->filter_kelas);
+    }
+
+    // 3. Respon untuk AJAX
+    if ($request->ajax()) {
+        $users = $query->orderBy('kelas', 'asc')->get();
+        return view('admin.table_siswa_rows', compact('users'))->render();
+    }
+
+    // Load halaman normal (pertama kali)
+    $users = $query->orderBy('kelas', 'asc')->paginate(10)->withQueryString();
+    
+    return view('partials.siswa', [
+        'users' => $users,
+        'title' => 'Daftar Siswa'
+    ]);
+}
+
     public function create()
     {
         if (!in_array(auth()->user()->role, ['kepper', 'petugas'])) {
@@ -73,19 +125,25 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', count($ids) . ' akun berhasil dihapus.');
     }
+public function bulkUpdateKelas(Request $request)
+{
+    // Pastikan kolom 'kelas' ada di property $fillable Model User.php
+    $ids = $request->input('ids');
+    $newKelas = $request->input('kelas');
 
-    public function bulkUpdateKelas(Request $request)
-    {
-        $dataArray = json_decode($request->ids, true);
+    if ($ids && $newKelas) {
+        \App\Models\User::whereIn('id', $ids)->update([
+            'kelas' => $newKelas
+        ]);
 
-        foreach ($dataArray as $item) {
-            User::whereIn('id', $item['ids'])->update([
-                'kelas' => $item['new_kelas']
-            ]);
-        }
-
-        return back()->with('success', 'Berhasil memperbarui kelas.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Kelas berhasil diupdate!'
+        ]);
     }
+
+    return response()->json(['success' => false, 'message' => 'Data kurang'], 400);
+}
 
     public function destroy(string $id)
     {
@@ -96,15 +154,26 @@ class UserController extends Controller
     }
 
     public function updatePassword(Request $request, $id)
-    {
-        $request->validate([
-            'password' => ['required', 'string', 'min:8'],
-        ]);
+{
+    $request->validate([
+        'password' => ['required', 'string', 'min:8'],
+    ]);
 
+    try {
         $user = \App\Models\User::findOrFail($id);
         $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
         $user->save();
 
-        return back()->with('success', 'Password ' . $user->name . ' berhasil diperbarui!');
+        // Kembalikan JSON agar SweetAlert bisa sukses
+        return response()->json([
+            'success' => true,
+            'message' => 'Password ' . $user->name . ' berhasil diperbarui!'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memperbarui password.'
+        ], 500);
     }
+}
 }

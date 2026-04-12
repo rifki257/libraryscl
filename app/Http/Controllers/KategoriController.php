@@ -9,11 +9,27 @@ use Illuminate\Support\Facades\Storage;
 
 class KategoriController extends Controller
 {
-    public function index()
-    {
-        $kategoris = Kategori::withCount('buku')->get();
-        return view('kategori', compact('kategoris'));
+   // Tambahkan Request di sini
+public function index(Request $request) 
+{
+    $query = Kategori::withCount('buku');
+
+    // Sekarang $request sudah terdefinisi dan bisa digunakan
+    if ($request->has('search') && $request->search != '') {
+        $query->where('nama_kategori', 'like', '%' . $request->search . '%');
     }
+
+    $kategoris = $query->paginate(3); // Gunakan paginate sesuai kebutuhan
+
+    // Cek jika permintaan datang dari AJAX (Live Search)
+    if ($request->ajax()) {
+        return response()->json([
+            'html' => view('admin.table_rows', compact('kategoris'))->render()
+        ]);
+    }
+
+    return view('kategori', compact('kategoris'));
+}
 
 
     public function katalog()
