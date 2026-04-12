@@ -29,19 +29,20 @@ public function index(Request $request)
     return view('kategori', compact('kategoris'));
     }
 
-    // halaman buku user
-    public function katalog()
-    {
-    $kategoris = Kategori::withCount('buku') 
-        ->orderBy('buku_count', 'desc')     
-        ->take(5)                        
-        ->get();
+public function katalog()
+{
+    // 1. Ambil SEMUA kategori untuk baris ke samping (bawah)
+    // Kita ambil relasi buku dengan limit 6 untuk preview
+    $allKategori = Kategori::with(['buku' => function($q) {
+        $q->take(6); 
+    }])->withCount('buku')->get();
 
-    $dataBuku = Buku::all(); 
+    // 2. Ambil 5 Kategori Terpopuler (atas) dari koleksi yang sudah ada
+    // Kita urutkan berdasarkan buku_count secara desc dan ambil 5
+    $topKategori = $allKategori->sortByDesc('buku_count')->take(5);
 
-    return view('katalog', compact('kategoris', 'dataBuku'));
-    }
-    
+    return view('katalog', compact('allKategori', 'topKategori'));
+}
     // isi katgeori
     public function show($id)
     {

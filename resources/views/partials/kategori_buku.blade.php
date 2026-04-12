@@ -2,15 +2,15 @@
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Kategori Buku</h2>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        @foreach ($kategoris as $item)
+        @foreach ($topKategori as $top)
             <a
-                href="{{ route('isikategori', $item->id_kategori) }}"
+                href="{{ route('isikategori', $top->id_kategori) }}"
                 class="group relative overflow-hidden rounded-xl h-40 shadow-md"
             >
-                @if ($item->gambar)
+                @if ($top->gambar)
                     <img
-                        src="{{ asset('storage/kategori/' . $item->gambar) }}"
-                        alt="{{ $item->nama_kategori }}"
+                        src="{{ asset('storage/kategori/' . $top->gambar) }}"
+                        alt="{{ $top->nama_kategori }}"
                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                 @else
@@ -19,7 +19,7 @@
                     >
                         <span
                             class="text-gray-500 text-xs text-center px-2"
-                            >{{ $item->nama_kategori }}</span
+                            >{{ $top->nama_kategori }}</span
                         >
                     </div>
                 @endif
@@ -32,7 +32,7 @@
                     <span
                         class="text-white font-bold text-sm leading-tight drop-shadow-lg"
                     >
-                        {{ $item->nama_kategori }}
+                        {{ $top->nama_kategori }}
                     </span>
                 </div>
             </a>

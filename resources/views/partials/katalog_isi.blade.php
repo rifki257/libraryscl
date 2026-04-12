@@ -1,145 +1,116 @@
-<div class="max-w-screen-7xl mx-auto py-12 relative group">
-    <div
-        id="scroll-container"
-        class="flex flex-row items-center overflow-x-auto pb-10 scrollbar-hide scroll-smooth"
-    >
-        <div class="flex flex-row items-center space-x-4 pr-10">
-            @foreach ($dataBuku as $buku)
-                @php
-        $isOutOfStock = $buku->jumlah <= 0;
-        $isGuest = !Auth::check();
-        
-        // Logika URL dan Onclick sama seperti sebelumnya
-        if ($isOutOfStock) {
-            $url = 'javascript:void(0)';
-            $onclick = "Swal.fire({icon: 'error', title: 'Stok Habis', text: 'Buku tidak tersedia.', confirmButtonColor: '#2563eb'})";
-        } elseif ($isGuest) {
-            $url = 'javascript:void(0)';
-            $onclick = "Swal.fire({icon: 'info', title: 'Login dulu', text: 'Silakan login untuk meminjam.', showCancelButton: true, confirmButtonText: 'Login'}).then((r) => { if(r.isConfirmed) window.location.href='".route('login')."'; })";
-        } else {
-            $url = route('peminjaman', $buku->id_buku);
-            $onclick = "";
-        }
-    @endphp
-                <div
-                    class="flex-shrink-0 w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow border border-white/5 transition-transform hover:-translate-y-2"
+@foreach ($allKategori as $kat)
+    {{-- Container per baris kategori --}}
+    <div class="max-w-screen-7xl mx-auto py-8 px-4">
+        {{-- Header: Judul Kategori & See All --}}
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col">
+                <h2
+                    class="text-2xl font-bold text-white uppercase tracking-tight"
                 >
-                    {{-- Area Gambar --}}
-                    <div class="relative h-[240px] w-full">
-                        <img
-                            src="{{ asset('storage/' . $buku->gambar) }}"
-                            alt="{{ $buku->judul }}"
-                            class="w-full h-full object-cover {{ $isOutOfStock ? 'grayscale opacity-50' : '' }}"
-                        />
-                        @if (!$isGuest && !$isOutOfStock)
-                            <button
-                                onclick="tambahWishlist(event, {{ $buku->id_buku }}, '{{ addslashes($buku->judul) }}')"
-                                {{-- Gunakan group untuk mendeteksi hover pada button --}}
-                                class="absolute top-3 right-3 z-30 transition-all duration-300 group/wish"
-                                title="Tambah ke Wishlist"
-                            >
-                                {{-- 1. Ikon Garis Tepi (Default: Abu-abu, Hilang saat Hover) --}}
-                                <i
-                                    class="bi bi-bookmark text-2xl text-gray-400 group-hover/wish:hidden"
-                                ></i>
+                    {{ $kat->nama_kategori }}
+                </h2>
+                <div class="h-1 w-12 bg-blue-600 rounded-full mt-1"></div>
+            </div>
 
-                                {{-- 2. Ikon Terisi Penuh (Default: Tersembunyi, Muncul Putih saat Hover) --}}
-                                <i
-                                    class="bi bi-bookmark-fill text-2xl text-white hidden group-hover/wish:inline-block"
-                                ></i>
-                            </button>
-                        @endif
+            <a
+                href="{{ route('isikategori', $kat->id_kategori) }}"
+                class="group text-blue-400 hover:text-blue-300 transition-all flex items-center text-sm font-semibold"
+            >
+                See All
+                <i
+                    class="bi bi-arrow-right-short text-xl ml-1 group-hover:translate-x-1 transition-transform"
+                ></i>
+            </a>
+        </div>
 
-                        @if ($isOutOfStock)
-                            <div
-                                class="absolute inset-0 flex items-center justify-center bg-black/40"
-                            >
-                                <span
-                                    class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded"
-                                    >HABIS</span
+        {{-- Scroll Container Buku --}}
+        <div class="relative group">
+            <div
+                class="flex flex-row items-center overflow-x-auto pb-4 scrollbar-hide scroll-smooth space-x-5"
+            >
+                @foreach ($kat->buku as $buku)
+                    @php
+                        $isOutOfStock = $buku->jumlah <= 0;
+                        $isGuest = !Auth::check();
+                        
+                        if ($isOutOfStock) {
+                            $url = 'javascript:void(0)';
+                            $onclick = "Swal.fire({icon:'error', title:'Stok Habis', text:'Buku tidak tersedia.'})";
+                        } elseif ($isGuest) {
+                            $url = 'javascript:void(0)';
+                            $onclick = "Swal.fire({icon:'info', title:'Login dulu', text:'Silakan login untuk meminjam.', showCancelButton:true}).then((r)=>{if(r.isConfirmed) window.location.href='".route('login')."';})";
+                        } else {
+                            $url = route('peminjaman.beda', ['id' => $buku->id_buku]);
+                            $onclick = "";
+                        }
+                    @endphp
+                    {{-- Card Buku --}}
+                    <div
+                        class="flex-shrink-0 w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow border border-white/5 transition-all hover:-translate-y-2 hover:border-blue-500/30"
+                    >
+                        {{-- Area Gambar --}}
+                        <div class="relative h-[240px] w-full">
+                            <img
+                                src="{{ asset('storage/' . $buku->gambar) }}"
+                                class="w-full h-full object-cover {{ $isOutOfStock ? 'grayscale opacity-50' : '' }}"
+                            />
+
+                            {{-- TOMBOL WISHLIST (Kembali Ditambahkan) --}}
+                            @if (!$isGuest && !$isOutOfStock)
+                                <button
+                                    onclick="tambahWishlist(event, {{ $buku->id_buku }}, '{{ addslashes($buku->judul) }}')"
+                                    class="absolute top-3 right-3 z-30 transition-all duration-300 group/wish"
+                                    title="Tambah ke Wishlist"
                                 >
-                            </div>
-                        @endif
-                    </div>
+                                    <i
+                                        class="bi bi-bookmark text-2xl text-gray-400 group-hover/wish:hidden"
+                                    ></i>
+                                    <i
+                                        class="bi bi-bookmark-fill text-2xl text-white hidden group-hover/wish:inline-block"
+                                    ></i>
+                                </button>
+                            @endif
 
-                    {{-- Area Konten (Bawah Gambar) --}}
-                    <div class="p-4 flex flex-col h-[140px] justify-between">
-                        <div>
-                            <h3
-                                class="text-blue-400 font-bold text-sm line-clamp-1 mb-1 uppercase tracking-tight"
-                            >
-                                {{ $buku->judul }}
-                            </h3>
-                            <p class="text-gray-400 text-[11px] italic line-clamp-1">
-                                {{ $buku->penulis }}
-                            </p>
-                            <p class="text-gray-500 text-[10px] mb-2">
-                                Stok:
-                                <span
-                                    class="{{ $isOutOfStock ? 'text-red-500' : 'text-green-500' }}"
-                                    >{{ $buku->jumlah }}</span
+                            @if ($isOutOfStock)
+                                <div
+                                    class="absolute inset-0 flex items-center justify-center bg-black/40"
                                 >
-                            </p>
+                                    <span
+                                        class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded"
+                                        >HABIS</span
+                                    >
+                                </div>
+                            @endif
                         </div>
 
-                        @php
-    $isOutOfStock = $buku->jumlah <= 0;
-    $isGuest = !Auth::check();
-    
-    // Hitung buku yang sedang aktif dipinjam (Jika sudah login)
-    $totalPinjam = 0;
-    if (!$isGuest) {
-        $totalPinjam = \App\Models\Peminjaman::where('id', auth()->id())
-            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu', 'ajukan_kembali'])
-            ->count();
-    }
-    $isLimit = $totalPinjam >= 6;
-
-    // Tentukan URL dan Onclick
-    if ($isOutOfStock) {
-        $url = 'javascript:void(0)';
-        $onclick = "Swal.fire({icon: 'error', title: 'Stok Habis', text: 'Buku tidak tersedia.', confirmButtonColor: '#ef4444'})";
-    } elseif ($isGuest) {
-        $url = 'javascript:void(0)';
-        $onclick = "Swal.fire({icon: 'info', title: 'Login dulu', text: 'Silakan login untuk meminjam.', showCancelButton: true, confirmButtonText: 'Login'}).then((r) => { if(r.isConfirmed) window.location.href='".route('login')."'; })";
-    } elseif ($isLimit) {
-        $url = 'javascript:void(0)';
-        $onclick = "Swal.fire({icon: 'warning', title: 'Limit Tercapai', text: 'Kamu sudah meminjam/mengajukan 6 buku. Kembalikan buku dulu ya!', confirmButtonColor: '#6366F1'})";
-    } else {
-        $url = route('peminjaman.beda', ['id' => $buku->id_buku]);
-        $onclick = "";
-    }
-@endphp
-
-                        <a
-                            href="{{ $url }}"
-                            onclick="{!! $onclick !!}"
-                            class="w-full py-2 rounded-lg text-center text-xs font-bold transition-all 
-    {{ $isOutOfStock || ($isLimit && !$isGuest)
-        ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
-        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20 shadow-lg' 
-    }}"
-                            style="
-                                display: block;
-                                width: 140px;
-                                text-decoration: none;
-                            "
+                        {{-- Area Detail --}}
+                        <div
+                            class="p-4 flex flex-col h-[140px] justify-between"
                         >
-                            @if ($isOutOfStock)
-                                TIDAK TERSEDIA
-                            @elseif ($isLimit && !$isGuest)
-                                KUOTA PENUH
-                            @else
-                                PINJAM SEKARANG
-                            @endif
-                        </a>
+                            <div>
+                                <h3
+                                    class="text-blue-400 font-bold text-sm line-clamp-1 uppercase"
+                                >
+                                    {{ $buku->judul }}
+                                </h3>
+                                <p class="text-white text-[13px] line-clamp-1 italic">{{ $buku->penulis }}</p>
+                                <p class="text-gray-500 text-[12px]">Stok: <span class="{{ $isOutOfStock ? 'text-red-500' : 'text-green-500' }}">{{ $buku->jumlah }}</span></p>
+                            </div>
+
+                            <a
+                                href="{{ $url }}"
+                                onclick="{!! $onclick !!}"
+                                class="w-full py-2 rounded-lg text-center text-xs font-bold {{ $isOutOfStock ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-900/20' }} transition-all"
+                            >
+                                {{ $isOutOfStock ? 'TIDAK TERSEDIA' : 'PINJAM SEKARANG' }}
+                            </a>
+                        </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </div>
     </div>
-</div>
-</div>
+@endforeach
 <script>
     function tambahWishlist(event, idBuku, judulBuku) {
         event.preventDefault();
