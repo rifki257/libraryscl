@@ -340,4 +340,26 @@ public function exportWord(Request $request)
         ->header('Content-Type', 'application/msword')
         ->header('Content-Disposition', "attachment; filename=$filename");
 }
+
+public function laporanUser(Request $request)
+{
+    // Ambil ID user yang sedang login
+    $id = auth()->id();
+    
+    $query = \App\Models\Peminjaman::with('buku')
+                // Ganti 'id' menjadi 'id' agar yang muncul adalah riwayat milik user tersebut
+                ->where('id', $id) 
+                ->orderBy('created_at', 'desc');
+
+    // Filter berdasarkan Status (Tanpa Filter Denda)
+    $query->when($request->status, function ($q) use ($request) {
+        return $q->where('status', $request->status);
+    });
+
+    // Tetap gunakan withQueryString agar pagination tidak rusak saat filter aktif
+    $riwayat = $query->paginate(10)->withQueryString();
+
+    return view('laporan_user', compact('riwayat'));
+}
+
 }

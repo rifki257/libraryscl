@@ -17,33 +17,24 @@
         <td>{{ $user->no_hp ?? '-' }}</td>
         <td>
             <button
-                type="button"
-                onclick="editPassword({{ $user->id }}, '{{ $user->name }}')"
-                class="btn btn-primary text-white"
+                class="btn btn-sm btn-info btn-reset-pw"
+                data-id="{{ $user->id }}"
+                title="Reset Password"
             >
-                Password
+                <i class="fas fa-key"></i>
             </button>
 
-            <form
-                id="delete-form-{{ $user->id }}"
-                action="{{ route('user.destroy', $user->id) }}"
-                method="POST"
-                class="inline-block m-0"
+            <button
+                class="btn btn-sm btn-danger btn-delete-siswa"
+                data-id="{{ $user->id }}"
+                title="Hapus"
             >
-                @csrf
-                @method ('DELETE')
-                <button
-                    type="button"
-                    onclick="confirmDelete({{ $user->id }})"
-                    class="btn btn-danger"
-                >
-                    Hapus
-                </button>
-            </form>
+                <i class="fas fa-trash"></i>
+            </button>
         </td>
     </tr>
 @empty
     <tr>
-        <td colspan="7" class="text-center">Data Kelas XI tidak ditemukan.</td>
+        <td colspan="7" class="text-center">Data siswa tidak ditemukan.</td>
     </tr>
 @endforelse

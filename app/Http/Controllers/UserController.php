@@ -176,4 +176,23 @@ public function bulkUpdateKelas(Request $request)
         ], 500);
     }
 }
+// Menghapus Siswa
+public function destroySiswa($id)
+{
+    $user = \App\Models\User::findOrFail($id);
+    $user->delete();
+
+    return response()->json(['success' => 'Data siswa berhasil dihapus.']);
+}
+
+// Reset Password ke Default (misal: 12345678)
+public function resetPassword($id)
+{
+    $user = \App\Models\User::findOrFail($id);
+    $user->update([
+        'password' => \Hash::make('12345678')
+    ]);
+
+    return response()->json(['success' => 'Password berhasil direset menjadi: 12345678']);
+}
 }

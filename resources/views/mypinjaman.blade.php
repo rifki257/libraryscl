@@ -7,7 +7,22 @@
             <div
                 class="bg-[#ebebeb] overflow-hidden shadow-sm sm:rounded-lg p-4 p-md-5"
             >
-            <a href="">Lihat laporan</a>
+                <div
+                    class="d-flex justify-content-between align-items-center mb-4"
+                >
+                    <h2
+                        class="font-semibold text-xl text-gray-800 leading-tight"
+                    >
+                        Peminjaman Saya
+                    </h2>
+                    <a
+                        href="{{ route('laporan_user') }}"
+                        class="btn btn-primary shadow-sm"
+                    >
+                        <i class="bi bi-file-earmark-text me-1"></i> Lihat
+                        Laporan Riwayat
+                    </a>
+                </div>
                 <div class="row g-4">
                     @forelse ($sedangDipinjam as $item)
                         @php
@@ -183,19 +198,19 @@
                             </div>
                         </div>
                     @empty
-                    <div
-                        class="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-300"
-                    >
-                        <i
-                            class="bi bi-bookmark-x text-5xl text-gray-300 mb-4 block"
-                        ></i>
-                        <p class="text-gray-500 font-medium">Belum ada peminjaman.</p>
-                        <a
-                            href="{{ route('katalog') }}"
-                            class="text-blue-500 hover:text-blue-700 underline mt-2 inline-block"
-                            >Jelajahi Katalog Buku</a
+                        <div
+                            class="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-300"
                         >
-                    </div>
+                            <i
+                                class="bi bi-bookmark-x text-5xl text-gray-300 mb-4 block"
+                            ></i>
+                            <p class="text-gray-500 font-medium">Belum ada peminjaman.</p>
+                            <a
+                                href="{{ route('katalog') }}"
+                                class="text-blue-500 hover:text-blue-700 underline mt-2 inline-block"
+                                >Jelajahi Katalog Buku</a
+                            >
+                        </div>
                     @endforelse
                 </div>
             </div>

@@ -260,5 +260,63 @@
                 fetchSiswa();
             };
         });
+        // --- FITUR HAPUS SISWA ---
+        $(document).on('click', '.btn-delete-siswa', function () {
+            let id = $(this).data('id');
+
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: 'Data siswa ini akan dihapus permanen!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/admin/users/siswa/${id}`, // Sesuaikan dengan route Anda
+                        type: 'DELETE',
+                        data: { _token: '{{ csrf_token() }}' },
+                        success: function (response) {
+                            Swal.fire('Terhapus!', response.success, 'success');
+                            fetchSiswa(); // Refresh tabel
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Gagal menghapus data.', 'error');
+                        },
+                    });
+                }
+            });
+        });
+
+        // --- FITUR RESET PASSWORD ---
+        $(document).on('click', '.btn-reset-pw', function () {
+            let id = $(this).data('id');
+
+            Swal.fire({
+                title: 'Reset Password?',
+                text: 'Password akan diubah menjadi default: 12345678',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Reset!',
+                cancelButtonText: 'Batal',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/admin/users/siswa/reset-password/${id}`, // Sesuaikan dengan route Anda
+                        type: 'POST',
+                        data: { _token: '{{ csrf_token() }}' },
+                        success: function (response) {
+                            Swal.fire('Berhasil!', response.success, 'success');
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Gagal mereset password.', 'error');
+                        },
+                    });
+                }
+            });
+        });
     </script>
 </x-app-layout>

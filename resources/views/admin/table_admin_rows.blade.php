@@ -13,10 +13,11 @@
         <td>
             <button
                 type="button"
-                onclick="editPassword({{ $admin->id }}, '{{ $admin->name }}')"
+                onclick="resetPasswordAdmin({{ $admin->id }}, '{{ $admin->name }}')"
                 class="btn btn-primary text-white"
+                title="Reset Password"
             >
-                Password
+                <i class="fas fa-key"></i>
             </button>
             <form
                 id="delete-form-{{ $admin->id }}"
@@ -31,12 +32,12 @@
                     onclick="confirmDelete({{ $admin->id }})"
                     class="btn btn-danger"
                 >
-                    Hapus
+                    <i class="fas fa-trash"></i>
                 </button>
             </form>
             <form
                 id="update-pw-form-{{ $admin->id }}"
-                action="{{ route('admin.updatePassword', $admin->id) }}"
+                action="{{ route('admin.resetPassword', $admin->id) }}"
                 method="POST"
                 style="display: none"
             >

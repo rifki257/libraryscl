@@ -83,16 +83,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/akun-admin', [UserController::class, 'index'])->name('akun_admin');
         Route::delete('/akun-admin/{id}', [UserController::class, 'destroy'])->name('admin.destroy');
         Route::put('/akun-admin/update-password/{id}', [UserController::class, 'updatePassword'])->name('admin.updatePassword');
-        
+        Route::post('/admin/reset-password/{id}', [UserController::class, 'resetPassword'])->name('admin.resetPassword');
+        Route::get('/users', [UserController::class, 'index'])->name('akun_user');
     });
 
-// Bagian Manajemen User Anggota (X, XI, XII)
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/users', [UserController::class, 'index'])->name('akun_user');
-        Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('user.destroy');
-        Route::post('/admin/users/{id}/update-password', [UserController::class, 'updatePassword'])->name('user.updatePassword');
-        Route::put('/users/{id}/password', [UserController::class, 'updatePassword'])->name('user.updatePassword');
-    });
 
 
     Route::post('/wishlist/store', [WishlistController::class, 'store'])->name('wishlist.store');
@@ -134,4 +128,5 @@ Route::get('/admin/laporan', [App\Http\Controllers\PeminjamanController::class, 
 Route::get('/admin/laporan/export', [App\Http\Controllers\PeminjamanController::class, 'exportWord'])->name('admin.laporan.export');
 
 Route::get('/admin/users/siswa', [UserController::class, 'indexSiswa'])->name('users.siswa');
+Route::get('/laporan-user', [PeminjamanController::class, 'laporanUser'])->name('laporan_user');
 });

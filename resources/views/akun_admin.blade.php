@@ -119,53 +119,40 @@
             });
         }
 
-        function editPassword(id, name) {
+        function resetPasswordAdmin(id, name) {
             Swal.fire({
-                title: 'Ganti Password',
-                text: 'Masukkan password baru untuk ' + name,
-                input: 'password',
-                inputAttributes: {
-                    autocapitalize: 'off',
-                    autocorrect: 'off',
-                },
+                title: 'Reset Password?',
+                text: `Password untuk ${name} akan diubah menjadi default: 12345678`,
+                icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Update Password',
                 confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Reset!',
                 cancelButtonText: 'Batal',
-                showLoaderOnConfirm: true, // Menampilkan loading saat proses
-                inputValidator: (value) => {
-                    if (!value) return 'Password tidak boleh kosong!';
-                    if (value.length < 8) return 'Password minimal 8 karakter!';
-                },
-                preConfirm: (newPassword) => {
-                    // Gunakan AJAX Fetch di sini daripada form.submit()
-                    return fetch(`/akun-admin/update-password/${id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            Accept: 'application/json',
-                        },
-                        body: JSON.stringify({ password: newPassword }),
-                    })
-                        .then((response) => {
-                            if (!response.ok)
-                                throw new Error('Gagal memperbarui password');
-                            return response.json();
-                        })
-                        .catch((error) => {
-                            Swal.showValidationMessage(`Request failed: ${error}`);
-                        });
-                },
-                allowOutsideClick: () => !Swal.isLoading(),
             }).then((result) => {
-                if (result.isConfirmed && result.value.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: result.value.message,
-                        timer: 2000,
-                        showConfirmButton: false,
+                if (result.isConfirmed) {
+                    $.ajax({
+                        // Mengarah ke fungsi resetPassword di UserController
+                        url: `/admin/users/siswa/reset-password/${id}`,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                        },
+                        beforeSend: function () {
+                            Swal.showLoading();
+                        },
+                        success: function (response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: response.success,
+                                timer: 2000,
+                                showConfirmButton: false,
+                            });
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Gagal mereset password.', 'error');
+                        },
                     });
                 }
             });

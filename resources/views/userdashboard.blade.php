@@ -72,60 +72,40 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 text-sm">
-                                    <tr>
-                                        <td
-                                            class="px-4 py-3 font-medium text-gray-900"
-                                        >
-                                            Madilog
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span
-                                                class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700"
-                                                >Dipinjam</span
+                                    @foreach ($recentActivities as $activity)
+                                        <tr>
+                                            <td
+                                                class="px-4 py-3 font-medium text-gray-900"
                                             >
-                                        </td>
-                                        <td class="px-4 py-3 text-gray-500">
-                                            10 Apr 2026
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td
-                                            class="px-4 py-3 font-medium text-gray-900"
-                                        >
-                                            Negeri Para Bedebah
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span
-                                                class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-700"
-                                                >Kembali</span
-                                            >
-                                        </td>
-                                        <td class="px-4 py-3 text-gray-500">
-                                            08 Apr 2026
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td
-                                            class="px-4 py-3 font-medium text-gray-900"
-                                        >
-                                            Bumi
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span
-                                                class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700"
-                                                >Diajukan</span
-                                            >
-                                        </td>
-                                        <td class="px-4 py-3 text-gray-500">
-                                            12 Apr 2026
-                                        </td>
-                                    </tr>
+                                                {{ $activity->buku->judul }}
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                @php
+                $statusClasses = [
+                    'menunggu' => 'bg-yellow-100 text-yellow-700',
+                    'dipinjam' => 'bg-blue-100 text-blue-700',
+                    'proses'   => 'bg-purple-100 text-purple-700',
+                    'kembali'  => 'bg-success-100 text-green-700',
+                ];
+                $class = $statusClasses[$activity->status] ?? 'bg-gray-100 text-gray-700';
+            @endphp
+                                                <span
+                                                    class="px-2 py-1 text-xs font-semibold rounded-full {{ $class }}"
+                                                >
+                                                    {{ ucfirst($activity->status) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-gray-500">
+                                                {{ $activity->updated_at->format('d M Y') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
                         <div class="mt-3 text-right">
                             <a
-                                href="#"
+                                href="{{ route('laporan_user') }}"
                                 class="text-xs text-blue-600 font-bold hover:underline"
                                 >Lihat Semua Riwayat →</a
                             >
@@ -144,11 +124,16 @@
             labels: ['Diajukan Pinjam', 'Sedang Dipinjam', 'Diajukan Kembali'],
             datasets: [
                 {
-                    data: [2, 5, 1], // Ganti dengan data asli dari database
+                    // DATA REAL DARI DATABASE MASUK DISINI
+                    data: [
+                        @json ($countAjuan),
+                        @json ($countPinjam),
+                        @json ($countKembali),
+                    ],
                     backgroundColor: [
-                        '#FACC15', // Yellow 400
-                        '#3B82F6', // Blue 500
-                        '#A855F7', // Purple 500
+                        '#FACC15', // Ajuan
+                        '#3B82F6', // Pinjam
+                        '#A855F7', // Kembali
                     ],
                     borderWidth: 0,
                 },
@@ -156,9 +141,10 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false, // Kita matikan karena sudah buat legend manual di samping
+                    display: false,
                 },
             },
         },
