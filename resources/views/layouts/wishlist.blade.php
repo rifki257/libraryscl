@@ -24,7 +24,7 @@
 
     @if ($wishlistCount > 0)
         <span
-            class="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full border-2 border-white"
+            class="absolute top-2 right-2 flex items-center justify-center w-5 h-5 text-[11px] font-bold text-white bg-[#ef4444] rounded-full border-2 border-white translate-x-1/4 -translate-y-1/4"
         >
             {{ $wishlistCount }}
         </span>

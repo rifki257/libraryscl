@@ -5,7 +5,7 @@
         <div class="flex justify-between items-center mb-6">
             <div class="flex flex-col">
                 <h2
-                    class="text-2xl font-bold text-white uppercase tracking-tight"
+                    class="text-2xl font-bold text-dark uppercase tracking-tight"
                 >
                     {{ $kat->nama_kategori }}
                 </h2>

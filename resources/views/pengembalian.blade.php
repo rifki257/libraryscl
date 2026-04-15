@@ -85,7 +85,7 @@
                             <div class="flex justify-between text-sm italic">
                                 <span class="text-gray-500">Peminjam:</span>
                                 <span
-                                    class="font-semibold text-gray-800"
+                                    class="font-semibold text-gray-800 capitalize"
                                     x-text="selectedItem.name"
                                 ></span>
                             </div>
@@ -110,8 +110,9 @@
 
                     <div class="p-4 bg-gray-50 flex gap-3">
                         <button
+                            type="button"
                             @click="openModal = false"
-                            class="flex-1 px-4  text-sm font-bold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                            class="flex-1 flex items-center justify-center px-4 h-[41px] text-sm font-bold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                         >
                             BATAL
                         </button>

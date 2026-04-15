@@ -77,7 +77,7 @@
                     @include ('admin.table_rows')
                 </tbody>
             </table>
-             <div class="mt-10">{{ $kategoris->links() }}</div>
+            <div class="mt-10">{{ $kategoris->links() }}</div>
         </div>
     </div>
 

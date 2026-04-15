@@ -43,6 +43,8 @@
             @else
                 @include ('layouts.footers.user')
             @endif
+        @else
+            @include ('layouts.footers.user')
         @endauth
     </div>
     @if (session('error'))

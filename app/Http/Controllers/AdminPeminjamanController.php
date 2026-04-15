@@ -78,6 +78,13 @@ class AdminPeminjamanController extends Controller
     {
         $pinjam = Peminjaman::where('id_pinjam', $id)->firstOrFail();
 
+        if ($pinjam->status !== 'ditolak') {
+        $buku = $pinjam->buku;
+        if ($buku) {
+            $buku->increment('jumlah', 1);
+        }
+    }
+
         $pinjam->update([
             'status' => 'ditolak',
             'pesan_admin' => $request->alasan

@@ -77,6 +77,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // KatalogController
+
     // peminjamancontroller
     Route::get('/pinjam/{id}', [App\Http\Controllers\PeminjamanController::class, 'create'])->name('peminjaman');
     Route::post('/peminjaman/store', [PeminjamanController::class, 'store'])->name('peminjaman.store');

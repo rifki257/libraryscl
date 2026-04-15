@@ -36,7 +36,7 @@
                     <p><strong>1. Durasi Pinjam:</strong> Minimal 7 hari dan maksimal 30 hari / 1 Bulan.</p>
                     <p><strong>2. Denda Keterlambatan:</strong> Rp50.000 / hari per buku.</p>
                     <p><strong>3. Kerusakan / Kehilangan:</strong> Ketika ada kerusakan / Kehilangan maka petugas akan mendenda secara langsung di tempat sebesar Rp100.000.</p>
-                    <p><strong>4. Kuota:</strong> Maksimal peminjaman adalah 6 buku sekaligus.</p>
+                    <p><strong>4. Kuota:</strong> Maksimal peminjaman adalah 6 buku.</p>
                     <p><strong>5. Denda:</strong> Denda transparan.</p>
                 </div>
 

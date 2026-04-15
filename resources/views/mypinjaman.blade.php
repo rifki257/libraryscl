@@ -260,24 +260,25 @@
         // Fungsi Detail Denda & WhatsApp Admin
         function showDendaDetail(judul, hari, total) {
             const formatRupiah = (angka) => {
+                const angkaPositif = Math.abs(angka);
                 return new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
                     minimumFractionDigits: 0,
-                }).format(angka);
+                }).format(angkaPositif);
             };
 
             Swal.fire({
                 title: '<span class="text-danger">Detail Keterlambatan</span>',
                 html: `
-                <div class="text-start border p-3 rounded bg-light">
-                    <p class="mb-1"><strong>Judul Buku:</strong> <br>${judul}</p>
-                    <hr>
-                    <p class="mb-1"><strong>Jumlah Hari:</strong> ${hari} Hari</p>
-                    <p class="mb-0 text-danger"><strong>Total Denda:</strong> ${formatRupiah(total)}</p>
-                </div>
-                <p class="mt-3 small text-muted">Harap segera mengembalikan buku ke perpustakaan untuk menghindari penambahan denda.</p>
-            `,
+        <div class="text-start border p-3 rounded bg-light">
+            <p class="mb-1"><strong>Judul Buku:</strong> ${judul}</p>
+            <hr>
+            <p class="mb-1 mt-2"><strong>Jumlah Hari:</strong> ${Math.abs(hari)} Hari</p>
+            <p class="text-danger"><strong>Total Denda:</strong> ${formatRupiah(total)}</p>
+        </div>
+        <p class="mt-3 small text-muted">Harap segera mengembalikan buku ke perpustakaan untuk menghindari penambahan denda.</p>
+    `,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#25D366',

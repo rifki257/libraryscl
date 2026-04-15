@@ -39,9 +39,9 @@
         <td>
             @if ($isTelat)
                 <span
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-tight bg-red-100 text-red-700 border border-red-200"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold tracking-tight bg-red-100 text-red-700 border border-red-200"
                 >
-                    Rp {{ number_format($totalDenda, 0, ',', '.') }}
+                    Rp{{ number_format(abs($totalDenda), 0, ',', '.') }}
                 </span>
             @else
                 <span
@@ -54,7 +54,7 @@
     </tr>
 @empty
     <tr>
-        <td colspan="4" class="px-6 py-16 text-center">
+        <td colspan="6" class="px-6 py-16 text-center">
             <div class="flex flex-col items-center justify-center">
                 <p class="text-gray-400 italic text-sm">Belum ada riwayat pengembalian.</p>
             </div>

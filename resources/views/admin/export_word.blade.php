@@ -25,7 +25,7 @@
                 <th>Jatuh Tempo</th>
                 @if($jenis == 'pengembalian')
                     <th>Tgl Kembali</th>
-                    <th>Status/Denda</th>
+                    <th>Denda</th>
                 @else
                     <th>Status</th>
                 @endif

@@ -1,25 +1,65 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+/>
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Buku Kategori: {{ $kategori->nama_kategori }}
+        <div
+            class="flex flex-col md:flex-row items-center justify-between gap-4"
+        >
+            <h2
+                class="font-semibold text-xl text-gray-800 leading-tight shrink-0"
+            >
+                {{ $kategori->nama_kategori }}
             </h2>
 
-            <a href="{{ route('katalog') }}" class="btn btn-success">
-                Kembali
+            <div class="flex-grow max-w-md w-full">
+                <form
+                    action="{{ url()->current() }}"
+                    method="GET"
+                    class="relative group"
+                >
+                    <div class="relative">
+                        <span
+                            class="absolute inset-y-0 left-0 flex items-center pl-3"
+                        >
+                            <i class="bi bi-search text-gray-400"></i>
+                        </span>
+
+                        <input
+                            type="search"
+                            name="search"
+                            value="{{ request('search') }}"
+                            placeholder="Cari buku {{ $kategori->nama_kategori }}..."
+                            class="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-full focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
+                        />
+
+                        @if (request('search'))
+                            <a
+                                href="{{ url()->current() }}"
+                                class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+
+            <a href="{{ route('katalog') }}" class="btn btn-success shrink-0">
+                <i class="bi bi-arrow-left"></i> Kembali
             </a>
         </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-wrap justify-center gap-6">
-                @foreach ($dataBuku as $buku)
-                    @php
+            @if ($dataBuku->count() > 0)
+                <div class="flex flex-wrap justify-center gap-6">
+                    @foreach ($dataBuku as $buku)
+                        @php
                     $isOutOfStock = $buku->jumlah <= 0;
                     $isGuest = !Auth::check();
-                    
+
                     $totalPinjam = 0;
                     if (!$isGuest) {
                         $totalPinjam = \App\Models\Peminjaman::where('id', auth()->id())
@@ -42,86 +82,97 @@
                         $onclick = "";
                     }
                 @endphp
-                    <div
-                        class="w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow border border-white/5 transition-transform hover:-translate-y-2"
-                    >
-                        <div class="relative h-[240px] w-full">
-                            <img
-                                src="{{ asset('storage/' . $buku->gambar) }}"
-                                alt="{{ $buku->judul }}"
-                                class="w-full h-full object-cover {{ $isOutOfStock ? 'grayscale opacity-50' : '' }}"
-                            />
-
-                            @if (!$isGuest && !$isOutOfStock)
-                                <button
-                                    onclick="tambahWishlist(event, {{ $buku->id_buku }}, '{{ addslashes($buku->judul) }}')"
-                                    class="absolute top-3 right-3 z-30 transition-all duration-300 group/wish"
-                                    title="Tambah ke Wishlist"
-                                >
-                                    <i
-                                        class="bi bi-bookmark text-2xl text-gray-400 group-hover/wish:hidden"
-                                    ></i>
-                                    <i
-                                        class="bi bi-bookmark-fill text-2xl text-white hidden group-hover/wish:inline-block"
-                                    ></i>
-                                </button>
-                            @endif
-
-                            @if ($isOutOfStock)
-                                <div
-                                    class="absolute inset-0 flex items-center justify-center bg-black/40"
-                                >
-                                    <span
-                                        class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded"
-                                        >HABIS</span
-                                    >
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- Area Konten --}}
                         <div
-                            class="p-4 flex flex-col h-[150px] justify-between"
+                            class="w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow border border-white/5 transition-transform hover:-translate-y-2"
                         >
-                            <div>
-                                <h3
-                                    class="text-blue-400 font-bold text-sm line-clamp-1 uppercase tracking-tight"
-                                >
-                                    {{ $buku->judul }}
-                                </h3>
-                                <p class="text-white text-[13px] italic line-clamp-1">
-                                    {{ $buku->penulis }}
-                                </p>
-                                <p class="text-gray-500 text-[10px] mb-2">
-                                    Stok:
-                                    <span
-                                        class="{{ $isOutOfStock ? 'text-red-500' : 'text-green-500' }}"
-                                        >{{ $buku->jumlah }}</span
+                            <div class="relative h-[240px] w-full">
+                                <img
+                                    src="{{ asset('storage/' . $buku->gambar) }}"
+                                    alt="{{ $buku->judul }}"
+                                    class="w-full h-full object-cover {{ $isOutOfStock ? 'grayscale opacity-50' : '' }}"
+                                />
+
+                                @if (!$isGuest && !$isOutOfStock)
+                                    <button
+                                        onclick="tambahWishlist(event, {{ $buku->id_buku }}, '{{ addslashes($buku->judul) }}')"
+                                        class="absolute top-3 right-3 z-30 transition-all duration-300 group/wish"
+                                        title="Tambah ke Wishlist"
                                     >
-                                </p>
+                                        <i
+                                            class="bi bi-bookmark text-2xl text-gray-400 group-hover/wish:hidden"
+                                        ></i>
+                                        <i
+                                            class="bi bi-bookmark-fill text-2xl text-white hidden group-hover/wish:inline-block"
+                                        ></i>
+                                    </button>
+                                @endif
+
+                                @if ($isOutOfStock)
+                                    <div
+                                        class="absolute inset-0 flex items-center justify-center bg-black/40"
+                                    >
+                                        <span
+                                            class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded"
+                                            >HABIS</span
+                                        >
+                                    </div>
+                                @endif
                             </div>
 
-                            <a
-                                href="{{ $url }}"
-                                onclick="{!! $onclick !!}"
-                                class="w-full py-2 rounded-lg text-center text-[10px] font-bold transition-all no-underline
+                            {{-- Area Konten --}}
+                            <div
+                                class="p-4 flex flex-col h-[150px] justify-between"
+                            >
+                                <div>
+                                    <h3
+                                        class="text-blue-400 font-bold text-sm line-clamp-1 uppercase tracking-tight"
+                                    >
+                                        {{ $buku->judul }}
+                                    </h3>
+                                    <p class="text-white text-[13px] italic line-clamp-1">
+                                        {{ $buku->penulis }}
+                                    </p>
+                                    <p class="text-gray-500 text-[10px] mb-2">
+                                        Stok:
+                                        <span
+                                            class="{{ $isOutOfStock ? 'text-red-500' : 'text-green-500' }}"
+                                            >{{ $buku->jumlah }}</span
+                                        >
+                                    </p>
+                                </div>
+
+                                <a
+                                    href="{{ $url }}"
+                                    onclick="{!! $onclick !!}"
+                                    class="w-full py-2 rounded-lg text-center text-[10px] font-bold transition-all no-underline
                             {{ $isOutOfStock || ($isLimit && !$isGuest)
                                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
                                 : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20 shadow-lg' 
                             }}"
-                            >
-                                @if ($isOutOfStock)
-                                    TIDAK TERSEDIA
-                                @elseif ($isLimit && !$isGuest)
-                                    KUOTA PENUH
-                                @else
-                                    PINJAM SEKARANG
-                                @endif
-                            </a>
+                                >
+                                    @if ($isOutOfStock)
+                                        TIDAK TERSEDIA
+                                    @elseif ($isLimit && !$isGuest)
+                                        KUOTA PENUH
+                                    @else
+                                        PINJAM SEKARANG
+                                    @endif
+                                </a>
+                            </div>
                         </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="flex flex-col items-center justify-center py-20">
+                    <div class="bg-gray-800/50 rounded-full p-6 mb-4">
+                        <i class="bi bi-search text-5xl text-gray-500"></i>
                     </div>
-                @endforeach
-            </div>
+                    <h3 class="text-xl font-semibold text-white">
+                        Buku tidak ditemukan
+                    </h3>
+                    <p class="text-gray-400 mt-2">Maaf, buku dengan judul atau penulis <span class="text-blue-400">"{{ request('search') }}"</span> tidak tersedia di kategori ini.</p>
+                </div>
+            @endif
         </div>
     </div>
 

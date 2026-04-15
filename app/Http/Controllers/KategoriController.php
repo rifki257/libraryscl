@@ -40,19 +40,29 @@ public function katalog()
     return view('katalog', compact('allKategori', 'topKategori'));
 }
     // isi katgeori
-    public function show($id)
-    {
+    public function show($id, Request $request)
+{
     $kategori = Kategori::findOrFail($id);
-    $dataBuku = \App\Models\Buku::where('id_kategori', $id)->get();
+    
+    $search = $request->query('search');
+
+    $dataBuku = \App\Models\Buku::where('id_kategori', $id)
+        ->where(function($query) use ($search) {
+            if (!empty($search)) {
+                $query->where('judul', 'like', '%' . $search . '%')
+                ->orWhere('penulis', 'like', '%' . $search . '%');
+            }
+        })
+        ->get();
+
     return view('isikategori', compact('kategori', 'dataBuku'));
-    }
+}
 
     // proses buat kategori
     public function store(Request $request)
 {
     $request->validate([
         'nama_kategori' => 'required|string|max:255',
-        // Tambahkan webp, bmp, tiff dan perbesar max ke 5MB (5120) atau sesuai kebutuhan
         'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg,gif,bmp|max:5120' 
     ]);
 
@@ -60,7 +70,6 @@ public function katalog()
 
     if ($request->hasFile('gambar')) {
         $file = $request->file('gambar');
-        // Gunakan hashName() lebih aman agar tidak ada karakter aneh di nama file
         $nama_file = time() . '_' . $file->hashName(); 
         $file->storeAs('kategori', $nama_file, 'public');
     }
@@ -80,24 +89,20 @@ public function katalog()
 
     $request->validate([
         'nama_kategori' => 'required|string|max:255',
-        // Menambahkan format webp, svg, gif, bmp dan menaikkan limit ke 5MB
         'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg,gif,bmp|max:5120'
     ]);
 
     $kategori->nama_kategori = $request->nama_kategori;
 
     if ($request->hasFile('gambar')) {
-        // 1. Simpan file baru dulu
         $file = $request->file('gambar');
-        $nama_file = time() . '_' . $file->hashName(); // Pakai hashName agar lebih rapi
+        $nama_file = time() . '_' . $file->hashName();
         $file->storeAs('kategori', $nama_file, 'public');
 
-        // 2. Hapus file lama jika ada
         if ($kategori->gambar && Storage::disk('public')->exists('kategori/' . $kategori->gambar)) {
             Storage::disk('public')->delete('kategori/' . $kategori->gambar);
         }
 
-        // 3. Update nama file di database
         $kategori->gambar = $nama_file;
     }
 

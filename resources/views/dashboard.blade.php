@@ -27,160 +27,168 @@
             >
                 <div class="card-body p-4">
                     <div class="row g-3 mb-4">
-                        <div class="col-md">
-                            <a
-                                href="{{ route('buku') }}"
-                                class="text-decoration-none"
-                            >
-                                <div
-                                    class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-primary border-4 hover-shadow transition"
+                        @if (Auth::user()->role === 'kepper')
+                            <div class="col-md">
+                                <a
+                                    href="{{ route('buku') }}"
+                                    class="text-decoration-none"
                                 >
-                                    <div class="d-flex align-items-center">
-                                        <div
-                                            class="bg-primary bg-opacity-10 p-3 rounded-3 me-3"
-                                        >
-                                            <i
-                                                class="bi bi-journal-bookmark text-primary fs-4"
-                                            ></i>
-                                        </div>
-                                        <div>
-                                            <small
-                                                class="text-muted d-block fw-bold"
-                                                style="font-size: 0.7rem"
-                                                >TOTAL BUKU</small
+                                    <div
+                                        class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-primary border-4 hover-shadow transition"
+                                    >
+                                        <div class="d-flex align-items-center">
+                                            <div
+                                                class="bg-primary bg-opacity-10 p-3 rounded-3 me-3"
                                             >
-                                            <h4 class="fw-bold mb-0 text-dark">
-                                                {{ $totalBuku }}
-                                            </h4>
+                                                <i
+                                                    class="bi bi-journal-bookmark text-primary fs-4"
+                                                ></i>
+                                            </div>
+                                            <div>
+                                                <small
+                                                    class="text-muted d-block fw-bold"
+                                                    style="font-size: 0.7rem"
+                                                    >TOTAL BUKU</small
+                                                >
+                                                <h4
+                                                    class="fw-bold mb-0 text-dark"
+                                                >
+                                                    {{ $totalBuku }}
+                                                </h4>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </a>
-                        </div>
-
-                        <div class="col-md">
-                            <a
-                                href="{{ route('persetujuan.data') }}"
-                                class="text-decoration-none"
-                            >
-                                <div
-                                    class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-warning border-4 hover-shadow transition"
+                                </a>
+                            </div>
+                            <div class="col-md">
+                                <a
+                                    href="{{ route('persetujuan.data') }}"
+                                    class="text-decoration-none"
                                 >
-                                    <div class="d-flex align-items-center">
-                                        <div
-                                            class="bg-warning bg-opacity-10 p-3 rounded-3 me-3"
-                                        >
-                                            <i
-                                                class="bi bi-box-arrow-right text-warning fs-4"
-                                            ></i>
-                                        </div>
-                                        <div>
-                                            <small
-                                                class="text-muted d-block fw-bold"
-                                                style="font-size: 0.7rem"
-                                                >PINJAMAN</small
+                                    <div
+                                        class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-warning border-4 hover-shadow transition"
+                                    >
+                                        <div class="d-flex align-items-center">
+                                            <div
+                                                class="bg-warning bg-opacity-10 p-3 rounded-3 me-3"
                                             >
-                                            <h4 class="fw-bold mb-0 text-dark">
-                                                {{ $totalPinjam }}
-                                            </h4>
+                                                <i
+                                                    class="bi bi-box-arrow-right text-warning fs-4"
+                                                ></i>
+                                            </div>
+                                            <div>
+                                                <small
+                                                    class="text-muted d-block fw-bold"
+                                                    style="font-size: 0.7rem"
+                                                    >PINJAMAN</small
+                                                >
+                                                <h4
+                                                    class="fw-bold mb-0 text-dark"
+                                                >
+                                                    {{ $totalPinjam }}
+                                                </h4>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </a>
-                        </div>
-
-                        <div class="col-md">
-                            <a
-                                href="{{ route('pengembalian.data') }}"
-                                class="text-decoration-none"
-                            >
-                                <div
-                                    class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-success border-4 hover-shadow transition"
+                                </a>
+                            </div>
+                            <div class="col-md">
+                                <a
+                                    href="{{ route('pengembalian.data') }}"
+                                    class="text-decoration-none"
                                 >
-                                    <div class="d-flex align-items-center">
-                                        <div
-                                            class="bg-success bg-opacity-10 p-3 rounded-3 me-3"
-                                        >
-                                            <i
-                                                class="bi bi-box-arrow-in-left text-success fs-4"
-                                            ></i>
-                                        </div>
-                                        <div>
-                                            <small
-                                                class="text-muted d-block fw-bold"
-                                                style="font-size: 0.7rem"
-                                                >KEMBALI</small
+                                    <div
+                                        class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-success border-4 hover-shadow transition"
+                                    >
+                                        <div class="d-flex align-items-center">
+                                            <div
+                                                class="bg-success bg-opacity-10 p-3 rounded-3 me-3"
                                             >
-                                            <h4 class="fw-bold mb-0 text-dark">
-                                                {{ $totalKembali }}
-                                            </h4>
+                                                <i
+                                                    class="bi bi-box-arrow-in-left text-success fs-4"
+                                                ></i>
+                                            </div>
+                                            <div>
+                                                <small
+                                                    class="text-muted d-block fw-bold"
+                                                    style="font-size: 0.7rem"
+                                                    >KEMBALI</small
+                                                >
+                                                <h4
+                                                    class="fw-bold mb-0 text-dark"
+                                                >
+                                                    {{ $totalKembali }}
+                                                </h4>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </a>
-                        </div>
-
-                        <div class="col-md">
-                            <a
-                                href="{{ route('akun_admin', ['role' => 'admin']) }}"
-                                class="text-decoration-none"
-                            >
-                                <div
-                                    class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-danger border-4 hover-shadow transition"
+                                </a>
+                            </div>
+                            <div class="col-md">
+                                <a
+                                    href="{{ route('akun_admin', ['role' => 'admin']) }}"
+                                    class="text-decoration-none"
                                 >
-                                    <div class="d-flex align-items-center">
-                                        <div
-                                            class="bg-danger bg-opacity-10 p-3 rounded-3 me-3"
-                                        >
-                                            <i
-                                                class="bi bi-shield-lock text-danger fs-4"
-                                            ></i>
-                                        </div>
-                                        <div>
-                                            <small
-                                                class="text-muted d-block fw-bold"
-                                                style="font-size: 0.7rem"
-                                                >ADMIN</small
+                                    <div
+                                        class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-danger border-4 hover-shadow transition"
+                                    >
+                                        <div class="d-flex align-items-center">
+                                            <div
+                                                class="bg-danger bg-opacity-10 p-3 rounded-3 me-3"
                                             >
-                                            <h4 class="fw-bold mb-0 text-dark">
-                                                {{ $totalAdmin }}
-                                            </h4>
+                                                <i
+                                                    class="bi bi-shield-lock text-danger fs-4"
+                                                ></i>
+                                            </div>
+                                            <div>
+                                                <small
+                                                    class="text-muted d-block fw-bold"
+                                                    style="font-size: 0.7rem"
+                                                    >ADMIN</small
+                                                >
+                                                <h4
+                                                    class="fw-bold mb-0 text-dark"
+                                                >
+                                                    {{ $totalAdmin }}
+                                                </h4>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </a>
-                        </div>
-
-                        <div class="col-md">
-                            <a
-                                href="{{ route('akun_user', ['role' => 'user']) }}"
-                                class="text-decoration-none"
-                            >
-                                <div
-                                    class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-info border-4 hover-shadow transition"
+                                </a>
+                            </div>
+                            <div class="col-md">
+                                <a
+                                    href="{{ route('akun_user', ['role' => 'user']) }}"
+                                    class="text-decoration-none"
                                 >
-                                    <div class="d-flex align-items-center">
-                                        <div
-                                            class="bg-info bg-opacity-10 p-3 rounded-3 me-3"
-                                        >
-                                            <i
-                                                class="bi bi-people text-info fs-4"
-                                            ></i>
-                                        </div>
-                                        <div>
-                                            <small
-                                                class="text-muted d-block fw-bold"
-                                                style="font-size: 0.7rem"
-                                                >USER</small
+                                    <div
+                                        class="card border-0 shadow-sm h-100 rounded-4 p-3 border-start border-info border-4 hover-shadow transition"
+                                    >
+                                        <div class="d-flex align-items-center">
+                                            <div
+                                                class="bg-info bg-opacity-10 p-3 rounded-3 me-3"
                                             >
-                                            <h4 class="fw-bold mb-0 text-dark">
-                                                {{ $totalUser }}
-                                            </h4>
+                                                <i
+                                                    class="bi bi-people text-info fs-4"
+                                                ></i>
+                                            </div>
+                                            <div>
+                                                <small
+                                                    class="text-muted d-block fw-bold"
+                                                    style="font-size: 0.7rem"
+                                                    >USER</small
+                                                >
+                                                <h4
+                                                    class="fw-bold mb-0 text-dark"
+                                                >
+                                                    {{ $totalUser }}
+                                                </h4>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </a>
-                        </div>
+                                </a>
+                            </div>
+                            @endif
                     </div>
                     {{-- akumulasi --}}
                     <div class="row g-4">
