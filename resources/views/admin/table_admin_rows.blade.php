@@ -11,44 +11,48 @@
             </span>
         </td>
         <td>
-            <button
-                type="button"
-                onclick="resetPasswordAdmin({{ $admin->id }}, '{{ $admin->name }}')"
-                class="btn btn-primary text-white"
-                title="Reset Password"
-            >
-                <i class="fas fa-key"></i>
-            </button>
-            <form
-                id="delete-form-{{ $admin->id }}"
-                action="{{ route('admin.destroy', $admin->id) }}"
-                method="POST"
-                class="inline-block m-0"
-            >
-                @csrf
-                @method ('DELETE')
+            @if ($admin->role === 'petugas')
                 <button
                     type="button"
-                    onclick="confirmDelete({{ $admin->id }})"
-                    class="btn btn-danger"
+                    onclick="resetPasswordAdmin({{ $admin->id }}, '{{ $admin->name }}')"
+                    class="btn btn-primary text-white"
+                    title="Reset Password"
                 >
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-key"></i>
                 </button>
-            </form>
-            <form
-                id="update-pw-form-{{ $admin->id }}"
-                action="{{ route('admin.resetPassword', $admin->id) }}"
-                method="POST"
-                style="display: none"
-            >
-                @csrf
-                @method ('PUT')
-                <input
-                    type="hidden"
-                    name="password"
-                    id="pw-input-{{ $admin->id }}"
-                />
-            </form>
+                <form
+                    id="delete-form-{{ $admin->id }}"
+                    action="{{ route('admin.destroy', $admin->id) }}"
+                    method="POST"
+                    class="inline-block m-0"
+                >
+                    @csrf
+                    @method ('DELETE')
+                    <button
+                        type="button"
+                        onclick="confirmDelete({{ $admin->id }})"
+                        class="btn btn-danger"
+                    >
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+                <form
+                    id="update-pw-form-{{ $admin->id }}"
+                    action="{{ route('admin.resetPassword', $admin->id) }}"
+                    method="POST"
+                    style="display: none"
+                >
+                    @csrf
+                    @method ('PUT')
+                    <input
+                        type="hidden"
+                        name="password"
+                        id="pw-input-{{ $admin->id }}"
+                    />
+                </form>
+            @else
+                <span class="badge bg-secondary">Utama (No Action)</span>
+            @endif
         </td>
     </tr>
 @endforeach

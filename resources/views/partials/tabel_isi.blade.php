@@ -20,7 +20,7 @@
                         <img
                             src="{{ asset('storage/' . $buku->gambar) }}"
                             alt="cover"
-                            style="width: 50px; height: auto"
+                            style="width: 40px; height: 50px"
                             class="rounded mx-auto"
                         />
                     @else
@@ -43,40 +43,42 @@
                     <div
                         class="d-flex justify-content-center align-items-center gap-1"
                     >
-                        <a
-                            href="{{ route('buku.edit', $buku->id_buku) }}"
-                            class="btn btn-warning text-white"
-                            style="width: 70px"
-                            ><i class="fa-solid fa-pen-to-square"></i
-                        ></a>
-
+                        @if (auth()->user()->role === 'petugas')
+                            <a
+                                href="{{ route('buku.edit', $buku->id_buku) }}"
+                                class="btn btn-warning text-white"
+                                style="width: 70px"
+                                ><i class="fa-solid fa-pen-to-square"></i
+                            ></a>
+                        @endif
                         <a
                             href="{{ route('buku.detail', $buku->id_buku) }}"
                             class="btn btn-secondary"
                             style="width: 70px"
                             ><i class="fa-solid fa-eye"></i
                         ></a>
-
-                        <form
-                            action="{{ route('buku.destroy', $buku->id_buku) }}"
-                            method="POST"
-                            class="m-0"
-                        >
-                            @csrf
-                            @method ('DELETE')
-                            <button
-                                type="submit"
-                                class="btn btn-danger"
-                                style="width: 70px"
-                                onclick="
-                                    return confirm(
-                                        'Apakah Anda yakin ingin menghapus buku ini?'
-                                    );
-                                "
+                        @if (auth()->user()->role === 'petugas')
+                            <form
+                                action="{{ route('buku.destroy', $buku->id_buku) }}"
+                                method="POST"
+                                class="m-0"
                             >
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </form>
+                                @csrf
+                                @method ('DELETE')
+                                <button
+                                    type="submit"
+                                    class="btn btn-danger"
+                                    style="width: 70px"
+                                    onclick="
+                                        return confirm(
+                                            'Apakah Anda yakin ingin menghapus buku ini?'
+                                        );
+                                    "
+                                >
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </td>
             </tr>

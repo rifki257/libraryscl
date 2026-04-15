@@ -33,9 +33,11 @@
                 <div class="block px-4 py-2 text-xs text-gray-400">
                     {{ __('Manajemen Peminjaman') }}
                 </div>
-                <x-dropdown-link :href="route('admin.persetujuan')">
-                    {{ __('Konfir Peminjaman') }}
-                </x-dropdown-link>
+                @if (auth()->user()->role === 'petugas')
+                    <x-dropdown-link :href="route('admin.persetujuan')">
+                        {{ __('Konfir Peminjaman') }}
+                    </x-dropdown-link>
+                @endif
                 <x-dropdown-link :href="route('persetujuan.data')">
                     {{ __('Data Peminjaman') }}
                 </x-dropdown-link>
@@ -43,9 +45,11 @@
                 <div class="block px-4 py-2 text-xs text-gray-400">
                     {{ __('Manajemen Pengembalian') }}
                 </div>
-                <x-dropdown-link :href="route('pengembalian')">
-                    {{ __('Konfir Pengembalian') }}
-                </x-dropdown-link>
+                @if (auth()->user()->role === 'petugas')
+                    <x-dropdown-link :href="route('pengembalian')">
+                        {{ __('Konfir Pengembalian') }}
+                    </x-dropdown-link>
+                @endif
                 <x-dropdown-link :href="route('pengembalian.data')">
                     {{ __('Data Pengembalian') }}
                 </x-dropdown-link>
@@ -102,10 +106,12 @@
             </x-slot>
         </x-dropdown>
     </div>
-    <a
-        href="{{ route('admin.laporan.index') }}"
-        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md transition ease-in-out duration-150 {{ request()->routeIs('admin.laporan.index') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 bg-white hover:text-gray-700' }}"
-    >
-        {{ __('Laporan') }}
-    </a>
+    @if (auth()->user()->role === 'petugas')
+        <a
+            href="{{ route('admin.laporan.index') }}"
+            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md transition ease-in-out duration-150 {{ request()->routeIs('admin.laporan.index') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 bg-white hover:text-gray-700' }}"
+        >
+            {{ __('Laporan') }}
+        </a>
+    @endif
 </div>

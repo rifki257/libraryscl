@@ -14,14 +14,12 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {{-- Menggunakan flex-wrap agar elemen pindah ke bawah, dan justify-center agar rapi di tengah --}}
-            <div class="flex flex-wrap justify-start gap-6">
+            <div class="flex flex-wrap justify-center gap-6">
                 @foreach ($dataBuku as $buku)
                     @php
                     $isOutOfStock = $buku->jumlah <= 0;
                     $isGuest = !Auth::check();
                     
-                    // Hitung kuota pinjam
                     $totalPinjam = 0;
                     if (!$isGuest) {
                         $totalPinjam = \App\Models\Peminjaman::where('id', auth()->id())
@@ -30,7 +28,6 @@
                     }
                     $isLimit = $totalPinjam >= 6;
 
-                    // Logika URL dan Swal
                     if ($isOutOfStock) {
                         $url = 'javascript:void(0)';
                         $onclick = "Swal.fire({icon: 'error', title: 'Stok Habis', text: 'Buku tidak tersedia.', confirmButtonColor: '#ef4444'})";
@@ -45,11 +42,9 @@
                         $onclick = "";
                     }
                 @endphp
-                    {{-- Card Item --}}
                     <div
                         class="w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow border border-white/5 transition-transform hover:-translate-y-2"
                     >
-                        {{-- Area Gambar --}}
                         <div class="relative h-[240px] w-full">
                             <img
                                 src="{{ asset('storage/' . $buku->gambar) }}"
@@ -57,7 +52,6 @@
                                 class="w-full h-full object-cover {{ $isOutOfStock ? 'grayscale opacity-50' : '' }}"
                             />
 
-                            {{-- Tombol Wishlist --}}
                             @if (!$isGuest && !$isOutOfStock)
                                 <button
                                     onclick="tambahWishlist(event, {{ $buku->id_buku }}, '{{ addslashes($buku->judul) }}')"
@@ -91,11 +85,11 @@
                         >
                             <div>
                                 <h3
-                                    class="text-blue-400 font-bold text-sm line-clamp-1 mb-1 uppercase tracking-tight"
+                                    class="text-blue-400 font-bold text-sm line-clamp-1 uppercase tracking-tight"
                                 >
                                     {{ $buku->judul }}
                                 </h3>
-                                <p class="text-gray-400 text-[11px] italic line-clamp-1">
+                                <p class="text-white text-[13px] italic line-clamp-1">
                                     {{ $buku->penulis }}
                                 </p>
                                 <p class="text-gray-500 text-[10px] mb-2">

@@ -3,15 +3,24 @@
         <td>
             <input
                 type="checkbox"
-                class="user-checkbox"
+                class="siswa-checkbox"
                 value="{{ $user->id }}"
+                data-status="{{ $user->status }}"
                 data-kelas="{{ $user->kelas }}"
+                {{-- Tambahkan data-kelas --}}
+                onclick="updateBulkEditButton()"
             />
         </td>
         <td>{{ $user->nis ?? '-' }}</td>
         <td>{{ $user->name }}</td>
         <td>
-            <span class="badge bg-info text-dark">{{ $user->kelas }}</span>
+            @if ($user->status === 'alumni')
+                <span class="badge bg-dark text-white">
+                    <i class="fas fa-graduation-cap me-1"></i> Alumni
+                </span>
+            @else
+                <span class="badge bg-info text-dark">{{ $user->kelas }}</span>
+            @endif
         </td>
         <td>{{ $user->email }}</td>
         <td>{{ $user->no_hp ?? '-' }}</td>

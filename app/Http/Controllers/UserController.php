@@ -27,7 +27,7 @@ class UserController extends Controller
         });
         $admins = $query->latest()->get();
     } else {
-        $admins = $query->latest()->paginate(1); 
+        $admins = $query->latest()->paginate(10)->onEachSide(2);
     }
 
     if ($request->ajax()) {
@@ -39,33 +39,44 @@ class UserController extends Controller
 
     public function indexSiswa(Request $request)
     {
-    $query = \App\Models\User::where('role', 'anggota');
+        $query = User::where('role', 'anggota');
 
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function($q) use ($search) {
-            $q->where('name', 'like', "%$search%")
-            ->orWhere('nis', 'like', "%$search%")
-            ->orWhere('email', 'like', "%$search%")
-            ->orWhere('no_hp', 'like', "%$search%");
-        });
-    }
+        if ($request->filled('filter_kelas')) {
+            if ($request->filter_kelas === 'alumni') {
+                $query->where('status', 'alumni');
+            } else {
+                $query->where('kelas', $request->filter_kelas)
+                    ->where('status', '!=', 'alumni');
+            }
+        } else {
+            $query->where(function($q) {
+                $q->where('status', '!=', 'alumni')->orWhereNull('status');
+            });
+        }
 
-    if ($request->filled('filter_kelas')) {
-        $query->where('kelas', $request->filter_kelas);
-    }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                ->orWhere('nis', 'like', "%$search%")
+                ->orWhere('email', 'like', "%$search%")
+                ->orWhere('no_hp', 'like', "%$search%");
+            });
+        }
 
-    if ($request->ajax()) {
-        $users = $query->orderBy('kelas', 'asc')->get();
-        return view('admin.table_siswa_rows', compact('users'))->render();
-    }
+        $query->orderBy('kelas', 'asc');
 
-    $users = $query->orderBy('kelas', 'asc')->paginate(10)->withQueryString();
+        if ($request->ajax()) {
+            $users = $query->get();
+            return view('admin.table_siswa_rows', compact('users'))->render();
+        }
+
+        $users = $query->paginate(10)->onEachSide(2);
     
-    return view('partials.siswa', [
-        'users' => $users,
-        'title' => 'Daftar Siswa'
-    ]);
+        return view('partials.siswa', [
+            'users' => $users,
+            'title' => 'Daftar Siswa'
+        ]);
     }
 
     public function create()
@@ -218,4 +229,26 @@ class UserController extends Controller
         ], 500);
     }
 }
+
+public function bulkAlumni(Request $request)
+    {
+        $ids = $request->ids; 
+        
+        if (!$ids || !is_array($ids)) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada siswa terpilih'], 400);
+        }
+
+        $updated = User::whereIn('id', $ids)
+                    ->where('role', 'anggota')
+                    ->where('status', '!=', 'alumni')
+                    ->update([
+                        'status' => 'alumni', 
+                        'kelas' => '-' 
+                    ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Berhasil memindahkan $updated siswa ke daftar alumni."
+        ]);
+    }
 }

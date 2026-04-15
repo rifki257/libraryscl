@@ -11,6 +11,7 @@
             <div class="d-flex align-items-center gap-2">
                 <div id="bulk-edit-wrapper" class="mb-0" style="display: none">
                     <button
+                        id="btn-bulk-edit"
                         type="button"
                         onclick="openBulkEditModal()"
                         class="btn btn-warning font-bold shadow-sm"
@@ -20,6 +21,15 @@
                             >0</span
                         >
                         Data)
+                    </button>
+                    <button
+                        id="btn-make-alumni"
+                        type="button"
+                        onclick="makeAlumni()"
+                        class="btn btn-outline-dark shadow-sm"
+                    >
+                        <i class="fas fa-graduation-cap"></i> Set Alumni (Kelas
+                        12)
                     </button>
                 </div>
                 <div class="position-relative shadow-sm" style="width: 300px">
@@ -69,8 +79,8 @@
                         style="width: 300px; border-radius: 12px"
                     >
                         <div class="input-group input-group-sm mb-3"
-                        <span class="input-group-text bg-light border-end-0"
-                            ><i class="fas fa-search text-muted"></i
+                        <span
+                            class="input-group-text bg-light border-end-0"
                         ></span>
                         <input
                             type="text"
@@ -89,6 +99,20 @@
                             scrollbar-width: thin;
                         "
                     >
+                        <h2
+                            class="dropdown-header border-bottom bg-dark text-white fw-bold"
+                        >
+                            STATUS KHUSUS
+                        </h2>
+                        <button
+                            class="dropdown-item filter-opt text-danger fw-bold"
+                            data-value="alumni"
+                            type="button"
+                        >
+                            <i class="fas fa-graduation-cap me-2"></i> DATA
+                            ALUMNI
+                        </button>
+                        <hr class="dropdown-divider" />
                         @php
         $jurusanConfig = [
             'PPLG' => ['levels' => ['X', 'XI', 'XII'], 'count' => 3],
@@ -158,6 +182,73 @@
                 </thead>
                 <tbody id="siswaTableBody" class="text-center">
                     @include ('admin.table_siswa_rows')
+                    <div
+                        class="modal fade"
+                        id="bulkEditModal"
+                        tabindex="-1"
+                        aria-hidden="true"
+                    >
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        Edit Kelas Secara Masal
+                                    </h5>
+                                    <button
+                                        type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"
+                                    ></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Ubah kelas untuk <span id="modal-selected-count" class="fw-bold">0</span> siswa yang dipilih.</p>
+                                    <div class="form-group">
+                                        <label
+                                            for="new_kelas"
+                                            class="form-label"
+                                            >Pilih Kelas Baru</label
+                                        >
+                                        <select
+                                            id="new_kelas"
+                                            class="form-select"
+                                        >
+                                            <option value="">
+                                                -- Pilih Kelas --
+                                            </option>
+                                            @foreach ($jurusanConfig as $namaJurusan => $config)
+                                                @foreach ($config['levels'] as $tkt)
+                                                    @for ($i = 1; $i <= $config['count']; $i++)
+                                                        <option
+                                                            value="{{ "$tkt $namaJurusan $i" }}"
+                                                        >
+                                                            {{ "$tkt $namaJurusan $i" }}
+                                                        </option>
+                                                    @endfor
+                                                @endforeach
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onclick="submitBulkEdit()"
+                                        class="btn btn-primary"
+                                    >
+                                        Simpan Perubahan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </tbody>
             </table>
             <div class="mt-4">{{ $users->links() }}</div>
@@ -181,6 +272,9 @@
                             filter_kelas: currentKelas,
                         },
                         beforeSend: function () {
+                            $('#select-all').prop('checked', false);
+                            $('#bulk-edit-wrapper').hide();
+
                             $('#siswaTableBody').html(
                                 '<tr><td colspan="7" class="text-center">Memuat data...</td></tr>'
                             );
@@ -221,10 +315,18 @@
                     e.preventDefault();
                     currentKelas = $(this).data('value');
 
-                    // Update UI
-                    $('#selectedKelasLabel').text(currentKelas);
-                    $('#btnResetFilter').fadeIn();
+                    // Update UI Label
+                    if (currentKelas === 'alumni') {
+                        $('#selectedKelasLabel').html(
+                            '<span class="text-danger fw-bold">ALUMNI</span>'
+                        );
+                    } else if (currentKelas === '') {
+                        $('#selectedKelasLabel').text('Pilih Kelas');
+                    } else {
+                        $('#selectedKelasLabel').text(currentKelas);
+                    }
 
+                    $('#btnResetFilter').fadeIn();
                     fetchSiswa();
                 });
 
@@ -335,5 +437,207 @@
                     }
                 });
             });
+            // Fungsi untuk Check/Uncheck Semua
+            window.toggleSelectAll = function () {
+                let isChecked = $('#select-all').prop('checked');
+                // Cari semua checkbox di dalam tbody yang memiliki class .siswa-checkbox
+                $('.siswa-checkbox').prop('checked', isChecked);
+                updateBulkEditButton();
+            };
+
+            // Fungsi untuk update tampilan tombol Edit Kelas
+            window.updateBulkEditButton = function () {
+                let selectedCheckboxes = $('.siswa-checkbox:checked');
+                let selectedCount = selectedCheckboxes.length;
+
+                if (selectedCount === 0) {
+                    $('#bulk-edit-wrapper').fadeOut();
+                    return;
+                }
+
+                let hasAlumni = false;
+                let allIsKelas12 = true;
+
+                selectedCheckboxes.each(function () {
+                    let status = $(this).data('status');
+                    let kelas = $(this).data('kelas').toString().toUpperCase(); // Ambil teks kelas (ex: "XII PPLG 1")
+
+                    // Cek jika ada yang sudah alumni
+                    if (status === 'alumni') {
+                        hasAlumni = true;
+                    }
+
+                    // Cek jika ada yang BUKAN kelas 12
+                    // Logika: Jika string kelas tidak dimulai dengan "XII", berarti bukan kelas 12
+                    if (!kelas.startsWith('XII')) {
+                        allIsKelas12 = false;
+                    }
+                });
+
+                // Tampilkan Wrapper Utama
+                $('#bulk-edit-wrapper').fadeIn();
+                $('#selected-count').text(selectedCount);
+
+                // KONDISI 1: Tombol Edit Kelas
+                // Hanya muncul jika TIDAK ADA alumni yang terpilih
+                if (!hasAlumni) {
+                    $('#btn-bulk-edit').show();
+                } else {
+                    $('#btn-bulk-edit').hide();
+                }
+
+                // KONDISI 2: Tombol Set Alumni
+                // Hanya muncul jika SEMUA yang dipilih adalah Kelas 12 dan BELUM alumni
+                if (allIsKelas12 && !hasAlumni) {
+                    $('#btn-make-alumni').show();
+                } else {
+                    $('#btn-make-alumni').hide();
+                }
+
+                // Jika kedua tombol akhirnya hidden karena seleksi campuran, sembunyikan wrappernya
+                if (
+                    $('#btn-bulk-edit').is(':hidden') &&
+                    $('#btn-make-alumni').is(':hidden')
+                ) {
+                    $('#bulk-edit-wrapper').hide();
+                }
+            };
+
+            // Event listener untuk checkbox individual (menggunakan delegasi karena data di-load via AJAX)
+            $(document).on('change', '.siswa-checkbox', function () {
+                updateBulkEditButton();
+
+                // Jika satu checkbox di-uncheck, uncheck juga master "Select All"
+                if (!$(this).prop('checked')) {
+                    $('#select-all').prop('checked', false);
+                }
+
+                // Jika semua checkbox terpilih, check master "Select All"
+                if (
+                    $('.siswa-checkbox:checked').length === $('.siswa-checkbox').length &&
+                    $('.siswa-checkbox').length > 0
+                ) {
+                    $('#select-all').prop('checked', true);
+                }
+            });
+
+            window.openBulkEditModal = function () {
+                let selectedCount = $('.siswa-checkbox:checked').length;
+                $('#modal-selected-count').text(selectedCount);
+                $('#bulkEditModal').modal('show');
+            };
+
+            window.submitBulkEdit = function () {
+                let selectedIds = [];
+                $('.siswa-checkbox:checked').each(function () {
+                    selectedIds.push($(this).val());
+                });
+
+                let newKelas = $('#new_kelas').val();
+
+                if (!newKelas) {
+                    Swal.fire(
+                        'Peringatan',
+                        'Silakan pilih kelas baru terlebih dahulu!',
+                        'warning'
+                    );
+                    return;
+                }
+
+                $.ajax({
+                    url: '{{ route("users.bulkUpdateKelas") }}', // Pastikan Route ini sudah dibuat
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        ids: selectedIds,
+                        kelas: newKelas,
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            $('#bulkEditModal').modal('hide');
+                            Swal.fire('Berhasil!', response.success, 'success');
+                            fetchSiswa(); // Refresh tabel
+                            $('#bulk-edit-wrapper').hide();
+                            $('#select-all').prop('checked', false);
+                        }
+                    },
+                    error: function () {
+                        Swal.fire(
+                            'Error!',
+                            'Terjadi kesalahan saat memperbarui data.',
+                            'error'
+                        );
+                    },
+                });
+            };
+            window.makeAlumni = function () {
+                let selectedIds = [];
+                $('.siswa-checkbox:checked').each(function () {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length === 0) {
+                    Swal.fire(
+                        'Peringatan',
+                        'Pilih minimal satu siswa terlebih dahulu!',
+                        'warning'
+                    );
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Konfirmasi Alumni',
+                    text: `Apakah Anda yakin ingin membekukan ${selectedIds.length} akun siswa terpilih menjadi alumni?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Proses!',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Tampilkan loading saat proses
+                        Swal.fire({
+                            title: 'Sedang Memproses...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            },
+                        });
+
+                        $.ajax({
+                            url: '{{ route("users.bulkAlumni") }}',
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                ids: selectedIds,
+                            },
+                            success: function (response) {
+                                Swal.close(); // Tutup loading
+
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Berhasil!',
+                                        text: response.success,
+                                        icon: 'success',
+                                    }).then(() => {
+                                        // Refresh tabel dan sembunyikan tombol
+                                        location.reload(); // Atau panggil fetchSiswa() jika pakai AJAX
+                                    });
+                                }
+                            },
+                            error: function (xhr) {
+                                Swal.close();
+                                let errorMsg = 'Terjadi kesalahan pada server.';
+                                if (xhr.responseJSON && xhr.responseJSON.error) {
+                                    errorMsg = xhr.responseJSON.error;
+                                }
+                                Swal.fire('Gagal!', errorMsg, 'error');
+                                console.error(xhr.responseText); // Cek detail error di Inspect Element -> Console
+                            },
+                        });
+                    }
+                });
+            };
         </script></x-app-layout
 >

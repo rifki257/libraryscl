@@ -31,7 +31,7 @@ class BukuController extends Controller
         $query->where('id_kategori', $request->filter_kategori);
     }
 
-    $dataBuku = $query->paginate(6)->withQueryString();
+    $dataBuku = $query->paginate(6)->onEachSide(2);
 
     if ($request->ajax()) {
         return view('partials.tabel_isi', compact('dataBuku'))->render();
@@ -57,7 +57,7 @@ class BukuController extends Controller
             'penulis' => 'required|max:225',
             'jumlah' => 'required|numeric',
             'id_kategori' => 'required|exists:kategoris,id_kategori',
-            'gambar' => 'nullable|image|max:2048',
+            'gambar' => 'nullable|image|max:5048',
         ]);
 
         $data = $request->all();
@@ -66,7 +66,7 @@ class BukuController extends Controller
         }
 
         Buku::create($data);
-        return redirect()->route('buku')->with('success', 'Buku berhasil ditambah!');
+        return redirect()->back()->with('success', 'Buku berhasil ditambah!');
     }
 
     // detail

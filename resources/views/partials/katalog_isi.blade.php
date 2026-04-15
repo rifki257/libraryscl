@@ -26,7 +26,7 @@
         {{-- Scroll Container Buku --}}
         <div class="relative group">
             <div
-                class="flex flex-row items-center overflow-x-auto pb-4 scrollbar-hide scroll-smooth space-x-5"
+                class="flex flex-row justify-center items-start overflow-x-auto pb-4 scrollbar-hide scroll-smooth space-x-5"
             >
                 @foreach ($kat->buku as $buku)
                     @php
@@ -93,7 +93,7 @@
                                 >
                                     {{ $buku->judul }}
                                 </h3>
-                                <p class="text-white text-[13px] line-clamp-1 italic">{{ $buku->penulis }}</p>
+                                <p class="text-white text-[12px] line-clamp-1 italic">{{ $buku->penulis }}</p>
                                 <p class="text-gray-500 text-[12px]">Stok: <span class="{{ $isOutOfStock ? 'text-red-500' : 'text-green-500' }}">{{ $buku->jumlah }}</span></p>
                             </div>
 

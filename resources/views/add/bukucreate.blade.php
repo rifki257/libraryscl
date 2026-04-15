@@ -6,6 +6,11 @@
     />
 </head>
 <x-app-layout>
+    @if (session('success'))
+        <div class="bg-green-500 text-white p-4 rounded mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
     <x-slot name="header">
         <div class="d-flex align-items-center gap-2">
             <a
@@ -103,7 +108,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label"
-                                            >Kategori Buku</label
+                                            >Kategori</label
                                         >
                                         <select
                                             name="id_kategori"
@@ -124,7 +129,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn btn-success mt-3" id="simpan" style="width: 80px">
+                            <button
+                                class="btn btn-success mt-3"
+                                id="simpan"
+                                style="width: 80px"
+                            >
                                 <i class="fa-solid fa-floppy-disk"></i>
                             </button>
                             <a

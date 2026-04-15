@@ -6,15 +6,16 @@
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center w-100">
             {{-- SISI KIRI: Tombol Kategori --}}
-            <div class="d-flex align-items-center">
-                <a
-                    href="{{ route('kategori.buku') }}"
-                    class="btn btn-success d-flex align-items-center gap-1 shadow-sm"
-                >
-                    <i class="bi bi-list-ul"></i> Kategori
-                </a>
-            </div>
-
+            @if (auth()->user()->role === 'petugas')
+                <div class="d-flex align-items-center">
+                    <a
+                        href="{{ route('kategori.buku') }}"
+                        class="btn btn-success d-flex align-items-center gap-1 shadow-sm"
+                    >
+                        <i class="bi bi-list-ul"></i> Kategori
+                    </a>
+                </div>
+            @endif
             {{-- SISI KANAN: Filter dan Tambah Buku (Sejajar) --}}
             <div
                 class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end"
@@ -36,10 +37,7 @@
                         {{-- ps-5 untuk ruang ikon kiri, pe-5 untuk ruang tombol X --}}
                         placeholder="Cari judul atau penulis..."
                         value="{{ request('search') }}"
-                        style="
-                            border-radius: 8px;
-                            border: 1px solid #ddd;
-                        "
+                        style="border-radius: 8px; border: 1px solid #ddd"
                         autocomplete="off"
                     />
 
@@ -134,12 +132,14 @@
                 </div>
 
                 {{-- Tombol Tambah Buku --}}
-                <a
-                    href="{{ route('buku.create') }}"
-                    class="btn btn-success d-flex align-items-center gap-1 shadow-sm"
-                >
-                    <i class="bi bi-plus-lg"></i> Buku
-                </a>
+                @if (auth()->user()->role === 'petugas')
+                    <a
+                        href="{{ route('buku.create') }}"
+                        class="btn btn-success d-flex align-items-center gap-1 shadow-sm"
+                    >
+                        <i class="bi bi-plus-lg"></i> Buku
+                    </a>
+                @endif
             </div>
         </div>
     </x-slot>

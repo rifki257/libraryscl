@@ -18,7 +18,7 @@ public function index(Request $request)
         $query->where('nama_kategori', 'like', '%' . $request->search . '%');
     }
 
-    $kategoris = $query->paginate(3); 
+    $kategoris = $query->paginate(5)->onEachSide(2);
 
     if ($request->ajax()) {
         return response()->json([
@@ -31,14 +31,10 @@ public function index(Request $request)
 
 public function katalog()
 {
-    // 1. Ambil SEMUA kategori untuk baris ke samping (bawah)
-    // Kita ambil relasi buku dengan limit 6 untuk preview
     $allKategori = Kategori::with(['buku' => function($q) {
-        $q->take(6); 
+        $q->take(5); 
     }])->withCount('buku')->get();
 
-    // 2. Ambil 5 Kategori Terpopuler (atas) dari koleksi yang sudah ada
-    // Kita urutkan berdasarkan buku_count secara desc dan ambil 5
     $topKategori = $allKategori->sortByDesc('buku_count')->take(5);
 
     return view('katalog', compact('allKategori', 'topKategori'));
@@ -47,61 +43,68 @@ public function katalog()
     public function show($id)
     {
     $kategori = Kategori::findOrFail($id);
-    $dataBuku = \App\Models\Buku::where('id_kategori', $id)->paginate(6);
+    $dataBuku = \App\Models\Buku::where('id_kategori', $id)->get();
     return view('isikategori', compact('kategori', 'dataBuku'));
     }
 
     // proses buat kategori
     public function store(Request $request)
-    {
-        $request->validate([
-            'nama_kategori' => 'required|string|max:255',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048' 
-        ]);
+{
+    $request->validate([
+        'nama_kategori' => 'required|string|max:255',
+        // Tambahkan webp, bmp, tiff dan perbesar max ke 5MB (5120) atau sesuai kebutuhan
+        'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg,gif,bmp|max:5120' 
+    ]);
 
-        $nama_file = null;
+    $nama_file = null;
 
-        if ($request->hasFile('gambar')) {
-            $file = $request->file('gambar');
-            $nama_file = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('kategori', $nama_file, 'public');
-        }
-
-        Kategori::create([
-            'nama_kategori' => $request->nama_kategori,
-            'gambar' => $nama_file,
-        ]);
-
-        return redirect()->back()->with('success', 'Kategori berhasil ditambahkan!');
+    if ($request->hasFile('gambar')) {
+        $file = $request->file('gambar');
+        // Gunakan hashName() lebih aman agar tidak ada karakter aneh di nama file
+        $nama_file = time() . '_' . $file->hashName(); 
+        $file->storeAs('kategori', $nama_file, 'public');
     }
+
+    Kategori::create([
+        'nama_kategori' => $request->nama_kategori,
+        'gambar' => $nama_file,
+    ]);
+
+    return redirect()->back()->with('success', 'Kategori berhasil ditambahkan!');
+}
 
     // update
     public function update(Request $request, $id)
-    {
-        $kategori = Kategori::findOrFail($id);
+{
+    $kategori = Kategori::findOrFail($id);
 
-        $request->validate([
-            'nama_kategori' => 'required|string|max:255',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
-        ]);
+    $request->validate([
+        'nama_kategori' => 'required|string|max:255',
+        // Menambahkan format webp, svg, gif, bmp dan menaikkan limit ke 5MB
+        'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg,gif,bmp|max:5120'
+    ]);
 
-        if ($request->hasFile('gambar')) {
-            if ($kategori->gambar && Storage::disk('public')->exists('kategori/' . $kategori->gambar)) {
-                Storage::disk('public')->delete('kategori/' . $kategori->gambar);
-            }
+    $kategori->nama_kategori = $request->nama_kategori;
 
-            $file = $request->file('gambar');
-            $nama_file = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('kategori', $nama_file, 'public');
-            
-            $kategori->gambar = $nama_file;
+    if ($request->hasFile('gambar')) {
+        // 1. Simpan file baru dulu
+        $file = $request->file('gambar');
+        $nama_file = time() . '_' . $file->hashName(); // Pakai hashName agar lebih rapi
+        $file->storeAs('kategori', $nama_file, 'public');
+
+        // 2. Hapus file lama jika ada
+        if ($kategori->gambar && Storage::disk('public')->exists('kategori/' . $kategori->gambar)) {
+            Storage::disk('public')->delete('kategori/' . $kategori->gambar);
         }
 
-        $kategori->nama_kategori = $request->nama_kategori;
-        $kategori->save();
-
-        return redirect()->back()->with('success', 'Kategori berhasil diperbarui!');
+        // 3. Update nama file di database
+        $kategori->gambar = $nama_file;
     }
+
+    $kategori->save();
+
+    return redirect()->back()->with('success', 'Kategori berhasil diperbarui!');
+}
 
     // hapus
     public function destroy($id)

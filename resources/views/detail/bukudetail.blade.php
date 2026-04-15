@@ -82,12 +82,14 @@
                                 </tr>
                             </tbody>
                         </table>
+                        @if (auth()->user()->role === 'petugas')
                         <a
                             href="{{ route('buku.edit', $buku->id_buku) }}"
                             class="btn btn-warning text-white mt-2"
                             style="width: 80px"
                             id="edit"
                             ><i class="fa-solid fa-pen-to-square"></i></a>
+                        @endif
                         <a
                             href="{{ route('buku') }}"
                             class="btn btn-secondary mt-2" id="kembali"

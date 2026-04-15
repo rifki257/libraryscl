@@ -8,7 +8,7 @@
             <a
                 href="{{ route('buku') }}"
                 class="btn btn-secondary d-flex align-items-center justify-content-center"
-                style="width: 80px;"
+                style="width: 80px"
             >
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
@@ -27,10 +27,7 @@
                         id="liveSearch"
                         class="form-control ps-5 pe-5"
                         placeholder="Cari kategori..."
-                        style="
-                            border-radius: 8px;
-                            border: 1px solid #ddd;
-                        "
+                        style="border-radius: 8px; border: 1px solid #ddd"
                         autocomplete="off"
                     />
                     {{-- Tombol X (Reset) --}}
@@ -55,7 +52,7 @@
                         $dispatch('open-modal', 'tambah-kategori')
                     "
                     class="btn btn-success d-flex align-items-center gap-2 px-3"
-                    style="border-radius: 8px;"
+                    style="border-radius: 8px"
                 >
                     <i class="bi bi-plus-lg"></i>
                     <span class="fw-bold text-nowrap">Kategori</span>
@@ -80,9 +77,10 @@
                     @include ('admin.table_rows')
                 </tbody>
             </table>
+             <div class="mt-10">{{ $kategoris->links() }}</div>
         </div>
     </div>
-    <div class="mt-10">{{ $kategoris->links() }}</div>
+
     {{-- halaman buat --}}
     <x-modal name="tambah-kategori" focusable>
         <form
@@ -116,8 +114,8 @@
                     name="gambar"
                     class="form-control"
                     accept="image/*"
-                    required
                 />
+                <p class="text-muted small">Format: jpg, png, webp, gif. Max: 5MB</p>
                 @error ('gambar')
                     <div class="text-danger small mt-1">{{ $message }}</div>
                 @enderror

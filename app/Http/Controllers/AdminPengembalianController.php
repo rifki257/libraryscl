@@ -27,7 +27,7 @@ class AdminPengembalianController extends Controller
         });
         $semuaPeminjaman = $query->latest()->get();
     } else {
-        $semuaPeminjaman = $query->latest()->paginate(1);
+        $semuaPeminjaman = $query->latest()->paginate(6)->onEachSide(2);
     }
 
     if ($request->ajax()) {
@@ -96,7 +96,7 @@ class AdminPengembalianController extends Controller
         });
         $semuaPeminjaman = $query->latest()->get(); 
     } else {
-        $semuaPeminjaman = $query->latest()->paginate(2); 
+        $semuaPeminjaman = $query->latest()->paginate(2)->onEachSide(2);
     }
 
     if ($request->ajax()) {

@@ -43,7 +43,7 @@ class PeminjamanController extends Controller
 
         $semuaPeminjaman = $query->latest()->get();
     } else {
-        $semuaPeminjaman = $query->latest()->paginate(5);
+        $semuaPeminjaman = $query->latest()->paginate(5)->onEachSide(2);
     }
 
     if ($request->ajax()) {
@@ -207,52 +207,61 @@ class PeminjamanController extends Controller
 
     // minjam banyak
     public function storeMasal(Request $request)
-    {
-        $request->validate([
-            'id_buku'       => 'required|array',
-            'tgl_kembali'   => 'required|array',
-            'tgl_kembali.*' => 'required|date',
-        ]);
+{
+    $request->validate([
+        'id_buku'       => 'required|array',
+        'tgl_kembali'   => 'required|array',
+        'tgl_kembali.*' => 'required|date',
+    ]);
 
-        $limitMaksimal = 6;
-        $userId = Auth::id();
+    $limitMaksimal = 6;
+    $user = Auth::user(); // Mengambil objek user yang sedang login
 
-        $totalBukuAktif = Peminjaman::where('id', $userId)
-            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu', 'ajukan_kembali'])
-            ->count();
-
-        $jumlahBaru = count($request->id_buku);
-
-        if (($totalBukuAktif + $jumlahBaru) > $limitMaksimal) {
-            $sisaSlot = $limitMaksimal - $totalBukuAktif;
-            return back()->with('error', "Gagal! Sisa kuota pinjam kamu hanya $sisaSlot buku lagi.");
-        }
-
-        try {
-            DB::beginTransaction();
-            foreach ($request->id_buku as $key => $id) {
-                Peminjaman::create([
-                    'id'              => $userId,
-                    'id_buku'         => $id,
-                    'tgl_pinjam'      => now(),
-                    'tgl_jatuh_tempo' => $request->tgl_kembali[$key],
-                    'status'          => 'menunggu',
-                    'denda'           => 0,
-                ]);
-
-                $buku = Buku::where('id_buku', $id)->first();
-                if ($buku) {
-                    $buku->decrement('jumlah');
-                }
-                Wishlist::where('id', $userId)->where('id_buku', $id)->delete();
-            }
-            DB::commit();
-            return redirect()->route('mypinjaman')->with('success', 'Berhasil mengajukan pinjaman!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal: ' . $e->getMessage());
-        }
+    // --- PROTEKSI ALUMNI ---
+    // Jika status user adalah alumni, langsung tendang balik dengan pesan error
+    if ($user->status === 'alumni') {
+        return back()->with('error', 'Gagal! Akun berstatus Alumni tidak diperbolehkan melakukan peminjaman buku.');
     }
+
+    $userId = $user->id;
+
+    // Cek kuota pinjam aktif
+    $totalBukuAktif = Peminjaman::where('id', $userId)
+        ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu', 'ajukan_kembali'])
+        ->count();
+
+    $jumlahBaru = count($request->id_buku);
+
+    if (($totalBukuAktif + $jumlahBaru) > $limitMaksimal) {
+        $sisaSlot = $limitMaksimal - $totalBukuAktif;
+        return back()->with('error', "Gagal! Sisa kuota pinjam kamu hanya $sisaSlot buku lagi.");
+    }
+
+    try {
+        DB::beginTransaction();
+        foreach ($request->id_buku as $key => $id) {
+            Peminjaman::create([
+                'id'              => $userId,
+                'id_buku'         => $id,
+                'tgl_pinjam'      => now(),
+                'tgl_jatuh_tempo' => $request->tgl_kembali[$key],
+                'status'          => 'menunggu',
+                'denda'           => 0,
+            ]);
+
+            $buku = Buku::where('id_buku', $id)->first();
+            if ($buku) {
+                $buku->decrement('jumlah');
+            }
+            Wishlist::where('id', $userId)->where('id_buku', $id)->delete();
+        }
+        DB::commit();
+        return redirect()->route('mypinjaman')->with('success', 'Berhasil mengajukan pinjaman!');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Gagal: ' . $e->getMessage());
+    }
+}
 
     // tolak peminjaman
     public function tolakPinjam($id)
@@ -300,7 +309,7 @@ class PeminjamanController extends Controller
         $query->where('status', 'kembali');
     }
 
-    $semuaPeminjaman = $query->latest()->paginate(20)->withQueryString();
+    $semuaPeminjaman = $query->latest()->paginate(10)->onEachSide(2);
 
     return view('admin.laporan', compact('semuaPeminjaman', 'tgl_mulai', 'tgl_selesai', 'jenis'));
     }
@@ -349,7 +358,7 @@ class PeminjamanController extends Controller
         return $q->where('status', $request->status);
     });
 
-    $riwayat = $query->paginate(10)->withQueryString();
+    $riwayat = $query->paginate(10)->onEachSide(2);
 
     return view('laporan_user', compact('riwayat'));
     }

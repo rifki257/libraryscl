@@ -69,7 +69,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ->name('admin.reset_password_siswa');
     Route::delete('/admin/siswa/{id}', [UserController::class, 'destroySiswa'])
     ->name('admin.destroy_siswa');
-    
+    Route::post('/admin/siswa/bulk-update-kelas', [UserController::class, 'bulkUpdateKelas'])->name('users.bulkUpdateKelas');
+    Route::post('/admin/siswa/bulk-alumni', [UserController::class, 'bulkAlumni'])->name('users.bulkAlumni');
 
     // Profilecontroller
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
