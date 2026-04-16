@@ -20,7 +20,7 @@ class WishlistController extends Controller
             ->get();
 
         $totalDipinjam = Peminjaman::where('id', $userId)
-            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu'])
+            ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu', 'ajukan_kembali'])
             ->count();
 
         $sisaJatah = 6 - $totalDipinjam;

@@ -94,9 +94,9 @@ class AdminPengembalianController extends Controller
                 $b->where('judul', 'like', '%' . $search . '%');
             });
         });
-        $semuaPeminjaman = $query->latest()->get(); 
+        $semuaPeminjaman = $query->latest()->paginate(10)->onEachSide(2);
     } else {
-        $semuaPeminjaman = $query->latest()->paginate(2)->onEachSide(2);
+        $semuaPeminjaman = $query->latest()->paginate(10)->onEachSide(2);
     }
 
     if ($request->ajax()) {

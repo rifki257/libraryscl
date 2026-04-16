@@ -1,6 +1,7 @@
 <x-dropdown align="right" width="64">
     <x-slot name="trigger">
         <button
+            onclick="markAllAsReadSilently()"
             class="relative inline-flex items-center p-2 rounded-full text-gray-600 hover:text-black hover:bg-gray-100 transition-all focus:outline-none"
         >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -9,7 +10,7 @@
 
             @auth
                 @if (auth()->user()->unreadNotifications->count() > 0)
-                    <span class="absolute top-1.5 right-1.5 flex h-4 w-4">
+                    <span id="notification-badge" class="absolute top-1.5 right-1.5 flex h-4 w-4">
                         <span
                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"
                         ></span>
@@ -78,3 +79,30 @@
         </div>
     </x-slot>
 </x-dropdown>
+<script>
+    function markAllAsReadSilently() {
+        // 1. Cari elemen badge berdasarkan ID
+        const badge = document.getElementById('notification-badge');
+        
+        // 2. Jika ketemu, langsung hapus dari layar (Hapus, bukan cuma sembunyi)
+        if (badge) {
+            badge.remove(); 
+            console.log('Badge dihapus secara instan');
+        }
+
+        // 3. Panggil server di latar belakang untuk update database
+        fetch("{{ route('markNotificationsRead') }}", {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Server merespon:', data.message);
+        })
+        .catch(error => {
+            console.error('Waduh, ada error pas update notif:', error);
+        });
+    }
+</script>   

@@ -8,6 +8,7 @@ use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\AdminPeminjamanController;
 use App\Http\Controllers\AdminPengembalianController;
 use App\Http\Controllers\PengembalianController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\KategoriController;
@@ -125,4 +126,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/pengembalian/data', [AdminPengembalianController::class, 'history'])->name('pengembalian.data');
     Route::put('/admin/konfirmasi-kembali/{id}', [AdminPengembalianController::class, 'konfirmasi'])->name('admin.konfirmasi_kembali');
 
+    // NotifikasiController
+    Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])
+        ->name('markNotificationsRead');
+    });
 });
