@@ -5,7 +5,6 @@
                 class="bg-[#ebebeb] overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6"
             >
                 <div class="flex justify-end gap-3">
-                    {{-- Tombol Bulk Action (Muncul jika checklist > 1) --}}
                     <div id="bulk-action-container" class="invisible">
                         <button
                             onclick="eksekusiLangsung()"
@@ -101,12 +100,24 @@
                                     </form>
 
                                     @if ($sisaJatah > 0)
-                                        <a
-                                            href="{{ route('peminjaman.beda', ['id' => $item->buku->id_buku]) }}"
-                                            class="px-6 py-2 border-2 border-white text-white hover:bg-white hover:text-[#467599] rounded-md font-bold text-sm transition-all shadow-sm"
+                                        <form
+                                            action="{{ route('peminjaman.store.masal') }}"
+                                            method="POST"
+                                            class="m-0"
                                         >
-                                            Pinjam
-                                        </a>
+                                            @csrf
+                                            <input
+                                                type="hidden"
+                                                name="id_buku[]"
+                                                value="{{ $item->buku->id_buku }}"
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="px-6 py-2 border-2 border-white text-white hover:bg-white hover:text-[#467599] rounded-md font-bold text-sm transition-all shadow-sm"
+                                            >
+                                                Pinjam
+                                            </button>
+                                        </form>
                                     @else
                                         <button
                                             disabled
@@ -135,6 +146,15 @@
                         >
                     </div>
                 @endforelse
+                <form
+                    id="bulk-pinjam-form"
+                    action="{{ route('peminjaman.store.masal') }}"
+                    method="POST"
+                    style="display: none"
+                >
+                    @csrf
+                    <div id="hidden-inputs-container"></div>
+                </form>
             </div>
         </div>
     </div>
@@ -211,17 +231,60 @@
 
             if (ids.length > 0) {
                 Swal.fire({
-                    title: 'Mohon Tunggu',
-                    text: 'Sedang menyiapkan data peminjaman...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    },
-                });
+                    title: 'Konfirmasi Pinjam',
+                    text: `Apakah kamu yakin ingin meminjam ${ids.length} buku ini sekaligus?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#22c55e',
+                    confirmButtonText: 'Ya, Pinjam Sekarang!',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Mohon Tunggu',
+                            text: 'Sedang memproses peminjaman...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            },
+                        });
 
-                window.location.href = `{{ route('peminjaman.beda') }}?ids=${ids.join(',')}`;
+                        const form = document.getElementById('bulk-pinjam-form');
+                        const container = document.getElementById(
+                            'hidden-inputs-container'
+                        );
+                        container.innerHTML = '';
+
+                        ids.forEach((id) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'id_buku[]';
+                            input.value = id;
+                            container.appendChild(input);
+                        });
+
+                        form.submit();
+                    }
+                });
             }
         }
+        @if (session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '{{ session("success") }}',
+            showCancelButton: true,
+            cancelButtonColor: '#6b7280',
+            confirmButtonColor: '#6366F1',
+            cancelButtonText: 'Tetap di Sini',
+            confirmButtonText: '<i class="bi bi-journal-text"></i> Lihat Peminjaman',
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '{{ route('mypinjaman') }}';
+            }
+        });
+        @endif
 
         function konfirmasiHapus(formId) {
             Swal.fire({
@@ -229,11 +292,11 @@
                 text: 'Buku ini akan dihapus dari daftar wishlist kamu.',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#ef4444', 
-                cancelButtonColor: '#6b7280', 
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
                 confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal',
-                reverseButtons: true, 
+                reverseButtons: true,
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({
@@ -243,7 +306,6 @@
                             Swal.showLoading();
                         },
                     });
-                    // Kirim form-nya
                     document.getElementById(formId).submit();
                 }
             });

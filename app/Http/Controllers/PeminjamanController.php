@@ -52,21 +52,7 @@ class PeminjamanController extends Controller
 
     return view('partials.pinjam_data', compact('semuaPeminjaman'));
     }
-    
-    
-    // public function create($id = null)
-    // {
-    //     if (!$id) {
-    //         return redirect()->route('katalog');
-    //     }
-    //     $buku = Buku::findOrFail($id);
-    //     $totalBukuAktif = DB::table('peminjaman')
-    //         ->where('id', auth()->id())
-    //         ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu'])
-    //         ->count(); 
 
-    //     return view('peminjaman', compact('buku', 'totalBukuAktif'));
-    // }
 
     // proses minjam kayaknya
     public function store(Request $request)
@@ -206,60 +192,40 @@ class PeminjamanController extends Controller
     }
 
     // minjam banyak
-    public function storeMasal(Request $request)
-{
-    $request->validate([
-        'id_buku'       => 'required|array',
-        'tgl_kembali'   => 'required|array',
-        'tgl_kembali.*' => 'required|date',
-    ]);
-
-    $limitMaksimal = 6;
-    $user = Auth::user(); // Mengambil objek user yang sedang login
-
-    // --- PROTEKSI ALUMNI ---
-    // Jika status user adalah alumni, langsung tendang balik dengan pesan error
-    if ($user->status === 'alumni') {
-        return back()->with('error', 'Gagal! Akun berstatus Alumni tidak diperbolehkan melakukan peminjaman buku.');
-    }
-
-    $userId = $user->id;
-
-    // Cek kuota pinjam aktif
-    $totalBukuAktif = Peminjaman::where('id', $userId)
-        ->whereIn('status', ['pending', 'dipinjam', 'proses', 'terlambat', 'menunggu', 'ajukan_kembali'])
-        ->count();
-
-    $jumlahBaru = count($request->id_buku);
-
-    if (($totalBukuAktif + $jumlahBaru) > $limitMaksimal) {
-        $sisaSlot = $limitMaksimal - $totalBukuAktif;
-        return back()->with('error', "Gagal! Sisa kuota pinjam kamu hanya $sisaSlot buku lagi.");
+    public function storeMasal(Request $request) {
+    $ids = (array) $request->id_buku;
+    
+    if (Auth::user()->denda > 0) {
+        return response()->json(['message' => 'Selesaikan denda Anda dulu!'], 403);
     }
 
     try {
-        DB::beginTransaction();
-        foreach ($request->id_buku as $key => $id) {
-            Peminjaman::create([
-                'id'              => $userId,
-                'id_buku'         => $id,
-                'tgl_pinjam'      => now(),
-                'tgl_jatuh_tempo' => $request->tgl_kembali[$key],
-                'status'          => 'menunggu',
-                'denda'           => 0,
-            ]);
+        DB::transaction(function () use ($ids) {
+            foreach ($ids as $id) {
+                $buku = Buku::lockForUpdate()->find($id); 
+                
+                if ($buku && $buku->jumlah > 0) {
+                    Peminjaman::create([
+                        'id' => Auth::id(),
+                        'id_buku' => $id,
+                        'tgl_pinjam' => now(),
+                        'tgl_jatuh_tempo' => now()->addDays(30),
+                        'status' => 'menunggu'
+                    ]);
+                    
+                    $buku->decrement('jumlah');
 
-            $buku = Buku::where('id_buku', $id)->first();
-            if ($buku) {
-                $buku->decrement('jumlah');
+                    \App\Models\Wishlist::where('id', Auth::id())
+                        ->where('id_buku', $id)
+                        ->delete();
+                }
             }
-            Wishlist::where('id', $userId)->where('id_buku', $id)->delete();
-        }
-        DB::commit();
-        return redirect()->route('mypinjaman')->with('success', 'Berhasil mengajukan pinjaman!');
+        });
+
+        return redirect()->back()->with('success', 'Buku berhasil dipinjam dan daftar wishlist diperbarui!');
+        
     } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Gagal: ' . $e->getMessage());
+        return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
     }
 }
 

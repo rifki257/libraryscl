@@ -19,7 +19,7 @@
                         href="{{ route('laporan_user') }}"
                         class="btn btn-primary shadow-sm"
                     >
-                        <i class="bi bi-file-earmark-text me-1"></i> Lihat
+                        <i class="bi bi-file-earmark-text me-1"></i>
                         Laporan Riwayat
                     </a>
                 </div>

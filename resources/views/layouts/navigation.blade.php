@@ -93,34 +93,7 @@
                                 >{{ __('Profile') }}
                             </x-dropdown-link>
                             @if (Auth::user()->role === 'anggota')
-                                <x-dropdown-link
-                                    :href="route('userdashboard')"
-                                    :active="request()->routeIs('userdashboard')"
-                                    class="w-20 justify-center"
-                                >
-                                    {{ __('Dashboard') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link
-                                    :href="route('katalog')"
-                                    :active="request()->routeIs('katalog')"
-                                    class="w-20 justify-center"
-                                >
-                                    {{ __('Buku') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link
-                                    :href="route('mypinjaman')"
-                                    :active="request()->routeIs('mypinjaman')"
-                                    class="w-20 justify-center"
-                                >
-                                    {{ __('Dipinjam') }}
-                                </x-dropdown-link>
-                                {{-- <x-dropdown-link
-                                    :href="route('mybalik')"
-                                    :active="request()->routeIs('mybalik')"
-                                    class="w-20 justify-center"
-                                >
-                                    {{ __('Dikembalikan') }}
-                                </x-dropdown-link> --}}
+                                @include('layouts.navigation-users')
                             @endif
                             {{-- akhir anggota --}}
                             <form method="POST" action="{{ route('logout') }}">

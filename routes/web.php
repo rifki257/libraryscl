@@ -131,4 +131,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])
         ->name('markNotificationsRead');
     });
+
 });

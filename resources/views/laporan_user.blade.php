@@ -44,11 +44,6 @@
                                     {{ request('status') == 'dipinjam' ? 'selected' : '' }}
                                     >Sedang Dipinjam
                                 </option>
-                                {{-- <option
-                                    value="proses"
-                                    {{ request('status') == 'proses' ? 'selected' : '' }}
-                                    >Proses Pengembalian
-                                </option> --}}
                                 <option
                                     value="kembali"
                                     {{ request('status') == 'kembali' ? 'selected' : '' }}
@@ -105,14 +100,12 @@
                             </td>
                             <td>{{ $tglJatuhTempo->format('d/m/Y') }}</td>
                             <td>
-                                {{-- Logika Badge Status Anda tetap di sini --}}
                                 @if ($item->status == 'kembali')
                                     <span class="badge bg-success"
                                         >kembali</span
                                     >
                                 @elseif ($item->status == 'ditolak')
                                     <span class="badge bg-danger">Ditolak</span>
-                                    {{-- ... status lainnya ... --}}
                                 @else
                                     <span
                                         class="badge bg-primary"

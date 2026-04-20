@@ -83,9 +83,9 @@
                     }
                 @endphp
                         <div
-                            class="w-[190px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow border border-white/5 transition-transform hover:-translate-y-2"
+                            class="w-[150px] bg-[#1e1e1e] rounded-2xl overflow-hidden shadow border border-white/5 transition-transform hover:-translate-y-2"
                         >
-                            <div class="relative h-[240px] w-full">
+                            <div class="relative h-[200px] w-full">
                                 <img
                                     src="{{ asset('storage/' . $buku->gambar) }}"
                                     alt="{{ $buku->judul }}"
@@ -121,7 +121,7 @@
 
                             {{-- Area Konten --}}
                             <div
-                                class="p-4 flex flex-col h-[150px] justify-between"
+                                class="p-4 flex flex-col h-[130px] justify-between"
                             >
                                 <div>
                                     <h3

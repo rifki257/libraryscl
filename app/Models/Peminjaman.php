@@ -11,8 +11,6 @@ class Peminjaman extends Model
 
     protected $table = 'peminjaman';
     protected $primaryKey = 'id_pinjam';
-
-    // PENTING: Set ke false karena ID dibuat manual di booted()
     public $incrementing = false;
     protected $keyType = 'int';
 
@@ -23,7 +21,6 @@ class Peminjaman extends Model
         'tgl_pinjam',
         'tgl_jatuh_tempo',
         'status',
-        'total_pinjam',
     ];
 
     protected static function booted()
